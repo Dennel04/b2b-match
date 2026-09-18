@@ -1,7 +1,7 @@
 /**
- * Сид-данные: 18 правдоподобных эстонских компаний с профилями, условиями и проблемами.
- * Запуск: npm run seed
- * Повторный запуск создаёт дубли — сначала чисти таблицы.
+ * Seed data: 18 plausible Estonian companies with profiles, terms and problems.
+ * Run: npm run seed
+ * Running it twice creates duplicates — truncate the tables first.
  */
 import { z } from 'zod';
 import { ask } from '../src/lib/claude';
@@ -55,35 +55,36 @@ const SeedSchema = z.object({
 });
 
 const prompt = (today: string) => `
-Придумай 18 правдоподобных эстонских B2B-компаний для демо платформы слепого матчинга.
-Сегодня ${today}.
+Invent 18 plausible Estonian B2B companies for a demo of a blind matching platform.
+Today is ${today}.
 
-Состав: 8 продавцов услуг (IT-аутсорс, логистика, бухгалтерия, маркетинг, HR,
-кибербезопасность, дизайн, юристы), 6 покупателей с проблемами, 4 универсальных (both).
+Mix: 8 service vendors (IT outsourcing, logistics, accounting, marketing, HR, cybersecurity,
+design, legal), 6 buyers with problems, 4 that do both.
 
-Требования:
-- Продавцы и both: заполни seller_terms — минимальный чек, форматы контракта, с какой даты
-  свободны, какие требования закрывают. problem = null у чистых продавцов.
-- Покупатели и both: problem — конкретная боль с цифрами, 2-3 предложения, как пишет живой
-  человек. Плюс buyer_terms с потолком бюджета, форматами, датой старта и требованиями.
-- Проблемы должны иметь очевидные решения среди продавцов из списка — матчи обязаны найтись.
-- Одна пара — идеальная: и по смыслу, и по бюджету, и по формату контракта (совпадение 90+).
-- ОБЯЗАТЕЛЬНО добавь 2 пары, которые идеально подходят по смыслу, но отсекаются машинно:
-  одна — потому что минимальный чек продавца выше потолка покупателя,
-  вторая — потому что у продавца нет ISO 27001 или готовности подписать DPA.
-  Это нужно, чтобы на демо было видно, как работает фильтр до вызова модели.
-- Даты — абсолютные ISO, в ближайшие 3 месяца от сегодня.
-- Названия и домены .ee правдоподобные, но вымышленные.
+Requirements:
+- Vendors and both: fill seller_terms — minimum deal size, contract formats, the date they are
+  free from, which requirements they meet. problem = null for pure vendors.
+- Buyers and both: problem is a concrete pain with numbers, 2-3 sentences, written the way a
+  real person writes. Plus buyer_terms with a budget ceiling, formats, start date, requirements.
+- Every problem must have an obvious solver among the vendors in the list — matches have to land.
+- One pair must be perfect on all three axes: meaning, budget and contract format (score 90+).
+- REQUIRED: include 2 pairs that fit perfectly on meaning but are filtered out mechanically —
+  one because the vendor's minimum deal size exceeds the buyer's ceiling, the other because the
+  vendor lacks ISO 27001 or will not sign a DPA. This makes the pre-model filter visible in the
+  demo.
+- Dates are absolute ISO dates within the next 3 months from today.
+- Names and .ee domains should be plausible but fictional.
+- Write everything in English.
 `.trim();
 
 async function main() {
   const today = new Date().toISOString().slice(0, 10);
-  console.log('Генерирую компании...');
+  console.log('Generating companies...');
   const { companies } = await ask(SeedSchema, prompt(today), { effort: 'high', maxTokens: 32000 });
 
   const db = adminClient();
   const ownerId = process.env.SEED_OWNER_ID;
-  if (!ownerId) throw new Error('Задай SEED_OWNER_ID в .env.local (id любого тестового юзера)');
+  if (!ownerId) throw new Error('Set SEED_OWNER_ID in .env.local (the id of any test user)');
 
   for (const c of companies) {
     const { data, error } = await db
@@ -116,9 +117,9 @@ async function main() {
       });
       if (pErr) throw pErr;
     }
-    console.log(`  + ${c.name}${c.problem ? ' (с проблемой)' : ''}`);
+    console.log(`  + ${c.name}${c.problem ? ' (with problem)' : ''}`);
   }
-  console.log(`Готово: ${companies.length} компаний.`);
+  console.log(`Done: ${companies.length} companies.`);
 }
 
 main().catch((e) => {

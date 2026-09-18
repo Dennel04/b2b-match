@@ -1,527 +1,543 @@
-# Исследование рынка: насколько идея оригинальна и что отвечать жюри
+# Market research: how original is this, and what to tell the judges
 
-Дата: 18 сентября 2026. Источники — в конце, всё проверяемо.
+Compiled 18 September 2026. Every claim below is sourced at the end.
 
-**Короткий вывод:** как категория идея не оригинальна — этим занимаются минимум три
-сформировавшихся рынка и один прямой конкурент с ценой $75/мес. Как **механика** — комбинация
-«приватная проблема + слепой матч + двойное согласие + оплата за принятую встречу» на рынке
-не упакована, и у LinkedIn есть структурная причина никогда её не сделать. Оригинальность
-защищаема, но не на словах «AI матчинг» — только на механике приватности.
+## Executive summary
+
+**As a category, the idea is not original.** At least three established markets already do
+parts of it, plus one direct competitor charging $75/month. The mechanism — *private problem,
+blind match, machine-to-machine negotiation, payment per accepted meeting* — is not packaged
+anywhere, and LinkedIn has a structural reason never to build it.
+
+Three things are defensible:
+
+1. **The problem is never disclosed** — not publicly, not to the seller before consent.
+2. **Payment per accepted meeting**, not per lead and not by subscription. The only model where
+   spam is mathematically pointless.
+3. **Matching on unstructured problem text** — impossible before LLMs, and the reason the EU's
+   own database stayed a catalogue instead of becoming a matcher.
+
+The strongest pitch framing is **"a dark pool for business problems"**. The strongest single
+line is *"We don't show the numbers. We show that the numbers match."*
+
+As a standalone marketplace the odds are poor — frequency and liquidity, not competitors, are
+what kill it. As a layer sold to an organisation that already owns both sides (a chamber of
+commerce, an accelerator, an event organiser) the same code is a viable business. See §7.
+
+## Contents
+
+1. [Who already does something similar](#1-who-already-does-something-similar)
+2. [Why people keep using LinkedIn](#2-why-people-keep-using-linkedin)
+3. [Why now](#3-why-now)
+4. [Honest weaknesses and how to answer them](#4-honest-weaknesses-and-how-to-answer-them)
+5. [What is actually original](#5-what-is-actually-original)
+6. [The machine-only channel: does anyone ship it?](#6-the-machine-only-channel-does-anyone-ship-it)
+7. [Verdict: continue or drop it](#7-verdict-continue-or-drop-it)
+8. [Sources](#8-sources)
 
 ---
 
-## 1. Кто уже делает похожее
+## 1. Who already does something similar
 
-### 1.1 Прямой конкурент: Xpylon
+### 1.1 Direct competitor: Xpylon
 
-Ближе всего к нашей идее. AI-платформа B2B-матчинга: пользователь описывает потребность
-(сектор, гео, сертификаты), AI сканирует «глобальный граф сделок» и отдаёт подходящие
-контрагентов в инбокс. Сегменты: покупатели, продавцы, M&A, procurement.
+The closest thing to our idea. An AI B2B matchmaking platform: you describe a need (sector,
+geography, certifications), the AI scans a "global deal graph" and delivers matching
+counterparties to your inbox. Segments: buyers, sellers, M&A, procurement.
 
-| | Xpylon | Мы |
+| | Xpylon | Us |
 |---|---|---|
-| Матчинг | по структурированным критериям (сектор, гео) | по тексту проблемы, без таксономии |
-| Приватность запроса | не заявлена | ядро продукта |
-| Двойное согласие | не заявлено | обязательный шаг |
-| Цена | $75/мес с пользователя | платит продавец за принятую встречу |
-| Traction | не раскрыт | — |
+| Matching | structured criteria (sector, geography) | problem text, no taxonomy |
+| Request privacy | not claimed | the core of the product |
+| Double opt-in | not claimed | a required step |
+| Price | $75/month per user | the seller pays per accepted meeting |
+| Traction | not disclosed | — |
 
-**Что это значит:** мы не первые. Но Xpylon продаёт подписку за доступ к матчам — то есть
-монетизирует **показ**, а не результат. Это тот же стимул спамить, что у всех остальных.
+**What this means:** we are not first. But Xpylon sells a subscription for *access to matches* —
+it monetises exposure, not outcomes. Same incentive to spam as everyone else.
 
-### 1.2 Лид-маркетплейсы: Bark, Sortlist, Clutch
+### 1.2 Lead marketplaces: Bark, Sortlist, Clutch
 
-Модель: покупатель описывает задачу → платформа продаёт этот лид подрядчикам.
+The model: a buyer describes a job, the platform sells that lead to vendors.
 
-- **Bark.com** — 1000+ категорий услуг. Профессионалы покупают кредиты и тратят их, чтобы
-  связаться с клиентом. Контакты клиента раскрываются только после отправки квоты.
-- **Sortlist** — бизнес присылает бриф, алгоритм подбирает агентства по экспертизе, языку,
-  радиусу и бюджету. Агентства платят подписку (Sortlist+) плюс кредиты за доступ к лидам.
+- **Bark.com** — 1000+ service categories. Professionals buy credits and spend them to contact
+  a customer. Customer details are released only once a quote has been sent.
+- **Sortlist** — a business submits a brief, an algorithm selects agencies by expertise,
+  language, radius and budget band. Agencies pay a subscription (Sortlist+) plus credits for
+  lead access.
 
-**Главный урок отсюда — отрицательный.** Обе платформы берут деньги с продавца **за доступ
-к лиду**, а не за результат. Следствие известно всем, кто пользовался Bark: покупатель
-оставляет заявку и получает 5–10 звонков за час. Это ровно тот спам, который мы обещаем
-убрать, только внутри платформы. **Наша модель оплаты — единственное, что нас от этого
-отличает, и она должна звучать в питче.**
+**The key lesson here is a negative one.** Both charge the seller **for access to the lead**,
+not for the outcome. Anyone who has used Bark knows what follows: you post a request and get
+five to ten calls within the hour. That is exactly the spam we promise to remove, relocated
+inside a platform. **Our payment model is the only thing that separates us from them, and it
+has to be said in the pitch.**
 
-### 1.3 Событийный матчмейкинг: Brella, Grip, Swapcard, b2match
+### 1.3 Event matchmaking: Brella, Grip, Swapcard, b2match
 
-Самая зрелая механика «двустороннего согласия» на рынке — и она давно решена.
+The most mature "both sides must consent" mechanic on the market — and long since solved.
 
-- **Brella** — intent-based AI, анализирует цели и поведение участника по сотням сигналов.
-  **3+ млн встреч с 2016 года.** Встреча требует согласия обеих сторон.
-- **Grip** — 16+ ML-алгоритмов, явные предпочтения + поведенческие сигналы (кого смотрел,
-  куда ходил). Рекомендации улучшаются по ходу события.
-- **b2match, Swapcard** — то же для выставок и конференций.
+- **Brella** — intent-based AI reading goals and behaviour across hundreds of signals.
+  **3+ million meetings since 2016.** A meeting requires both sides to agree.
+- **Grip** — 16+ ML algorithms combining stated preferences with behavioural signals.
+- **b2match, Swapcard** — the same for trade fairs and conferences.
 
-**Что это значит:** «AI сводит две компании и обе подтверждают встречу» — решённая задача
-с миллионами транзакций. Жюри, которое ходило на конференции, это узнает. Наше отличие
-не в матчинге, а в том, что **у нас нет события** — нет общего контекста и нет ограничения
-по времени, зато есть приватная проблема, которой на конференции не бывает.
+**What this means:** "AI introduces two companies and both confirm a meeting" is a solved
+problem with millions of transactions behind it. Any judge who attends conferences will
+recognise it. Our difference is not the matching — it is that **there is no event**: no shared
+context and no time box, but there is a private problem, which conferences never have.
 
 ### 1.4 Intent data: 6sense, Bombora, G2, ZoomInfo
 
-Огромный зрелый рынок, решающий ту же боль **с другой стороны**: вычисляет, какие компании
-сейчас «в рынке», по цифровым следам — что читают, что гуглят, какие отзывы смотрят.
+A large, mature market solving the same pain **from the other end**: inferring which companies
+are in-market from digital exhaust — what they read, search, and review.
 
-Принципиальная разница: **это данные о покупателе без его ведома и согласия.** Покупатель
-не заявляет потребность — её выводят из поведения, и он всё равно получает холодные письма,
-только более точные. Мы — противоположный подход: заявленное намерение с контролем доступа.
+The fundamental difference: **this is data about the buyer without their knowledge or consent.**
+The buyer never declares a need; it is inferred, and they still get cold email, just
+better-targeted. We are the opposite: declared intent with access control.
 
-Это лучшая одна фраза для питча: *«Intent data угадывает намерение за спиной покупателя.
-Мы спрашиваем покупателя — и даём ему рубильник».*
+Best single pitch line here: *"Intent data guesses the buyer's intent behind their back.
+We ask the buyer — and give them the switch."*
 
-### 1.5 Бесплатный конкурент, о котором забывают: Enterprise Europe Network
+### 1.5 The free competitor people forget: Enterprise Europe Network
 
-Государственная база ЕС `een.ec.europa.eu/partnering-opportunities`: **6 045 активных
-профилей**, типы — Business Offer, **Business Request**, R&D Request, Technology Offer/Request.
-Компании из 60+ стран. **Бесплатно.**
+The EU's own database at `een.ec.europa.eu/partnering-opportunities`: **6,045 live profiles**,
+types including Business Offer, **Business Request**, R&D Request, Technology Offer/Request.
+Companies from 60+ countries. **Free.**
 
-То есть «компания публикует запрос, другая находит» в Европе уже существует и стоит ноль.
-Почему им не пользуются массово: это статичный каталог без матчинга, без приватности,
-без ранжирования — надо вручную листать 605 страниц. **Это наш аргумент, а не наша проблема:**
-спрос доказан государством, качество исполнения ужасно.
+So "a company publishes a request and another finds it" already exists in Europe at zero cost.
+Why nobody uses it at scale: it is a static catalogue with no matching, no privacy and no
+ranking — you page through 605 pages by hand. **That is our argument, not our problem:** demand
+is proven by a government, execution is terrible.
 
-### 1.6 Доказательство, что модель работает: Xometry
+### 1.6 Proof the model can work: Xometry
 
-Вертикальный buyer-driven маркетплейс (заказ деталей на производство). Q1 2026:
-**выручка $205 млн (+36% г/г), маркетплейс +40%, 85 581 активный покупатель (+20%)**,
-валовая маржа маркетплейса выросла с 31,8% до 34,7%.
+A vertical buyer-driven marketplace (ordering manufactured parts). Q1 2026:
+**revenue $205M (+36% YoY), marketplace up 40%, 85,581 active buyers (+20%)**, marketplace
+gross margin up from 31.8% to 34.7%.
 
-Почему работает: **одна вертикаль + мгновенная котировка**. Покупатель загружает 3D-модель
-и получает цену за секунды. Никакого «опишите вашу проблему словами».
+Why it works: **one vertical plus instant quoting**. Upload a 3D model, get a price in seconds.
+No "describe your problem in words".
 
-**Урок для нас:** горизонтальные платформы «для всех отраслей» умирают, вертикальные с
-мгновенным ответом — растут. В питче обязательно назвать **одну нишу**, с которой начинаем.
+**Lesson:** horizontal "for every industry" platforms die; vertical ones with an instant answer
+grow. The pitch must name **one niche** to start in.
 
 ---
 
-## 2. Почему люди продолжают пользоваться LinkedIn
+## 2. Why people keep using LinkedIn
 
-Вопрос от жюри будет именно в этой формулировке. Ответ честный: **потому что его невозможно
-обойти, и мы не пытаемся.**
+The judges will ask this in exactly these words. The honest answer: **because it cannot be
+routed around, and we are not trying to.**
 
-### Цифры
+### The numbers
 
-| Метрика | Значение |
+| Metric | Value |
 |---|---|
-| Участников | **1,2 млрд**, 4 года двузначного роста подряд |
-| Выручка FY2026 (Microsoft) | **$19,8 млрд**; впервые $5+ млрд за квартал (Q4 2025) |
-| Premium-подписки | $2+ млрд/год, подписчиков +~50% за два года |
-| Доля рынка recruitment tech | **88,05%** |
-| Sales Navigator | $99–149/мес; пользователи закрывают на 42% более крупные сделки |
+| Members | **1.2 billion**, four straight years of double-digit growth |
+| FY2026 revenue (Microsoft) | **$19.8B**; first $5B+ quarter in Dec 2025 |
+| Premium subscriptions | $2B+/year, subscribers up ~50% in two years |
+| Recruitment tech market share | **88.05%** |
+| Sales Navigator | $99–149/month; users close 42% larger deals |
 
-### Три причины, почему он не отваливается
+### Three reasons it does not fall over
 
-1. **Граф доверия, а не продукт.** Двадцать лет накопленных профилей, мест работы,
-   рекомендаций и связей. Это невоспроизводимо. Продукт при этом посредственный, лента
-   зашумлена — и выручка всё равно растёт двузначно. Люди терпят LinkedIn не потому,
-   что он хороший, а потому что там все.
-2. **Идентичность = издержки переключения.** Уйти с LinkedIn означает потерять доказательство
-   того, кто ты. Ни одна альтернатива это не компенсирует.
-3. **Он единственное место, где можно проверить человека.** Даже когда сделка началась
-   в другом месте, её участников идут смотреть в LinkedIn.
+1. **A trust graph, not a product.** Two decades of accumulated profiles, work history,
+   endorsements and relationships. Not reproducible. The product is mediocre and the feed is
+   noise, and revenue still grows double digits. People tolerate LinkedIn not because it is
+   good, but because everyone is there.
+2. **Identity equals switching cost.** Leaving means losing the proof of who you are.
+3. **It is the only place to verify a person.** Even when a deal starts elsewhere, the
+   participants get looked up on LinkedIn.
 
-### Почему это наш шанс, а не наш приговор
+### Why that is our opening, not our death sentence
 
-**Бизнес-модель LinkedIn — продавать доступ к людям.** InMail-кредиты, Sales Navigator за
-$99–149/мес, реклама. Его выручка растёт ровно тогда, когда растёт объём исходящих сообщений.
+**LinkedIn's business model is selling access to people.** InMail credits, Sales Navigator at
+$99–149/month, advertising. Revenue grows exactly when outbound volume grows.
 
-Из этого следует: **LinkedIn структурно не может дать покупателю рубильник.** Функция
-«я получаю максимум 3 предложения в неделю, и только те, что прошли двойное согласие»
-уничтожает InMail как продукт. Это не вопрос приоритетов продуктовой команды — это
-противоречие в модели монетизации.
+It follows that **LinkedIn structurally cannot hand the buyer a switch.** A feature that says
+"I receive at most three offers a week, and only ones that passed double opt-in" destroys InMail
+as a product. That is not a roadmap priority — it is a contradiction in how they make money.
 
-**Формулировка для питча (выучить дословно):**
+**Pitch wording (learn it verbatim):**
 
-> «Мы не конкурируем с LinkedIn за граф — там 1,2 миллиарда человек, это не отыгрывается.
-> Мы конкурируем за одну функцию, которую LinkedIn не сделает никогда: контроль на стороне
-> покупателя. LinkedIn зарабатывает $19,8 млрд на том, что продаёт продавцам доступ
-> к покупателям. Дать покупателю выключатель — значит убить собственную выручку.
-> Мы начинаем с того, что для них — бизнес-риск».
+> "We are not competing with LinkedIn for the graph — 1.2 billion people is not a fight you
+> win. We compete on one function LinkedIn will never build: control on the buyer's side.
+> LinkedIn earns $19.8 billion selling sellers access to buyers. Handing the buyer an off
+> switch means killing its own revenue. We start where their business risk begins."
 
 ---
 
-## 3. Почему момент подходящий (данные для слайда «Why now»)
+## 3. Why now
 
-| Факт | Источник | Что означает |
+| Fact | Source | What it means |
 |---|---|---|
-| Reply rate холодных писем упал **5,1% (2024) → 3,43% (2026)** | Instantly, анализ 10M+ писем | Старый канал умирает на глазах |
-| **67% B2B-покупателей** предпочитают покупать **без продавца** (было 61% в 2025) | Gartner, опрос 646 покупателей, март 2026 | Рынок сам движется к нашей модели |
-| Покупатель проводит с поставщиками **17% времени** сделки; ~80% пути — без продавца | Gartner | Продавец не контролирует процесс |
-| **45%** покупателей использовали AI в последней покупке | Gartner, 2026 | AI-посредник уже норма |
-| **20% B2B-продавцов** в 2026 столкнутся с переговорами, которые ведёт AI-агент покупателя | Deloitte / отраслевые прогнозы | Наш «диалог агентов» — тренд, не игрушка |
-| MCP (Anthropic), A2A (Google), NLWeb (Microsoft) выпущены в 2025–2026 | — | Инфраструктура agent-to-agent уже есть |
+| Cold email reply rates fell **5.1% (2024) → 3.43% (2026)** | Instantly, 10M+ emails analysed | The old channel is dying in real time |
+| **67% of B2B buyers** prefer a **rep-free** purchase (61% in 2025) | Gartner, 646 buyers, March 2026 | The market is moving toward our model on its own |
+| Buyers spend **17% of the buying cycle** with vendors; ~80% happens without a rep | Gartner | The seller does not control the process |
+| **45%** of buyers used AI in a recent purchase | Gartner, 2026 | An AI intermediary is already normal |
+| **20% of B2B sellers** will face negotiations run by a buyer's AI agent in 2026 | Deloitte / industry forecasts | Our agent negotiation is a trend, not a toy |
+| MCP (Anthropic), A2A (Google), NLWeb (Microsoft) shipped 2025–2026 | — | Agent-to-agent infrastructure already exists |
 
-**Ключевой аргумент «почему сейчас, а не в 2015»:** матчинг неструктурированной проблемы
-с неструктурированным описанием услуги раньше требовал таксономий, тегов и ручной модерации —
-поэтому EEN получился каталогом, а не матчером. LLM убирают этот слой: «у нас текучка
-в складской логистике, теряем 12 часов в неделю на ручной учёт» матчится с «внедряем WMS»
-без единого справочника. **Это и есть настоящий ответ на «почему сейчас».**
+**The real "why not in 2015" argument:** matching an unstructured problem against an
+unstructured service description used to require taxonomies, tags and manual moderation — which
+is why EEN became a catalogue rather than a matcher. LLMs remove that layer: "we're bleeding 12
+hours a week on manual warehouse bookkeeping" matches "we implement WMS" with no shared
+vocabulary at all. **That is the actual answer to "why now".**
 
-Историческая справка на случай въедливого жюри: идея buyer-driven commerce запатентована
-Walker Digital и легла в основу Priceline в 1998 году («name your own price» — покупатель
-называет условия, продавцы принимают или нет). Идее 28 лет. Ново не намерение покупателя,
-а то, что его теперь можно понять без формы с полями.
-
----
-
-## 4. Честные слабые места (и что отвечать)
-
-### 4.1 Почему покупатель вообще раскроет проблему
-
-Самый сильный удар. Исследования по RFP показывают: публичное раскрытие потребности
-отпугивает обе стороны — покупатель боится утечки к конкурентам, поставщик не верит
-в подлинность запроса и не хочет тратить время на неопределённость. Получается замкнутый
-круг: мало продавцов отвечает → покупателям незачем публиковать.
-
-**Ответ:** проблема не публикуется нигде. Продавец никогда не видит её текст — только
-сгенерированное объяснение уровня категории («компании нужна помощь с X в области Y»).
-Это не настройка приватности в профиле, это архитектура: у нас `problems` закрыта RLS,
-а `reasoning_public` генерируется промптом с явным запретом цитировать. **Показать в демо
-экраном, а не словами** — вот что видит покупатель, вот что видит продавец, разницу видно.
-
-### 4.2 Cold start — и то, что убивает чаще
-
-Стандартный ответ про курицу и яйцо известен. Но данные по маркетплейсам говорят жёстче:
-**большинство двусторонних площадок умирает не до запуска, а после — от потери ликвидности.**
-Типичные причины: размазали предложение по слишком многим сегментам, засеяли не ту сторону,
-на второй год сделки ушли мимо платформы, take rate поставили раньше, чем поняли экономику.
-
-**Ответ:** начинаем с одной ниши и с той стороны, которую труднее достать. Труднее достать
-покупателя с горящей проблемой — значит, сначала он, а продавцов подтягиваем под конкретный
-спрос. Одна вертикаль, одно сообщество (эстонский стартап-хаб / одна отраслевая ассоциация),
-а не «все компании Европы».
-
-### 4.3 Утечка сделок мимо платформы
-
-Свели двоих — дальше они общаются напрямую и платформа больше не нужна. Классическая причина
-смерти маркетплейсов на второй год.
-
-**Ответ:** берём деньги в момент **принятия встречи**, до того как стороны обменялись
-контактами. Брифинг — это и есть момент передачи ценности и момент оплаты.
-
-### 4.4 Стимулы продавца
-
-Модель Bark (плати за лид) неизбежно скатывается в спам: продавец платит за показ, значит
-хочет попадать во все матчи. Модель Xpylon (подписка за доступ) — то же самое.
-
-**Ответ:** платит продавец, и только за **принятую покупателем встречу**. Спамить
-экономически бессмысленно: отказ ничего не стоит платформе и ничего не приносит продавцу.
-Прецедент, что это работает: **Startup Intros** — каждый матч двусторонний, инвестор видит
-основателя только если сам согласился на категорию; берут подписку $790/год, без комиссии
-за сделку, 500+ основателей за 18 месяцев.
-
-### 4.5 Регуляторный попутный ветер (специфика ЕС)
-
-Холодные рассылки в ЕС юридически шаткие: в **Германии и Италии** B2B-письма практически
-требуют предварительного согласия; во Франции, Нидерландах, Ирландии допустим
-legitimate interest для ролевых адресов. Штрафы GDPR — до €20 млн или 4% мирового оборота.
-
-**Ответ и одновременно аргумент:** платформа, построенная на явном согласии обеих сторон,
-**структурно** не имеет этой проблемы. Для эстонского/европейского жюри это сильный
-довод — назвать его одной фразой, не углубляясь.
+Historical footnote for a sharp judge: buyer-driven commerce was patented by Walker Digital and
+became Priceline in 1998 ("name your own price" — the buyer states terms, sellers accept or
+not). The idea is 28 years old. What is new is not buyer intent; it is that intent can now be
+understood without a form.
 
 ---
 
-## 5. Итог: в чём оригинальность и как её защищать
+## 4. Honest weaknesses and how to answer them
 
-**Не оригинально:** AI-матчинг компаний (Xpylon, Skipso, Innoloft), двустороннее согласие
-на встречу (Brella, Grip — 3 млн встреч), «опишите задачу — подберём подрядчика» (Bark,
-Sortlist), «компания публикует запрос» (EEN, бесплатно, 6045 профилей), сама идея
-buyer-driven commerce (патент 1998 года).
+### 4.1 Why would a buyer disclose a problem at all?
 
-**Оригинально — и защищаемо ровно в трёх пунктах:**
+The hardest hit. RFP research shows public disclosure deters both sides: the buyer fears leaks
+to competitors; the vendor doubts the request is genuine and will not spend time on the
+uncertainty. That closes a loop — few vendors respond, so buyers stop publishing.
 
-1. **Проблема не раскрывается никогда** — ни публично, ни продавцу до согласия. У всех
-   перечисленных площадок запрос покупателя либо публичен, либо продаётся за деньги.
-2. **Оплата за принятую встречу, а не за лид и не за подписку.** Единственная модель, где
-   спам невыгоден математически. Ни у одного из изученных конкурентов её нет.
-3. **Матчинг по неструктурированному тексту проблемы.** Без таксономий и форм — именно то,
-   чего не могли сделать до LLM, и причина, по которой EEN остался каталогом.
+**Answer:** the problem is never published anywhere. The seller never sees its text — only a
+generated, category-level explanation ("this company needs help with X in the Y area"). This is
+not a privacy setting, it is architecture: `problems` is behind RLS, and `reasoning_public` is
+generated by a prompt that forbids quoting. **Show it on screen rather than saying it** — here
+is what the buyer sees, here is what the seller sees; the difference is visible.
 
-Всё остальное («AI матчинг», «умный подбор», «экономим время продажников») — красные флаги
-для жюри, которое видело эти слова у десяти команд до нас.
+### 4.2 Cold start — and the thing that kills more often
 
-### Что из этого менять в продукте и питче
+The standard chicken-and-egg answer is known. But the marketplace data is harsher:
+**most two-sided platforms die after launch, of lost liquidity, not before it.** Typical causes:
+supply spread across too many segments, seeding the wrong side first, transactions leaking off
+platform in year two, setting a take rate before understanding the unit economics.
 
-- **Демо ведём приватностью, а не матчингом.** Первым делом показать два экрана рядом:
-  что видит покупатель / что видит продавец. Матч без этого контраста — обычный поиск.
-- **Назвать нишу вслух.** Не «B2B-компании», а конкретно: например, эстонские
-  логистические компании и их подрядчики. Xometry вырос вертикалью, а не охватом.
-- **Метрика в питче — не число матчей, а доля принятых встреч.** Матчей может нагенерить
-  кто угодно; принятая встреча — это и есть продукт, и это то, за что берут деньги.
-- **Диалог агентов подать как раннюю реализацию agent-to-agent commerce**, а не как
-  «прикольную фичу»: 20% продавцов столкнутся с этим в 2026, стандарты вышли в 2025–26.
-- **Заготовить ответ про LinkedIn дословно** (раздел 2). Этот вопрос будет.
+**Answer:** start in one niche and seed the side that is harder to acquire. A buyer with a
+burning problem is the harder side, so start there and pull vendors toward concrete demand.
+One vertical, one community (the Estonian startup hub, or a single industry association) —
+not "every company in Europe".
+
+### 4.3 Disintermediation
+
+You introduce two parties and then they talk directly and the platform is no longer needed.
+A classic year-two cause of death.
+
+**Answer:** we take payment at the moment of **meeting acceptance**, before contacts are
+exchanged. The briefing is both the value handover and the billing event.
+
+### 4.4 Seller incentives
+
+Bark's model (pay per lead) inevitably degrades into spam: the seller pays for exposure, so they
+want to appear in every match. Xpylon's model (subscription for access) is the same.
+
+**Answer:** the seller pays, and only for a meeting the **buyer accepted**. Spamming is
+economically pointless: a rejection costs the platform nothing and earns the seller nothing.
+Precedent that this works: **Startup Intros** — every match is double opt-in, an investor only
+sees a founder if they opted into the category; $790/year subscription, no placement fee,
+500+ founders in 18 months.
+
+### 4.5 Regulatory tailwind (EU specific)
+
+Cold outreach in the EU is legally fragile: **Germany and Italy** effectively require prior
+consent for B2B email; France, the Netherlands and Ireland allow legitimate interest for
+role-based addresses. GDPR fines reach €20M or 4% of global turnover.
+
+**Answer, and an argument in itself:** a platform built on explicit consent from both sides
+**structurally** does not have this problem. For an Estonian or EU jury this lands — say it in
+one sentence and move on.
 
 ---
 
-## Источники
+## 5. What is actually original
 
-**Конкуренты**
+**Not original:** AI matching of companies (Xpylon, Skipso, Innoloft), mutual consent before a
+meeting (Brella, Grip — 3M meetings), "describe your task, we'll find a vendor" (Bark,
+Sortlist), "a company publishes a request" (EEN, free, 6,045 profiles), and buyer-driven
+commerce itself (patented 1998).
+
+**Original and defensible in exactly three points:**
+
+1. **The problem is never disclosed** — not publicly, not to the seller before consent. On every
+   platform above the buyer's request is either public or sold.
+2. **Payment per accepted meeting**, not per lead and not by subscription. The only model where
+   spam is mathematically pointless. None of the competitors studied has it.
+3. **Matching on unstructured problem text.** No taxonomies, no forms — exactly what was
+   impossible before LLMs, and why EEN remained a catalogue.
+
+Everything else ("AI matching", "smart pairing", "saving sales reps time") is a red flag to a
+jury that heard those words from ten teams before us.
+
+### What that changes in the product and the pitch
+
+- **Lead the demo with privacy, not matching.** Two screens side by side: what the buyer sees,
+  what the seller sees. Without the contrast a match looks like ordinary search.
+- **Name the niche out loud.** Not "B2B companies" but, say, Estonian logistics firms and their
+  contractors. Xometry grew by vertical, not by reach.
+- **The pitch metric is the accepted-meeting rate**, not the number of matches. Anyone can
+  generate matches; an accepted meeting is the product, and it is what gets billed.
+- **Frame the agent negotiation as early agent-to-agent commerce**, not as a fun feature: 20% of
+  sellers meet this in 2026, and the standards shipped in 2025–26.
+- **Have the LinkedIn answer ready verbatim** (§2). That question is coming.
+
+---
+
+## 6. The machine-only channel: does anyone ship it?
+
+Refined idea: **no human on the other side ever sees the list of problems.** The negotiation
+happens entirely inside the platform, between agents. Humans learn about a counterparty only
+once the algorithms have agreed, and they receive a summary.
+
+I searched specifically for this. **I found no product in production with that mechanism.**
+Below is everything that came closest, and how it differs.
+
+### 6.1 Closest real analogue: Axial and Dealsuite (M&A)
+
+| | What they do | How it differs from our mechanism |
+|---|---|---|
+| **Axial** | 20,000+ investors, advisors and owners. The algorithm evaluates buy-side preferences and **privately** suggests counterparties to sell-side members, ranked by fit. The seller keeps full control over who sees what, and when. | The anonymised teaser is written by a **human**. Every disclosure is approved by hand. No machine negotiation. |
+| **Dealsuite** | European M&A. A deal is uploaded as **anonymised criteria** and the platform returns interested buyers immediately. Built-in NDA tool. The user decides how much to share and with whom. | Same: anonymisation is manual, the match is a criteria filter rather than a conversation. |
+
+**This is an important precedent to know.** "The request is never public, an algorithm matches
+blind, disclosure only on mutual consent" **already exists and works — but only in M&A, and with
+a human in every link.**
+
+What has not been done: removing the human from the middle, and moving this from selling a
+business to **current operational problems**, which are orders of magnitude more common.
+
+### 6.2 The financial precedent worth naming in the pitch: dark pools
+
+Exactly our mechanism, decades old, on exchanges: large block orders are **not published**, no
+participant sees anyone else's intent, the engine crosses them internally, and the trade becomes
+known only after execution. The point is to prevent the leak of an intention that would move the
+price against you. In the US this is legal and regulated by the SEC (Regulation ATS).
+
+**Pitch wording — the shortest and clearest we have:**
+
+> "It's a dark pool for business problems. On an exchange, a large player doesn't show its order
+> to the market, because the intention itself is worth money. For a company it's the same:
+> saying out loud 'our warehouse is on fire' means a hundred phone calls and a lost negotiating
+> position. We keep the intention dark and cross it only once the match has been checked."
+
+That explains itself in ten seconds and kills the "why would a buyer disclose" question outright.
+
+### 6.3 Machine negotiation exists, but one-sided
+
+**Pactum** — AI runs autonomous negotiations with suppliers. Walmart, Maersk and Vodafone run
+this at scale. Walmart: average payment terms extended by 35 days at a 68% supplier agreement
+rate. Negotiation cycles drop from weeks to minutes, with 2–30% value on negotiated spend.
+
+How it differs: this is **AI against a human**, not AI against AI. And it negotiates terms in an
+**existing** relationship with a known supplier — not discovery, not introduction. Pactum itself
+describes AI-to-AI as a future state, not a current product.
+
+Market forecasts: ~20% of B2B sellers will face negotiations run by a buyer's agent during 2026;
+a genuinely agent-negotiable stage is expected 2027–2028. We are building at the hackathon what
+the market expects in a year or two. Good argument — and an honest risk: we are early.
+
+### 6.4 The direction is named, the product is not built
+
+There is commentary on A2A marketing: agents evaluate a company's trust signals, documentation,
+integrations and credibility **before** a human buyer ever sees the shortlist. That is our logic
+exactly — but it is articles and forecasts, not shipping products.
+
+Separately: the technology where **nobody at all sees the data, including the platform
+operator** — confidential computing and MPC — does exist (OPAQUE raised $24M in Feb 2026,
+Evervault $25M in Mar 2026; 75% of organisations are adopting or piloting). We do **not** use it;
+see the next point.
+
+### 6.5 Where this framing becomes a lie a judge will catch
+
+Saying "nobody sees the problem" is **false for our implementation**, and a sharp judge will
+expose it. It is seen by:
+
+- our Postgres, in plaintext,
+- anyone holding the service role key, which is the whole team,
+- the Anthropic API, where we send it inside a prompt.
+
+**Say this instead:**
+
+> "No human at the counterparty company ever sees the problem statement. Ever. Even after the
+> meeting is accepted, the seller receives a summary, not the raw text."
+
+That is true, it is verifiable on screen, and it is enough. If someone asks "but do *you* see
+it?", the honest answer is: "today, yes — the platform is a trusted intermediary, like a dark
+pool or an escrow. The next step is confidential computing so that we don't either." That answer
+is stronger than an exaggeration that got caught.
+
+### 6.6 What this framing changes in the product
+
+**It is stronger than the original.** "Another matching platform" becomes "a dark pool for
+business problems". The judges will remember the second one.
+
+Three hard consequences for 24 hours:
+
+1. **The agent negotiation stops being a stretch goal and becomes the product.** If the machine
+   channel is the substance and we do not show it, we have shown ordinary matching. It moves
+   into the required scope and something else gets cut (website scraping was the candidate; the
+   profile can be typed by hand).
+2. **The demo risks becoming invisible.** If everything happens inside machines, there is nothing
+   on screen. So the centrepiece is **the negotiation transcript itself**, with the moment
+   highlighted where the buyer's agent refused to disclose a detail. That is the only way to show
+   the invisible.
+3. **Cold start gets worse, not better.** If people cannot browse a catalogue, the platform has
+   no pull until density exists: you arrive, fill a form, and leave to wait. In the demo that is
+   solved by seeding; in the pitch, by an honest answer about starting inside one community.
+
+### 6.7 Originality scorecard, with the refinement applied
+
+| Element | Done on the market? | By whom |
+|---|---|---|
+| Request never public, blind match | **Yes** | Axial, Dealsuite — M&A only |
+| Disclosure only on mutual consent | **Yes** | Axial, Dealsuite, Brella, Startup Intros |
+| Anonymised teaser instead of raw text | **Yes**, manually | Axial, Dealsuite |
+| AI negotiating autonomously | **Yes**, one-sided | Pactum (Walmart, Maersk, Vodafone) |
+| Matching on unstructured problem text | Barely | — |
+| **Agent vs agent, humans outside the loop until consent** | **No product found** | — |
+
+We invented none of the bricks. What is original is **the assembly**: take the dark pool
+mechanism from M&A, remove the human intermediary using LLMs, and apply it not to selling a
+business but to operational problems. Say it that way — it sounds honest and strong, whereas
+"we invented private matching" sounds like not having read the market.
+
+---
+
+## 7. Verdict: continue or drop it
+
+Two different questions with opposite answers.
+
+### 7.1 For the hackathon — continue, unambiguously
+
+Changing the idea hours before the deadline is a guaranteed loss. What already exists: a working
+skeleton, market research with numbers, a sharp framing ("a dark pool for business problems"),
+and a mechanism nobody has assembled this way.
+
+The idea demos well — that is the hackathon criterion, not market size. Blind match, agent
+negotiation, briefing: all visible on screen in two minutes.
+
+### 7.2 As a standalone marketplace — poor odds
+
+Honestly: **frequency and liquidity kill this model, not competitors and not technology.**
+
+**Frequency.** A company has a problem worth hunting a vendor for 2–4 times a year. That is not
+a habit; the product never enters daily use. Low frequency plus modest value per transaction is
+the worst quadrant for a marketplace.
+
+For comparison: Axial works on the same mechanism because a single M&A deal is a six- or
+seven-figure sum. There it is worth filling in an anonymous form and waiting a month. Nobody
+waits a month to solve a €3,000/month operational problem.
+
+**Liquidity.** The marketplace data says most two-sided platforms die after launch, of lost
+liquidity. Our refined mechanism makes cold start **worse**: people cannot browse, so the
+platform has no pull at all. Arrive, fill a form, leave. If the other side is empty, they never
+come back.
+
+**Trust.** For the mechanism to work, a company must put its confidential problems into an
+unknown startup's database. Axial spent years building that reputation. This is a second
+chicken-and-egg problem that people usually forget.
+
+**ARPU.** Payment per accepted meeting is right on incentives, but if a meeting is worth €50–200
+and a company accepts three a year, that is €150–600 per customer per year. Volume is required;
+volume requires liquidity; liquidity runs into frequency. The loop closes.
+
+Odds of taking off as a standalone marketplace: **low.** Not because of the idea — because of the
+distribution shape.
+
+### 7.3 Where it does work — and it is the same code
+
+**Stop being a marketplace. Become a layer on top of a pool that already exists.**
+
+Cold start disappears if you sell not to two sides separately but to **one organisation that
+already has both**:
+
+| Who to sell to | Why they already have the pool |
+|---|---|
+| Chambers of commerce, industry associations | Hundreds of member companies paying dues and demanding value |
+| Accelerators, incubators, Startup Estonia | A portfolio that needs introducing to itself |
+| Trade fair and conference organisers | Exactly what they already buy from Brella and Grip |
+| Banks with an SME customer base | They know who has what turnover and what problems |
+| Enterprise Europe Network | 6,045 profiles sitting dead without matching |
+
+This changes the model from "two-sided marketplace" (dies) to "B2B SaaS for an organisation that
+owns both sides" (works). That is precisely how Brella, Grip and Swapcard are built — they sell
+to organisers, not participants. It also explains why they have millions of meetings and
+standalone platforms do not.
+
+The code does not change at all. What changes is who gets the invoice.
+
+**It is stronger for the pitch too:** answering "how will you get your first users" with "we sell
+to one chamber of commerce with 400 member companies" is far more convincing than "we'll start
+with one niche".
+
+### 7.4 The cheapest way to find out instead of guessing
+
+Before writing another line of code after the hackathon — **two days and ten conversations**:
+
+Go to ten companies you know and ask them to write their current problem into an input field
+right now, in front of you. Not "would you use this?" — everyone says yes. Actually write it,
+here and now.
+
+- **7+ out of 10 wrote something** — the privacy hypothesis holds, the product is worth building.
+- **7+ refused, or wrote "we want to grow"** — the mechanism is dead regardless of code quality,
+  and no technology fixes that.
+
+Cheaper than any development, and it answers the one question that decides everything.
+
+### 7.5 Bottom line
+
+Do not drop it. But do not spend six months building a marketplace either.
+
+1. Finish the hackathon build as is — the foundation is strong.
+2. Then run the test in §7.4. It costs two days.
+3. If it passes, go to organisations with a ready-made pool, not to a marketplace.
+
+---
+
+## 8. Sources
+
+**Competitors**
 - Xpylon — https://landing.xpylon.com/
-- Bark.com, как это работает — https://www.bark.com/en/gb/how-it-works/
-- Sortlist vs Clutch, модели монетизации — https://www.leadrpro.com/blog/clutch-co-vs-sortlist-a-comprehensive-look-at-b2b-platforms
-- Как устроен лид-маркетплейс типа Bark — https://www.sharetribe.com/create/how-to-build-website-like-bark.com/
-- Brella, матчмейкинг и 3 млн встреч — https://www.brella.io/event-matchmaking
-- Grip, 16+ ML-алгоритмов — https://youreventkit.com/tools/grip/
-- Сравнение matchmaking-софта — https://innoloft.com/en-us/blog/matchmaking-software
+- Bark.com, how it works — https://www.bark.com/en/gb/how-it-works/
+- Sortlist vs Clutch, monetisation models — https://www.leadrpro.com/blog/clutch-co-vs-sortlist-a-comprehensive-look-at-b2b-platforms
+- How a Bark-style lead marketplace is built — https://www.sharetribe.com/create/how-to-build-website-like-bark.com/
+- Brella, matchmaking and 3M meetings — https://www.brella.io/event-matchmaking
+- Grip, 16+ ML algorithms — https://youreventkit.com/tools/grip/
+- Matchmaking software comparison — https://innoloft.com/en-us/blog/matchmaking-software
 - Enterprise Europe Network, Partnering Opportunities — https://een.ec.europa.eu/partnering-opportunities
-- Startup Intros, двойное согласие — https://startupintros.com/
-- Intent data, обзор рынка — https://www.onfire.ai/blog/top-b2b-intent-data-providers
+- Startup Intros, double opt-in — https://startupintros.com/
+- Intent data market overview — https://www.onfire.ai/blog/top-b2b-intent-data-providers
+- Axial, confidential deal origination — https://www.axial.net/
+- Axial reviewed from the buy side — https://duedilio.com/axial-is-it-the-best-deal-sourcing-platform-for-small-business-buyers/
+- Dealsuite, anonymised criteria and NDA tool — https://www.dealsuite.com/en/users/ma-advisory
 
-**Рынок и данные**
-- Gartner: 67% покупателей предпочитают rep-free (март 2026) — https://www.gartner.com/en/newsroom/press-releases/2026-03-09-gartner-sales-survey-finds-67-percent-of-b2b-buyers-prefer-a-rep-free-experience
-- Gartner: 61% годом ранее — https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-sales-survey-finds-61-percent-of-b2b-buyers-prefer-a-rep-free-buying-experience
-- 17% времени с поставщиками, 80% пути без продавца — https://brixongroup.com/en/the-modern-b2b-buying-journey-why-buyers-complete-80-of-their-journey-alone-and-how-you-can-still-remain-visible
-- Cold email benchmark 2026, падение 5,1% → 3,43% — https://instantly.ai/cold-email-benchmark-report-2026
-- Статистика холодных писем — https://snov.io/blog/cold-email-statistics/
-- LinkedIn: моат, 1,2 млрд, $19,8 млрд FY2026 — https://app.dealroom.co/news/note/linkedin-s-unshakeable-moat-network-effects-ai-slop-and-the-walled-garden
-- LinkedIn статистика 2026 — https://axis-intelligence.com/linkedin-statistics/
-- Sales Navigator, цена и эффект — https://www.joinvalley.co/blog/is-linkedin-sales-navigator-worth-it-in-2026-honest-review
-- Xometry, отчёт Q1 2026 — https://investors.xometry.com/news-releases/news-release-details/xometry-reports-record-first-quarter-2026-results
-- Xometry, разбор цифр — https://www.digitalcommerce360.com/article/xometry-marketplace-sales-revenue/
+**Market data**
+- Gartner: 67% of buyers prefer rep-free (March 2026) — https://www.gartner.com/en/newsroom/press-releases/2026-03-09-gartner-sales-survey-finds-67-percent-of-b2b-buyers-prefer-a-rep-free-experience
+- Gartner: 61% a year earlier — https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-sales-survey-finds-61-percent-of-b2b-buyers-prefer-a-rep-free-buying-experience
+- 17% of time with vendors, 80% of the journey without a rep — https://brixongroup.com/en/the-modern-b2b-buying-journey-why-buyers-complete-80-of-their-journey-alone-and-how-you-can-still-remain-visible
+- Cold email benchmark 2026, 5.1% → 3.43% — https://instantly.ai/cold-email-benchmark-report-2026
+- Cold email statistics — https://snov.io/blog/cold-email-statistics/
+- LinkedIn: moat, 1.2B members, $19.8B FY2026 — https://app.dealroom.co/news/note/linkedin-s-unshakeable-moat-network-effects-ai-slop-and-the-walled-garden
+- LinkedIn statistics 2026 — https://axis-intelligence.com/linkedin-statistics/
+- Sales Navigator, pricing and effect — https://www.joinvalley.co/blog/is-linkedin-sales-navigator-worth-it-in-2026-honest-review
+- Xometry Q1 2026 results — https://investors.xometry.com/news-releases/news-release-details/xometry-reports-record-first-quarter-2026-results
+- Xometry, numbers analysed — https://www.digitalcommerce360.com/article/xometry-marketplace-sales-revenue/
 
-**Риски и механика маркетплейсов**
-- Почему двусторонние площадки умирают после запуска — https://www.raftlabs.com/blog/two-sided-marketplace-failure-rate
-- Cold-start playbook, первые 100 пользователей — https://techvinta.com/blog/marketplace-cold-start-playbook-first-100-users
-- Почему поставщики не отвечают на RFP — https://eunasolutions.com/resources/why-vendors-arent-bidding-on-your-rfps-and-what-to-do-about-it/
-- Фандрейзинг маркетплейсов в 2026 — https://www.gardinercolin.com/p/marketplace-startup-fundraising-2026
+**Marketplace risk and mechanics**
+- Why two-sided platforms die after launch — https://www.raftlabs.com/blog/two-sided-marketplace-failure-rate
+- Cold-start playbook, first 100 users — https://techvinta.com/blog/marketplace-cold-start-playbook-first-100-users
+- Why vendors don't bid on RFPs — https://eunasolutions.com/resources/why-vendors-arent-bidding-on-your-rfps-and-what-to-do-about-it/
+- Marketplace fundraising in 2026 — https://www.gardinercolin.com/p/marketplace-startup-fundraising-2026
 
-**Agent-to-agent и регуляторика**
-- Deloitte, agentic commerce в B2B — https://www.deloitte.com/us/en/what-we-do/capabilities/applied-artificial-intelligence/articles/b2b-agentic-commerce.html
-- Agent-to-agent commerce, стадии и сроки — https://salespeak.ai/blog/agent-to-agent-commerce/
-- AI-агенты в B2B-закупках 2026 — https://elogic.co/blog/ai-agents-b2b-buying/
-- GDPR и холодные письма в Балтии — https://balticleads.ee/gdpr-cold-email-guide-baltic
-- Законы по странам ЕС — https://www.leadfeeder.com/blog/sales-prospecting/cold-calling-illegal-ireland/
+**Dark pools, agent-to-agent, regulation**
+- Dark pools: mechanics and regulation — https://www.six-group.com/en/blog/dark-pools-explained.html
+- Order matching in dark pools — https://devexperts.com/blog/order-matching-in-exchanges-and-dark-pools/
+- Pactum, agentic negotiation in procurement — https://pactum.com/blog/understanding-agentic-ai-in-procurement-how-autonomous-ai-has-been-transforming-supplier-deals
+- Walmart, Maersk, Vodafone: AI negotiators at scale — https://www.cfotech.com/blog/ai-agents-that-negotiate-vendor-contracts-autonomously/
+- Deloitte, agentic commerce in B2B — https://www.deloitte.com/us/en/what-we-do/capabilities/applied-artificial-intelligence/articles/b2b-agentic-commerce.html
+- Agent-to-agent commerce, stages and timing — https://salespeak.ai/blog/agent-to-agent-commerce/
+- AI agents in B2B buying 2026 — https://elogic.co/blog/ai-agents-b2b-buying/
+- A2A marketing: agents filter before the human — https://www.entrepreneur.com/science-technology/the-rise-of-a2a-agent-to-agent-marketing-how-to-get/504522
+- Confidential computing and MPC landscape — https://www.edgeless.systems/blog/the-landscape-of-privacy-preserving-computing-ppc
+- GDPR and cold email in the Baltics — https://balticleads.ee/gdpr-cold-email-guide-baltic
+- Cold calling and emailing laws across Europe — https://www.leadfeeder.com/blog/sales-prospecting/cold-calling-illegal-ireland/
 
-**История**
+**History**
 - Name your own price / buyer-driven commerce — https://en.wikipedia.org/wiki/Name_your_own_price
-
----
-
-## 6. Отдельно: механика «человек не видит ничего, договариваются машины»
-
-Уточнённая формулировка идеи: **список проблем не видит ни один человек на той стороне.**
-Внутри платформы идёт машинный канал — AI-агенты, скрипты, интеграции. Люди узнают о
-контрагенте только тогда, когда алгоритмы уже сошлись, и получают готовую выжимку.
-
-Искал именно это. Вывод: **продукта с такой механикой в продакшене я не нашёл.** Ниже —
-всё, что подошло ближе всего, и чем оно отличается.
-
-### 6.1 Ближайший реальный аналог: Axial и Dealsuite (M&A)
-
-| | Что делают | Чем отличается от нашей механики |
-|---|---|---|
-| **Axial** | 20 000+ инвесторов, advisors и владельцев бизнеса. Алгоритм оценивает предпочтения buy-side и **приватно** предлагает sell-side подходящих контрагентов, ранжированных по релевантности. Продавец сохраняет полный контроль над тем, кому, как и когда открыться. | Анонимный тизер пишет **человек**. Каждое раскрытие человек подтверждает вручную. Переговоров между машинами нет. |
-| **Dealsuite** | Европейский M&A. Сделка загружается по **анонимизированным критериям**, платформа сразу выдаёт список заинтересованных покупателей. Встроенный NDA-инструмент. Пользователь решает, сколько информации открыть и кому. | То же: анонимизация ручная, матч — фильтр по критериям, а не диалог. |
-
-**Это важный прецедент, и его надо знать.** Механика «запрос никогда не публичен, алгоритм
-сводит вслепую, раскрытие только по обоюдному согласию» **уже существует и работает —
-но только в M&A и только с человеком в каждом звене.**
-
-Вывод для нас: механика не фантастическая, она проверена рынком. Не сделано главное —
-убрать человека из середины и перенести это с продажи бизнеса на **текущие операционные
-проблемы**, которых на порядки больше.
-
-### 6.2 Финансовый прецедент, который надо назвать в питче: dark pools
-
-Ровно наша механика, только на биржах, и ей десятки лет: заявки на крупные блоки
-**не публикуются**, никто из участников не видит чужих намерений, движок сопоставляет
-внутри себя, и сделка становится известна только после исполнения. Смысл — не допустить
-утечки намерения, которая двинет цену против тебя. В США это законно и регулируется SEC
-(Regulation ATS).
-
-**Формулировка для питча — самая короткая и самая понятная:**
-
-> «Это dark pool для бизнес-проблем. На бирже крупный игрок не показывает заявку рынку,
-> потому что само намерение стоит денег. У компании ровно так же: сказать вслух
-> „у нас горит склад" — значит получить сто звонков и потерять переговорную позицию.
-> Мы держим намерение в темноте и сводим только тогда, когда матч уже проверен».
-
-Это объясняется за 10 секунд и сразу снимает вопрос «зачем покупателю раскрываться».
-
-### 6.3 Машинные переговоры: делают, но однобоко
-
-**Pactum** — AI ведёт автономные переговоры с поставщиками. Walmart, Maersk, Vodafone
-гоняют это в масштабе. У Walmart: средний срок оплаты вырос на 35 дней при 68% согласия
-поставщиков. Циклы переговоров с недель до минут, эффект 2–30% на объёме.
-
-Чем отличается: это **AI против человека**, не AI против AI. И это переговоры об условиях
-в **уже существующих** отношениях с известным поставщиком — не поиск и не знакомство.
-Сама Pactum пишет про AI-to-AI как про будущее состояние, не про текущий продукт.
-
-Прогнозы по рынку: ~20% B2B-продавцов столкнутся с переговорами, которые ведёт агент
-покупателя, уже в 2026; полноценная agent-negotiable стадия ожидается к 2027–2028.
-То есть мы делаем на хакатоне то, что рынок ждёт через год-два. Это хороший аргумент,
-но и честный риск: мы рано.
-
-### 6.4 Направление уже названо, продукта нет
-
-Есть публицистика про A2A-маркетинг: агенты проверяют сигналы доверия, документацию,
-интеграции и репутацию компании **до того**, как человек-покупатель увидит шортлист.
-Это ровно наша логика — но это статьи и прогнозы, не работающие продукты.
-
-Отдельно: технология «данные не видит вообще никто, включая оператора платформы»
-существует — confidential computing и MPC (OPAQUE привлёк $24 млн в феврале 2026,
-Evervault $25 млн в марте 2026, 75% организаций внедряют или тестируют). Мы этого **не
-используем**, см. следующий пункт.
-
-### 6.5 Где в этой формулировке ложь, которую поймает жюри
-
-Говорить «проблему не видит никто» — **неправда для нашей реализации**, и въедливый член
-жюри это вскроет. Её видят:
-
-- наш Postgres в открытом виде,
-- любой, у кого есть service-role ключ (то есть вся команда),
-- Anthropic API, куда мы отправляем текст в промпте.
-
-**Правильная формулировка, которую надо говорить вместо этого:**
-
-> «Ни один человек в компании-контрагенте не видит формулировку проблемы. Никогда.
-> Даже после того, как встреча принята, продавец получает выжимку, а не исходный текст».
-
-Это правда, это проверяемо на экране, и этого достаточно. Если кто-то спросит «а вы сами
-видите?» — честный ответ: «сейчас да, платформа — доверенный посредник, как dark pool или
-эскроу. Следующий шаг — confidential computing, чтобы не видели и мы». Такой ответ
-выглядит сильнее, чем пойманное преувеличение.
-
-### 6.6 Что эта формулировка меняет в продукте
-
-**Она сильнее исходной.** «Ещё одна платформа матчинга» → «dark pool для бизнес-проблем».
-Второе жюри запомнит.
-
-Но из неё следуют три жёстких последствия для 24 часов:
-
-1. **Диалог агентов перестаёт быть фичей «если успеем» и становится продуктом.** Если
-   машинный канал — это суть, а мы его не показали, мы показали обычный матчинг.
-   **Надо поднять его в обязательный скоуп** и резать что-то другое (кандидат на вылет —
-   скрапинг сайта, профиль можно вводить руками).
-2. **Демо рискует стать невидимым.** Если всё происходит внутри машин, на экране нечего
-   показывать. Значит центральный экран демо — **сам транскрипт переговоров агентов**,
-   в реальном времени, с подсветкой момента, где агент покупателя отказался раскрыть деталь.
-   Это единственный способ показать невидимое.
-3. **Cold start становится хуже, а не лучше.** Если люди не могут просматривать каталог,
-   у платформы нет никакого притяжения до появления плотности: пришёл, заполнил, ушёл ждать.
-   На демо это решается сидом, в питче — честным ответом: начинаем с одного сообщества,
-   где плотность есть с первого дня.
-
-### 6.7 Итог по оригинальности — с учётом уточнения
-
-| Элемент | Сделано на рынке? | Кем |
-|---|---|---|
-| Запрос никогда не публичен, слепой матч | **Да** | Axial, Dealsuite — но только M&A |
-| Раскрытие только по обоюдному согласию | **Да** | Axial, Dealsuite, Brella, Startup Intros |
-| Анонимный тизер вместо исходного текста | **Да**, вручную | Axial, Dealsuite |
-| AI ведёт переговоры автономно | **Да**, односторонне | Pactum (Walmart, Maersk, Vodafone) |
-| Матчинг по неструктурированному тексту проблемы | Почти нет | — |
-| **Агент против агента + человек вне контура до согласия** | **Не нашёл ни одного продукта** | — |
-
-Мы не изобрели ни один кирпич. Оригинальна **сборка**: взять механику dark pool из M&A,
-убрать оттуда человека-посредника при помощи LLM и применить не к продаже бизнеса,
-а к операционным проблемам. Так и надо говорить — это звучит честно и сильно,
-а «мы первые, кто придумал приватный матчинг» звучит как незнание рынка.
-
-### Источники к разделу 6
-
-- Axial, конфиденциальный deal origination — https://www.axial.net/
-- Разбор Axial со стороны покупателя — https://duedilio.com/axial-is-it-the-best-deal-sourcing-platform-for-small-business-buyers/
-- Dealsuite, анонимизированные критерии и NDA-инструмент — https://www.dealsuite.com/en/users/ma-advisory
-- Dark pools: механика и регулирование — https://www.six-group.com/en/blog/dark-pools-explained.html
-- Order matching в dark pools — https://devexperts.com/blog/order-matching-in-exchanges-and-dark-pools/
-- Pactum, агентные переговоры в закупках — https://pactum.com/blog/understanding-agentic-ai-in-procurement-how-autonomous-ai-has-been-transforming-supplier-deals
-- Walmart, Maersk, Vodafone: AI-переговорщики в масштабе — https://www.cfotech.com/blog/ai-agents-that-negotiate-vendor-contracts-autonomously/
-- A2A-маркетинг: агенты фильтруют до человека — https://www.entrepreneur.com/science-technology/the-rise-of-a2a-agent-to-agent-marketing-how-to-get/504522
-- Confidential computing и MPC, рынок и раунды — https://www.edgeless.systems/blog/the-landscape-of-privacy-preserving-computing-ppc
-
----
-
-## 7. Вердикт: продолжать или бросать
-
-Два разных вопроса с противоположными ответами.
-
-### 7.1 Для хакатона — однозначно продолжать
-
-Менять идею за несколько часов до дедлайна — гарантированный провал. Что уже есть:
-рабочий каркас, исследование рынка с цифрами, острая формулировка («dark pool для
-бизнес-проблем») и механика, которой нет ни у кого в такой сборке.
-
-Идея хорошо демонстрируется — это главный критерий хакатона, а не размер рынка.
-Приватный матч, переговоры агентов, брифинг — всё видно на экране за две минуты.
-
-### 7.2 Как самостоятельный маркетплейс — шансы низкие
-
-Честно: **частота и ликвидность убивают эту модель, а не конкуренты и не технология.**
-
-**Частота.** У компании «горящая проблема, ради которой стоит искать подрядчика» возникает
-2–4 раза в год. Это не привычка, продукт не входит в ежедневный обиход. Низкая частота
-плюс невысокая ценность одной транзакции — худший квадрант для маркетплейса.
-
-Сравнение: Axial работает на той же механике, потому что одна сделка M&A — это шести-
-семизначная сумма. Там имеет смысл заполнить анонимную анкету и ждать месяц. Ради решения
-операционной проблемы за €3 000/мес ждать никто не станет.
-
-**Ликвидность.** Данные по двусторонним площадкам: большинство умирает не до запуска,
-а после — от потери ликвидности. А наша уточнённая механика делает cold start **хуже**:
-люди не могут просматривать каталог, значит у платформы нет никакого притяжения. Пришёл,
-заполнил форму, ушёл ждать. Если на той стороне пусто — не вернётся.
-
-**Доверие.** Чтобы механика заработала, компания должна положить свои конфиденциальные
-проблемы в базу неизвестного стартапа. У Axial на это ушли годы репутации. Это вторая
-проблема курицы и яйца, про которую обычно забывают.
-
-**ARPU.** Оплата за принятую встречу правильна по стимулам, но если встреча стоит €50–200,
-а компания принимает 3 в год — это €150–600 с клиента в год. Нужен объём, объём требует
-ликвидности, ликвидность упирается в частоту. Круг замыкается.
-
-Оценка шансов взлететь как отдельный маркетплейс: **низкая**. Не из-за идеи —
-из-за формы дистрибуции.
-
-### 7.3 Где это действительно работает — и это тот же код
-
-**Перестать быть маркетплейсом. Стать слоем поверх пула, который уже существует.**
-
-Cold start исчезает, если продавать не двум сторонам по отдельности, а **одной организации,
-у которой обе стороны уже есть**:
-
-| Кому продавать | Почему у них уже есть пул |
-|---|---|
-| Торговые палаты, отраслевые союзы | Сотни компаний-членов, которые платят взносы и требуют пользы |
-| Акселераторы, инкубаторы, Startup Estonia | Портфель компаний, которых надо сводить между собой |
-| Организаторы выставок и конференций | Ровно это покупают у Brella и Grip уже сейчас |
-| Банки с базой SME-клиентов | Знают, у кого какие обороты и проблемы |
-| Enterprise Europe Network | 6 045 профилей лежат мёртвым грузом без матчинга |
-
-Это меняет бизнес-модель с «двусторонний маркетплейс» (умирает) на «B2B SaaS для
-организации, которая владеет обеими сторонами» (работает). Именно так устроены Brella,
-Grip и Swapcard — они продают организаторам, а не участникам. И это объясняет, почему
-у них миллионы встреч, а у самостоятельных площадок — нет.
-
-Код при этом не меняется вообще. Меняется, кому выставляется счёт.
-
-**Для питча это тоже сильнее:** на вопрос «как вы получите первых пользователей» ответ
-«продадим одной торговой палате с 400 компаниями-членами» звучит в разы убедительнее,
-чем «начнём с одной ниши».
-
-### 7.4 Самый дешёвый способ проверить, а не гадать
-
-До того как писать ещё строчку кода после хакатона — **два дня и десять разговоров**:
-
-Подойти к десяти знакомым компаниям и попросить прямо сейчас, при вас, написать свою
-текущую проблему в поле ввода. Не «а вы бы пользовались?» — все скажут да. Именно
-написать, здесь и сейчас.
-
-- **7+ из 10 написали** — гипотеза приватности подтверждена, продукт имеет смысл строить.
-- **7+ из 10 отказались или написали «хотим расти»** — механика мертва независимо от
-  качества кода, и никакая технология это не чинит.
-
-Это дешевле любой разработки и отвечает на единственный вопрос, который решает всё.
-
-### 7.5 Итог
-
-Не бросать. Но и не строить следующие полгода маркетплейс.
-
-1. Хакатон доделать как есть — заготовка сильная.
-2. После — провести тест из 7.4. Он стоит два дня.
-3. Если тест прошёл, идти не в маркетплейс, а к организациям с готовым пулом.

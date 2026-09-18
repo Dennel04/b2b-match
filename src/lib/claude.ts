@@ -2,13 +2,13 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import type { z } from 'zod';
 
-export const claude = new Anthropic(); // читает ANTHROPIC_API_KEY
+export const claude = new Anthropic(); // reads ANTHROPIC_API_KEY
 
 export const MODEL = 'claude-opus-5';
 
 /**
- * Один вызов Claude со строгим JSON на выходе.
- * Схема на zod — Claude физически не может вернуть не тот формат.
+ * One Claude call with a strictly typed JSON result.
+ * The zod schema is enforced by structured outputs — the model cannot return another shape.
  */
 export async function ask<T extends z.ZodType>(
   schema: T,
@@ -25,11 +25,11 @@ export async function ask<T extends z.ZodType>(
     messages: [{ role: 'user', content: prompt }],
   });
 
-  if (!res.parsed_output) throw new Error('Claude вернул невалидный JSON');
+  if (!res.parsed_output) throw new Error('Claude returned invalid JSON');
   return res.parsed_output;
 }
 
-/** Обычный текстовый ответ (брифинги в markdown). */
+/** Plain text response (markdown briefings). */
 export async function askText(prompt: string, maxTokens = 4000): Promise<string> {
   const res = await claude.messages.create({
     model: MODEL,

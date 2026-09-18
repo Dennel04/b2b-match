@@ -7,24 +7,25 @@ export const briefPrompt = (opts: {
   agreedFormat: string | null;
   openQuestions: string[];
 }) => `
-Агенты обеих сторон договорились, и обе компании подтвердили встречу.
-Напиши брифинг в markdown, на русском.
+The agents on both sides reached agreement and both companies confirmed the meeting.
+Write a meeting briefing in markdown.
 
-Покупатель: ${opts.buyerName}
-Продавец: ${opts.sellerName} — ${opts.sellerSummary}
-Проблема покупателя (раскрыта, обе стороны дали согласие): """${opts.problemText}"""
-Оценка совпадения: ${opts.score}/100
-Формат контракта, на котором сошлись агенты: ${opts.agreedFormat ?? 'не определён'}
-Вопросы, которые агенты решить не смогли:
-${opts.openQuestions.map((q) => `- ${q}`).join('\n') || '- нет'}
+Buyer: ${opts.buyerName}
+Seller: ${opts.sellerName} — ${opts.sellerSummary}
+The buyer's problem (now disclosed, both sides consented): """${opts.problemText}"""
+Match score: ${opts.score}/100
+Contract format the agents settled on: ${opts.agreedFormat ?? 'undecided'}
+Questions the agents could not settle:
+${opts.openQuestions.map((q) => `- ${q}`).join('\n') || '- none'}
 
-Структура строго такая:
-## Кто есть кто
-## Суть запроса
-## О чём уже договорились агенты
-## Что осталось решить людям
-## 3 вопроса для начала разговора
+Use exactly this structure:
+## Who's who
+## The ask
+## What the agents already settled
+## What's left for the humans
+## Three questions to open the conversation
 
-Коротко, по делу, без воды. Максимум 300 слов.
-Раздел «Что осталось решить людям» строй на open_questions — это главное в брифинге.
+Short and concrete, no filler. 300 words maximum.
+Build "What's left for the humans" from the open questions — that is the point of the briefing.
+Write in English.
 `.trim();

@@ -1,37 +1,47 @@
 # B2B Match
 
-Сводим проблему компании с решением другой компании. Без холодных рассылок.
-Приватные проблемы, слепой матчинг, двойное согласие, брифинг к встрече.
+A dark pool for business problems. Companies describe their services publicly and their
+problems privately. Two AI agents negotiate behind a wall — no human on either side sees the
+other's data — and people are introduced only once the machines agree, with a briefing already
+written.
 
-Хакатон 18–19 сентября 2026. План — `PLAN.md`, исследование рынка и ответы жюри — `docs/RESEARCH.md`,
-зоны ответственности — `TEAM.md`, правила для Claude Code — `CLAUDE.md`.
+Hackathon, 18–19 September 2026.
 
-## Старт (5 минут)
+| Document | What's in it |
+|---|---|
+| `PLAN.md` | Scope, demo path, architecture, timeline |
+| `docs/RESEARCH.md` | Market research, competitors, answers for the judges |
+| `TEAM.md` | Who owns which files, how we stay in sync |
+| `CLAUDE.md` | Rules every Claude Code session must follow |
+
+## Getting started
 
 ```bash
 git clone https://github.com/Dennel04/b2b-match.git
 cd b2b-match
 npm install
-cp .env.example .env.local   # заполнить ключи, взять у бэкендера
+cp .env.example .env.local   # fill in the keys, ask the backend owner
 npm run dev
 ```
 
 ## Supabase
 
-1. Создать проект на supabase.com.
-2. SQL Editor → выполнить `supabase/migrations/0001_init.sql`.
-3. Ключи из Settings → API положить в `.env.local`.
+1. Create a project at supabase.com.
+2. SQL Editor → run `supabase/migrations/0001_init.sql`.
+3. Copy the keys from Settings → API into `.env.local`.
 
-## Сид-данные
+## Commands
 
 ```bash
-npm run seed   # 18 компаний с профилями и проблемами, генерирует Claude
+npm run dev     # development server
+npm run check   # typecheck + overlap self-checks — run before every push
+npm run seed    # 18 seeded companies with profiles, terms and problems
 ```
 
-Нужен `SEED_OWNER_ID` в `.env.local` — id любого зарегистрированного пользователя.
+`npm run seed` needs `SEED_OWNER_ID` in `.env.local` — the id of any registered user.
 
-## Как работаем вдвоём-втроём
+## Working in parallel
 
-У каждого своя сессия Claude Code, общий контекст живёт в гите.
-`git pull --rebase` подтягивается автоматически на старте сессии (хук в `.claude/settings.json`).
-Детали — в `CLAUDE.md`, раздел «Как мы работаем параллельно».
+Everyone runs their own Claude Code session; the shared context lives in git, not in one
+session. A hook pulls teammates' changes before every prompt and tells the model to re-read
+any shared file that changed. See `TEAM.md`.

@@ -1,31 +1,31 @@
-// ЕДИНСТВЕННЫЙ ИСТОЧНИК ПРАВДЫ ПО ТИПАМ.
-// Менять только после объявления в общем чате команды — на этот файл завязаны все.
+// SINGLE SOURCE OF TRUTH FOR TYPES.
+// Announce in the team chat before changing anything here — everyone builds against it.
 
 export type CompanyRole = 'seller' | 'buyer' | 'both';
 export type MatchStatus = 'proposed' | 'buyer_interested' | 'accepted' | 'declined';
 export type Urgency = 'low' | 'medium' | 'high';
 
-/** Форма контракта. Пересечение множеств двух сторон — то, о чём вообще можно говорить. */
+/** Contract shape. The intersection of both sides' sets is all that can be discussed. */
 export type ContractFormat =
-  | 'pilot_first'        // сначала пилот/тест на 2-4 недели
-  | 'fixed_price'        // фикс за проект
-  | 'monthly_retainer'   // помесячная подписка/ретейнер
-  | 'time_and_materials' // почасовка
-  | 'outcome_based';     // оплата за результат
+  | 'pilot_first'        // a 2-4 week paid pilot before anything bigger
+  | 'fixed_price'        // fixed price per project
+  | 'monthly_retainer'
+  | 'time_and_materials'
+  | 'outcome_based';
 
-/** Требования, которые проверяются машинно, без участия людей. */
+/** Requirements checked mechanically, with no human in the loop. */
 export type Requirement =
-  | 'gdpr_dpa'          // готовы подписать DPA
+  | 'gdpr_dpa'          // willing to sign a data processing agreement
   | 'iso27001'
-  | 'eu_data_residency' // данные не покидают ЕС
+  | 'eu_data_residency'
   | 'estonian_language'
   | 'english_language'
-  | 'on_site'           // нужно присутствие на месте
-  | 'industry_refs';    // референсы в той же отрасли
+  | 'on_site'
+  | 'industry_refs';    // references in the same industry
 
 /**
- * Деньги. Покупатель называет ПОТОЛОК, продавец — ПОЛ.
- * Ни одна из сторон никогда не видит число другой: сравнение делает платформа.
+ * Money. The buyer states a CEILING, the seller states a FLOOR.
+ * Neither side ever sees the other's figure — the platform compares them.
  */
 export interface MoneyRange {
   amount: number;
@@ -33,40 +33,39 @@ export interface MoneyRange {
   period: 'one_off' | 'monthly';
 }
 
-/** Коммерческая рамка, которую заявляет покупатель. Приватна целиком. */
+/** The buyer's commercial envelope. Private in full. */
 export interface BuyerTerms {
   budget_ceiling: MoneyRange | null;
-  contract_formats: ContractFormat[];   // что готовы рассматривать
-  start_by: string | null;              // ISO-дата, «надо начать не позже»
+  contract_formats: ContractFormat[];   // what they are willing to consider
+  start_by: string | null;              // ISO date, "must start no later than"
   requirements: Requirement[];
-  dealbreakers: string[];               // свободным текстом, проверяет агент
+  dealbreakers: string[];               // free text, checked by the agent
 }
 
-/** Коммерческая рамка продавца. */
+/** The seller's commercial envelope. */
 export interface SellerTerms {
-  budget_floor: MoneyRange | null;      // минимальный чек
-  contract_formats: ContractFormat[];   // с чем работают
-  available_from: string | null;        // ISO-дата, когда могут начать
+  budget_floor: MoneyRange | null;      // smallest deal they take
+  contract_formats: ContractFormat[];
+  available_from: string | null;        // ISO date, when they can start
   capabilities: Requirement[];
 }
 
-/** Результат машинной проверки. Показывает совместимость, НЕ показывает цифры. */
+/** Result of the mechanical check. Reports compatibility, never the figures. */
 export interface Compatibility {
   budget: 'ok' | 'gap' | 'unknown';
   timeline: 'ok' | 'gap' | 'unknown';
-  contract_formats: ContractFormat[];   // пересечение; пусто = говорить не о чем
+  contract_formats: ContractFormat[];   // intersection; empty means nothing to discuss
   missing_requirements: Requirement[];
-  hard_fail: boolean;                   // матч отсеян до вызова модели
+  hard_fail: boolean;                   // filtered out before the model is called
 }
 
-/** Структурированная выжимка профиля компании. */
 export interface CompanyProfile {
   name: string;
   industry: string;
   size_hint: string;
   services: string[];
   keywords: string[];
-  summary: string;            // 2-3 предложения, можно показывать другой стороне
+  summary: string;            // 2-3 sentences, safe to show the other side
 }
 
 export interface Company {
@@ -80,7 +79,7 @@ export interface Company {
   created_at: string;
 }
 
-/** 🔒 Приватно. Никогда не уходит на клиент другой компании. */
+/** Private. Never leaves the server for another company's client. */
 export interface Problem {
   id: string;
   company_id: string;
@@ -109,13 +108,13 @@ export interface AgentDialogueLine {
   text: string;
 }
 
-/** Итог машинных переговоров: о чём агенты договорились, что осталось людям. */
+/** Outcome of the machine negotiation: what the agents settled, what is left to humans. */
 export interface DealEnvelope {
   verdict: 'proceed' | 'reject';
   agreed_format: ContractFormat | null;
   budget_compatible: boolean;
   earliest_start: string | null;
-  open_questions: string[];      // что агенты не смогли решить — в брифинг
+  open_questions: string[];      // what the agents could not settle — goes into the briefing
   confidence: number;            // 0..100
 }
 
@@ -130,7 +129,7 @@ export interface Match {
   seller_company_id: string;
   problem_id: string;
   score: number;                       // 0..100
-  reasoning_public: string;            // БЕЗ цитат из problems.text
+  reasoning_public: string;            // no verbatim quotes from the problem
   compatibility_json: Compatibility | null;
   agent_dialogue_json: AgentDialogueLine[] | null;
   deal_envelope_json: DealEnvelope | null;
@@ -139,14 +138,14 @@ export interface Match {
   created_at: string;
 }
 
-/** То, что видит продавец до принятия матча: анонимно, без цифр. */
+/** What the seller sees before accepting: anonymous, no figures. */
 export interface AnonymousMatchView {
   id: string;
   score: number;
   reasoning_public: string;
   buyer_industry: string;
   buyer_size_hint: string;
-  budget_compatible: boolean;          // «сходится», без суммы
+  budget_compatible: boolean;          // "it fits", without the amount
   agreed_format: ContractFormat | null;
   status: MatchStatus;
 }

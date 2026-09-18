@@ -1,4 +1,4 @@
-/** Самопроверка сравнения условий. Запуск: npm run check */
+/** Self-check for the terms comparison. Run: npm run check */
 import assert from 'node:assert/strict';
 import { checkCompatibility } from './overlap';
 import type { BuyerTerms, SellerTerms } from '@/types';
@@ -23,7 +23,7 @@ assert.equal(ok.timeline, 'ok');
 assert.deepEqual(ok.contract_formats, ['monthly_retainer']);
 assert.equal(ok.hard_fail, false);
 
-// Пол продавца выше потолка покупателя — отсекаем без вызова модели.
+// Seller floor above buyer ceiling — filtered out before the model is called.
 const tooPricey = checkCompatibility(buyer, {
   ...seller,
   budget_floor: { amount: 9000, currency: 'EUR', period: 'monthly' },
@@ -31,7 +31,7 @@ const tooPricey = checkCompatibility(buyer, {
 assert.equal(tooPricey.budget, 'gap');
 assert.equal(tooPricey.hard_fail, true);
 
-// Разовый платёж против помесячного: 2000/мес = 24000/год > 10000 разово.
+// One-off against monthly: 2000/mo = 24000/yr > 10000 one-off.
 assert.equal(
   checkCompatibility(
     { ...buyer, budget_ceiling: { amount: 10000, currency: 'EUR', period: 'one_off' } },
@@ -40,19 +40,19 @@ assert.equal(
   'gap',
 );
 
-// Нет общих форматов контракта — говорить не о чем.
+// No shared contract format — nothing to discuss.
 assert.equal(
   checkCompatibility(buyer, { ...seller, contract_formats: ['outcome_based'] }).hard_fail,
   true,
 );
 
-// Не закрыто требование покупателя.
+// A buyer requirement is unmet.
 assert.deepEqual(
   checkCompatibility(buyer, { ...seller, capabilities: [] }).missing_requirements,
   ['gdpr_dpa'],
 );
 
-// Стороны ничего не заявили — не отсекаем, пусть разбираются агенты.
+// Neither side stated terms — do not filter, let the agents work it out.
 const vague = checkCompatibility(
   { ...buyer, budget_ceiling: null, start_by: null, requirements: [] },
   { ...seller, budget_floor: null, available_from: null },
@@ -60,4 +60,4 @@ const vague = checkCompatibility(
 assert.equal(vague.budget, 'unknown');
 assert.equal(vague.hard_fail, false);
 
-console.log('overlap: все проверки прошли');
+console.log('overlap: all checks passed');

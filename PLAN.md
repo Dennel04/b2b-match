@@ -1,196 +1,218 @@
-# Рабочее название: B2B Match — «сводим проблему с решением без спама»
+# B2B Match — "connect the problem to the solution, without the spam"
 
-Хакатон 18–19 сентября 2026, направление «Бизнес». Цель: **работающий MVP за 24 часа**, а не питч о будущем.
-
----
-
-## 1. Идея в одном абзаце
-
-Компании заполняют профиль: что они продают (услуги, сайт для скрапинга, документы) и — **приватно** — какие у них сейчас проблемы. Система под капотом сопоставляет «проблему» одной компании с «решением» другой. Когда AI считает, что пара подходит, обе стороны подтверждают интерес, и только тогда живых людей сводят на встречу с готовым брифингом. Холодные рассылки становятся не нужны: продавец не пишет тысячу писем, покупатель не читает тысячу писем.
+Hackathon 18–19 September 2026, Business track. Goal: **a working MVP in 24 hours**, not a
+pitch about the future.
 
 ---
 
-## 2. Критика (честно)
+## 1. The idea in one paragraph
 
-> Разбор рынка, конкуренты, цифры и готовые ответы жюри — в [`docs/RESEARCH.md`](docs/RESEARCH.md).
-> Короткий вывод: как категория идея не оригинальна (Xpylon, Bark, Sortlist, Brella, EEN),
-> защищаема только механика: приватная проблема + оплата за принятую встречу + матчинг
-> по неструктурированному тексту.
-
-### Что сильно
-- **Боль реальная.** Sales-лиды получают сотни холодных сообщений, отклик на cold outreach падает годами. Это понятно жюри за 10 секунд.
-- **Переворот модели.** Сейчас продавец ищет покупателя вслепую. У вас покупатель сам заявляет, что ему нужно. Это «рынок намерений» — самый ценный тип данных в продажах.
-- **Хорошо демонстрируется.** Матч, объяснение «почему вы подходите», брифинг к встрече — всё это видно на экране за 2 минуты.
-
-### Слабые места (жюри спросит именно это)
-
-**1. Зачем покупателю раскрывать свои проблемы?**
-Это главный вопрос. Компания не хочет, чтобы конкуренты или продавцы знали, что у неё горит. И если она раскроет проблему, её могут завалить предложениями — то есть вы воспроизведёте тот же спам, только внутри своей платформы.
-→ **Ответ, который надо встроить в продукт:** «слепой матчинг» и **double opt-in** (двойное согласие). Продавец никогда не видит текст проблемы. Сначала покупатель видит анонимное «есть компания, которая решает X, совпадение 87%, вот почему» и жмёт «интересно». Только потом раскрывается продавцу. Покупатель контролирует поток: например, максимум 3 предложения в неделю.
-
-**2. Проблема курицы и яйца (cold start).**
-Двусторонней платформе нужны обе стороны сразу. Без покупателей продавцам нечего делать, без продавцов покупателям нечего получать. Так умирает большинство B2B-маркетплейсов.
-→ Для хакатона: засеять 15–20 правдоподобных компаний (можно по реальным сайтам эстонских компаний). В питче одной фразой: как вы получите первых пользователей (например, через одно сообщество/нишу/мероприятие, а не «все компании мира»).
-
-**3. Качество самоописанных проблем.**
-Люди пишут размыто: «хотим расти», «нужна оптимизация». По такому тексту матчить невозможно.
-→ AI-интервью при онбординге: вместо пустого поля — 3–4 уточняющих вопроса («что конкретно болит? сколько это стоит вам в месяц? что уже пробовали?»). Это ещё и эффектная фича для демо.
-
-**4. Стимулы продавцов.**
-Продавцы захотят «накрутить» профиль, чтобы матчиться со всеми.
-→ Бизнес-модель: платит продавец, и только **за принятую встречу**, а не за показ. Тогда спамить невыгодно.
-
-**5. Конкуренты.**
-LinkedIn Sales Navigator, Apollo, Clay (поиск лидов для продавцов), платформы матчмейкинга на конференциях (Brella, Grip). Отличие надо сформулировать чётко: *они помогают продавцу найти жертву быстрее; вы даёте покупателю контроль и делаете так, чтобы писали только тем, кому реально нужно.*
-
-**6. Риск для хакатона: слишком широко.**
-«Альтернатива LinkedIn» за 24 часа не строится. Строится один сквозной сценарий, который работает идеально.
-
-### Вердикт
-Идея хорошая для хакатона при одном условии: **приватность и double opt-in — это не деталь, а ядро продукта**, и оно должно быть видно в демо. Без этого жюри скажет «это ещё один спам-канал».
+Companies fill in a profile: what they sell, and — **privately** — what problems they have
+right now. Under the hood the system matches one company's problem to another's solution.
+Two AI agents negotiate on their owners' behalf; neither human sees the other side's data.
+Only once the agents agree do both sides confirm interest, and only then are people
+introduced, with a briefing already written. Cold outreach becomes unnecessary: the seller
+does not write a thousand emails, the buyer does not read a thousand emails.
 
 ---
 
-## 3. Что строим за 24 часа (MVP-скоуп)
+## 2. Honest critique
 
-### Один сквозной сценарий для демо (demo path)
-1. Компания A (продавец) регистрируется, заполняет профиль услуг и **условия работы**:
-   минимальный чек, форматы контракта, с какой даты свободны, что закрывают (DPA, ISO, язык).
-2. Компания B (покупатель) проходит AI-интервью: что болит, **потолок бюджета**, какие форматы
-   контракта готова рассматривать, к какой дате надо начать, жёсткие требования.
-   Всё помечено 🔒 «видит только система».
-3. «Найти совпадения» → два этапа:
-   **машинная сверка условий** отсекает несовместимых по деньгам, срокам, формату и требованиям
-   (ни одна сторона не видит чисел другой), затем **Claude оценивает только прошедших**.
-4. **Ядро продукта:** агент покупателя и агент продавца ведут переговоры. Люди в контур
-   не входят и друг о друге ещё не знают. Агент покупателя защищает текст проблемы,
-   агенты сходятся на формате контракта и фиксируют, что осталось людям.
-5. Только после вердикта `proceed` покупатель видит анонимный матч → «Интересно».
-   Продавец получает уведомление → «Принять».
-6. Генерируется **брифинг**: кто есть кто, суть, о чём договорились агенты,
-   что осталось решить людям, 3 вопроса для начала разговора.
+> Market research, competitors, numbers and ready answers for the judges are in
+> [`docs/RESEARCH.md`](docs/RESEARCH.md). Short version: as a category the idea is not
+> original (Xpylon, Bark, Sortlist, Brella, Axial, EEN). What is defensible is the mechanism:
+> the problem is never disclosed, payment is per accepted meeting, and matching runs on
+> unstructured text.
 
-### Обязательно (MVP)
-- Регистрация / вход
-- Профиль компании (вводится руками) + условия работы продавца
-- Приватные проблемы с AI-интервью, снимающим коммерческую рамку
-- Машинная сверка условий: бюджет, сроки, формат контракта, требования
-- Матчинг с оценкой и объяснением
-- **Переговоры агентов + deal envelope** — это продукт, а не украшение
-- Double opt-in (статусы матча)
-- Брифинг к встрече
-- 15–20 засеянных компаний, включая 2 пары, которые машинно отсекаются
+### What's strong
+- **The pain is real.** Cold email reply rates fell from 5.1% in 2024 to 3.43% in 2026.
+  A judge gets this in ten seconds.
+- **The model is inverted.** Today the seller hunts blind. Here the buyer states the need.
+  Declared intent is the most valuable data in sales.
+- **It demos well.** A blind match, an agent negotiation, a briefing — all visible in two minutes.
 
-### Если успеем
-- Лимит предложений в неделю для покупателя
-- Загрузка документов в профиль (PDF, выгрузка из Notion текстом)
-- Экспорт встречи в календарь
-- Стриминг переговоров агентов в реальном времени на экран
+### Where it's weak (the judges will ask exactly this)
 
-### Точно НЕ делаем
-- **Скрапинг сайта** — вырезан, профиль вводится руками за 30 секунд
-- Интеграции с Notion/Slack/CRM по OAuth — только слайд роадмапа
-- Оплату, чат между людьми, мобильное приложение, админку, email-рассылки
+**1. Why would a buyer disclose a problem at all?**
+→ Blind matching and **double opt-in**. The seller never sees the problem text — only a
+category-level explanation generated with quoting forbidden. The buyer controls the flow.
 
-## 4. Техническая архитектура
+**2. Chicken and egg / cold start.**
+→ Seed 15–20 plausible companies. In the pitch, name one community or niche, not "every
+company in Europe". And note that most marketplaces die of lost liquidity *after* launch,
+not before.
 
-**Стек (то, что уже умеем → быстрее):** Next.js (App Router) + Supabase (auth, Postgres, RLS) + Claude API + Vercel.
+**3. Quality of self-described problems.**
+→ An AI interview at onboarding: instead of an empty text box, five targeted questions that
+also capture the commercial envelope. This is a strong demo feature in its own right.
 
-### Как устроен матчинг (два этапа)
+**4. Seller incentives.**
+→ The seller pays, and only **for an accepted meeting** — never for exposure. Spamming becomes
+economically pointless. This is the single thing that separates us from Bark and Sortlist.
 
-**Этап 1 — машинная сверка, без AI и без денег.** Покупатель называет потолок бюджета,
-продавец — минимальный чек. Ни один человек не видит число другой стороны: `checkCompatibility()`
-сравнивает их на сервере и наружу отдаёт только «сходится / не сходится». Так же с датами,
-форматами контракта (берём пересечение множеств) и требованиями (DPA, ISO 27001, язык).
-Не прошёл — до модели дело не доходит.
+**5. Competitors.**
+→ LinkedIn Sales Navigator, Apollo, Clay find leads for sellers. Brella and Grip do consented
+matchmaking at events. Axial and Dealsuite do blind matching in M&A. Our line: *they help the
+seller find a target faster; we give the buyer control, so only relevant people ever write.*
 
-Это прямая аналогия dark pool: заявки не публикуются, движок сводит внутри себя.
-См. `docs/RESEARCH.md`, раздел 6.
+**6. Hackathon risk: too broad.**
+→ You cannot build "an alternative to LinkedIn" in 24 hours. You can build one end-to-end path
+that works perfectly.
 
-**Этап 2 — Claude оценивает только прошедших.** Берём текст проблемы и профили выживших
-продавцов, отдаём одним запросом: «оцени каждого 0-100, объясни в 2 предложениях, верни JSON».
-Выше 70 — сохраняем матч.
+### Verdict
+A good hackathon idea on one condition: **privacy and double opt-in are the core of the
+product, not a detail**, and that has to be visible in the demo. Without it the judges will
+say "this is just another spam channel".
 
-**Этап 3 — переговоры агентов.** Агент покупателя знает проблему и стоп-факторы, агент
-продавца знает свою компанию, оба знают результат сверки условий (но не цифры).
-Выход — транскрипт плюс `DealEnvelope`: вердикт, согласованный формат контракта, открытые
-вопросы для людей, уверенность.
+---
 
-В питче: «на масштабе заменим этап 2 на эмбеддинги + LLM-реранкинг». Этап 1 при этом
-не меняется — он и так O(n) и бесплатный.
+## 3. What we build in 24 hours
 
-### Приватность в базе
-Таблица проблем защищена RLS (Row Level Security — правила прямо в базе, кто какую строку может читать): владелец видит свои проблемы, другие пользователи не видят никогда. Матчинг работает на сервере с сервисным ключом. Продавцу отдаём только текст объяснения, который AI написал **без** прямых цитат проблемы.
+### The demo path
+1. Company A (seller) registers, fills in its service profile and its **working terms**:
+   minimum deal size, contract formats, the date it is free from, what it meets (DPA, ISO,
+   language).
+2. Company B (buyer) goes through an AI interview: what hurts, **budget ceiling**, which
+   contract formats it will consider, when it must start, hard requirements. All of it marked
+   "visible to the system only".
+3. "Find matches" runs two stages: a **mechanical terms check** filters out anyone incompatible
+   on money, timing, format or requirements — neither side sees the other's figures — then
+   **Claude scores only the survivors**.
+4. **The core:** the buyer's agent and the seller's agent negotiate. No human is in the loop and
+   neither yet knows the other exists. The buyer's agent protects the problem text; the agents
+   converge on a contract format and record what is left for the humans.
+5. Only after a `proceed` verdict does the buyer see an anonymous match → "Interested".
+   The seller is notified → "Accept".
+6. A **briefing** is generated: who's who, the ask, what the agents settled, what's left for the
+   humans, three opening questions.
 
-### Схема БД (черновик)
+### Must have
+- Auth
+- Company profile (entered by hand) and seller working terms
+- Private problems, AI interview that captures the commercial envelope
+- Mechanical terms check: budget, timing, contract format, requirements
+- Matching with a score and an explanation
+- **Agent negotiation and deal envelope** — this is the product, not decoration
+- Double opt-in (match statuses)
+- Meeting briefing
+- 15–20 seeded companies, including 2 pairs that are filtered out mechanically
+
+### If there's time
+- A weekly cap on offers shown to a buyer
+- Document upload into the profile (PDF, Notion pasted as text)
+- Calendar export
+- Streaming the agent negotiation live on screen
+
+### Explicitly not doing
+- **Website scraping** — cut; the profile is typed in 30 seconds
+- OAuth integrations with Notion/Slack/CRM — a roadmap slide only
+- Payments, human-to-human chat, mobile app, admin panel, email campaigns
+
+---
+
+## 4. Technical architecture
+
+**Stack:** Next.js (App Router) + Supabase (auth, Postgres, RLS) + Claude API + Vercel.
+
+### How matching works (three stages)
+
+**Stage 1 — mechanical check, no AI and no cost.** The buyer states a ceiling, the seller a
+floor. Neither human sees the other's number: `checkCompatibility()` compares them server-side
+and emits only "fits / does not fit". Same for dates, contract formats (set intersection) and
+requirements (DPA, ISO 27001, language). Fail here and the model is never called.
+
+This is a direct analogy to a dark pool: orders are not published, the engine crosses them
+internally. See `docs/RESEARCH.md` §6.
+
+**Stage 2 — Claude scores only the survivors.** The problem text plus the surviving profiles
+go out in one request: "score each 0-100, explain in two sentences, return JSON." Above 70 we
+store a match.
+
+**Stage 3 — the agents negotiate.** The buyer's agent knows the problem and the dealbreakers,
+the seller's agent knows its own company, both know the compatibility result but not the
+figures. Output: a transcript plus a `DealEnvelope` — verdict, agreed contract format, open
+questions for the humans, confidence.
+
+In the pitch: "at scale we replace stage 2 with embeddings plus LLM reranking." Stage 1 does
+not change — it is already O(n) and free.
+
+### Privacy in the database
+The problems table is protected by RLS (row-level security — rules in the database itself
+deciding who may read which row): the owner sees their own problems, nobody else ever does.
+Matching runs server-side with the service role key. The seller receives only the explanation
+the model wrote **without** quoting the problem.
+
+### Schema (draft)
 ```
-companies        id, owner_id, name, website, role ('seller'|'buyer'|'both'),
-                 raw_scraped_text, profile_json, created_at
-problems         id, company_id, text, interview_json, urgency, created_at   -- 🔒 RLS: только владелец
-matches          id, buyer_company_id, seller_company_id, problem_id,
-                 score, reasoning_public, agent_dialogue_json,
-                 status ('proposed'|'buyer_interested'|'accepted'|'declined'),
-                 brief_md, created_at
+companies   id, owner_id, name, website, role ('seller'|'buyer'|'both'),
+            profile_json, seller_terms, created_at
+problems    id, company_id, text, interview_json, buyer_terms, urgency, created_at  -- RLS: owner only
+matches     id, buyer_company_id, seller_company_id, problem_id, score,
+            reasoning_public, compatibility_json, agent_dialogue_json,
+            deal_envelope_json, status, brief_md, created_at
 ```
 
-### Серверные функции (контракт — договор между фронтом и бэком)
+### Server function contract
 ```ts
 saveCompany(input): Promise<Company>
 runInterview(turns: InterviewTurn[]): Promise<{ done, follow_up, summary, urgency, terms }>
 saveProblem(input: ProblemInput): Promise<Problem>
-checkCompatibility(buyer: BuyerTerms, seller: SellerTerms): Compatibility  // чистая функция, без AI
-findMatches(problemId: string): Promise<Match[]>                          // сверка условий → Claude
-negotiate(matchId: string): Promise<Negotiation>                          // переговоры агентов
+checkCompatibility(buyer: BuyerTerms, seller: SellerTerms): Compatibility  // pure, no AI
+findMatches(problemId: string): Promise<Match[]>                          // terms check → Claude
+negotiate(matchId: string): Promise<Negotiation>                          // agent negotiation
 setMatchStatus(matchId, action: 'interested'|'accept'|'decline'): Promise<Match>
 generateBrief(matchId: string): Promise<string /* markdown */>
 ```
-Все типы — в `src/types.ts`. Это единственный источник правды: фронт верстает на фейковых данных этой формы, не дожидаясь бэка.
+All types live in `src/types.ts`. It is the single source of truth: the frontend builds
+against fake objects of that shape without waiting for the backend.
 
 ---
 
-## 5. Роли (подставьте имена)
+## 5. Roles
 
-| Роль | Зона ответственности |
+| Role | Owns |
 |---|---|
-| **Бэкенд / AI** | Supabase-схема, RLS, скрапинг, промпты для профиля, матчинга, брифинга |
-| **Фронтенд** | Онбординг, профиль, AI-интервью, экран матчей, экран брифинга |
-| **Продукт / демо / питч** | Сид-данные 15–20 компаний, демо-сценарий, слайды, ответы на вопросы жюри, тестирование |
+| **Backend / AI** | Supabase schema, RLS, prompts, terms check, matching, negotiation, briefing |
+| **Frontend** | Onboarding, profile, AI interview, match screen, negotiation transcript, briefing |
+| **Product / demo / pitch** | Seed data, demo script, slides, answers for the judges, testing |
 
-Если вас двое — третья роль делится пополам, но сид-данные начинать делать **сразу**, это блокирует демо.
+If there are two of you, split the third role — but start the seed data **immediately**,
+it blocks the demo.
 
 ---
 
-## 6. Таймлайн
+## 6. Timeline
 
-| Время | Что |
+| Time | What |
 |---|---|
-| 0:00–1:00 | Договорились о схеме БД, `types.ts`, демо-сценарии. Создан репо, `CLAUDE.md`, все добавлены контрибьюторами |
-| 1:00–2:00 | Пустой Next.js задеплоен на Vercel, Supabase подключён, авторизация работает |
-| 2:00–8:00 | Параллельно: профиль + условия работы / онбординг UI / сид-данные |
-| 8:00–13:00 | Проблемы + AI-интервью с коммерческой рамкой, `checkCompatibility`, матчинг |
-| 13:00–17:00 | **Переговоры агентов** и экран транскрипта, double opt-in |
-| 17:00–19:00 | Брифинг, склейка сквозного сценария |
-| 19:00–22:00 | **Фриз фич.** Только баги, полировка демо-пути, питч |
-| 22:00–24:00 | Репетиция демо 3+ раза, запасное видео демо на случай падения интернета |
+| 0:00–1:00 | Agree the schema, `types.ts`, demo path. Repo created, `CLAUDE.md` in place, everyone added as a collaborator |
+| 1:00–2:00 | Empty Next.js deployed to Vercel, Supabase connected, auth working |
+| 2:00–8:00 | In parallel: profile and working terms / onboarding UI / seed data |
+| 8:00–13:00 | Problems, AI interview with the commercial envelope, `checkCompatibility`, matching |
+| 13:00–17:00 | **Agent negotiation** and the transcript screen, double opt-in |
+| 17:00–19:00 | Briefing, wiring the end-to-end path together |
+| 19:00–22:00 | **Feature freeze.** Bugs only, polish the demo path, write the pitch |
+| 22:00–24:00 | Rehearse the demo 3+ times, record a backup video in case the network dies |
 
 ---
 
-## 7. Правила работы
+## 7. Working rules
 
-- `main` всегда работает и задеплоен. Мёржим маленькими кусками, раз в 1–2 часа.
-- Каждый работает в своей зоне папок, чтобы не было конфликтов.
-- Схему БД и `types.ts` меняем только после того, как сказали остальным.
-- Промпты для AI храним в `src/prompts/` отдельными файлами — их удобно править без копания в коде.
-- Логику сверки условий (`src/lib/overlap.ts`) менять только вместе с `npm run check`.
-- Для демо AI-ответы можно кешировать в базе, чтобы на сцене ничего не зависло.
+- `main` always works and is always deployed. Merge small, every 1–2 hours.
+- Everyone stays in their own folders. See `TEAM.md`.
+- Schema and `types.ts` change only after telling everyone.
+- Prompts live in `src/prompts/`, one file per task — easy to edit without digging through code.
+- Only change the terms-comparison logic (`src/lib/overlap.ts`) together with `npm run check`.
+- For the demo, AI responses are cached in the database so nothing hangs on stage.
 
 ---
 
-## 8. Что сделать прямо сейчас
+## 8. What matters most in the demo
 
-1. Выбрать название (5 минут, не больше).
-2. Создать репо, добавить всех контрибьюторами.
-3. Положить в корень этот `PLAN.md` и `CLAUDE.md`.
-4. `npx create-next-app`, подключить Supabase, задеплоить на Vercel.
-5. Написать миграцию схемы и `src/types.ts` по разделу 4.
-6. Разойтись по ролям.
+1. **Lead with privacy, not matching.** Show two screens side by side: what the buyer sees,
+   what the seller sees. Without that contrast a match looks like ordinary search.
+2. **Highlight the refusal.** In the transcript, mark the line where the buyer's agent declined
+   to reveal a detail. Not "they had a nice chat" — "here it protected its client".
+3. **Show a rejected match.** A pair that fits perfectly on meaning, killed by the budget
+   filter. A negative result is more convincing than a positive one.
+4. **Say the line out loud:** *"We don't show the numbers. We show that the numbers match."*

@@ -1,42 +1,46 @@
 # CLAUDE.md
 
-Хакатон-MVP, 24 часа. Платформа B2B-матчинга: компании описывают услуги и приватные проблемы, AI сводит проблему с решением, после двойного согласия генерирует брифинг к встрече. Полный план — в `PLAN.md`, раздача зон — в `TEAM.md`.
+24-hour hackathon MVP. B2B matching platform: companies describe their services publicly and
+their problems privately. AI matches problem to solution, two AI agents negotiate behind a
+wall, and only after both sides consent do humans meet with a generated briefing.
 
-## Стек
-- Next.js 16 (App Router, TypeScript, Server Actions)
-- Supabase: auth, Postgres, RLS
-- Claude API (`claude-opus-5`) для профилирования, интервью, матчинга, брифингов
-- Tailwind v4 для стилей
-- Деплой: Vercel
+Full scope: `PLAN.md`. Market research and pitch answers: `docs/RESEARCH.md`. Who owns which
+files: `TEAM.md`.
 
-## Структура
-- `src/app/` — страницы
-- `src/components/` — UI-компоненты
-- `src/lib/` — клиенты Supabase и Claude, `overlap.ts` — сверка условий сделки
-- `src/actions/` — Server Actions (контракт из PLAN.md, раздел 4)
-- `src/prompts/` — промпты, по одному файлу на задачу
-- `src/types.ts` — **единственный источник правды по типам**
-- `supabase/migrations/` — схема БД
-- `scripts/seed.ts` — сид-данные компаний
+## Verify your work
 
-## Жёсткие правила
-- НЕ менять `src/types.ts` и миграции без явного указания человека: на них завязаны все участники.
-- Таблица `problems` приватна. Её содержимое никогда не отдаётся на клиент другой компании и не попадает в `reasoning_public` дословно.
-- `SUPABASE_SERVICE_ROLE_KEY` и `adminClient()` — только в `src/actions/` и `scripts/`. Никогда в компонентах.
-- Бюджеты и условия сторон сравниваются ТОЛЬКО через `checkCompatibility()`. Ни одно число одной стороны не попадает ни в промпт другой стороны, ни на клиент. Изменил `overlap.ts` — прогони `npm run check`.
-- Ответы Claude, которые парсим, всегда через `ask()` из `src/lib/claude.ts` — там zod-схема, модель не может вернуть не тот формат. Не писать сырых `JSON.parse` по ответу модели.
-- Секреты только в `.env.local`, никогда не коммитить.
-- Скорость важнее идеальности: без лишних абстракций, без новых библиотек без необходимости.
-- Работай только в файлах своей зоны из `TEAM.md`, чтобы не создавать конфликтов с коллегами.
+```bash
+npm run check   # tsc --noEmit + overlap self-checks
+```
 
-## Как мы работаем параллельно
-У каждого участника **своя сессия Claude Code** и своя зона папок. Общий контекст — этот файл и `PLAN.md` в гите, а не общая сессия.
+Run it after any change to `src/lib/overlap.ts`, `src/types.ts`, or `src/actions/`.
 
-- Перед новой задачей: `git pull --rebase`. Хук `SessionStart` делает это автоматически при старте сессии.
-- Если тиммейт обновил `CLAUDE.md`/`PLAN.md` посреди твоей сессии — напиши в промпте `@CLAUDE.md`, файл перечитается с диска.
-- Коммит и пуш минимум раз в 30 минут, мелкими кусками. Долгие ветки на хакатоне не выживают.
-- `main` всегда рабочий и задеплоен.
-- Меняешь общий файл (`src/types.ts`, миграции, `CLAUDE.md`) — сначала скажи в чат команды, потом меняй, потом сразу пушь.
+## Invariants
 
-## Приоритет
-Сначала сквозной демо-сценарий из PLAN.md, раздел 3. Переговоры агентов — часть обязательного скоупа, а не бонус: без них продукт неотличим от обычного матчинга (почему — `docs/RESEARCH.md`, раздел 6). Всё из «если успеем» — только когда основной путь работает end-to-end.
+IMPORTANT: the `problems` table is private. Its text must never reach another company's
+client, and never appear verbatim in `reasoning_public`, in an agent's dialogue line, or in
+any prompt sent on behalf of the other side.
+
+- Budget figures are compared only inside `checkCompatibility()`. One side's number must
+  never enter the other side's prompt or response. Expose compatibility, not amounts.
+- `adminClient()` and `SUPABASE_SERVICE_ROLE_KEY` are allowed only in `src/actions/` and
+  `scripts/`. Never in a component.
+- Parse model output only through `ask()` in `src/lib/claude.ts` — it enforces a zod schema.
+  No hand-rolled `JSON.parse` on a model response.
+- Do not change `src/types.ts` or `supabase/migrations/` without saying so in the team chat
+  first. Every teammate builds against them.
+- Never commit secrets. They live in `.env.local`.
+
+## Working style
+
+- Speed over polish: no abstractions, no new dependencies unless something is impossible
+  without them.
+- Stay inside your own files as listed in `TEAM.md`, so parallel sessions don't collide.
+- All user-facing copy, prompts and model output are in **English** — the judges are
+  English-speaking.
+
+## Priority
+
+Ship the end-to-end demo path in `PLAN.md` §3 first. The agent negotiation is part of that
+path, not a bonus: without it the product is indistinguishable from ordinary matching
+(see `docs/RESEARCH.md` §6).

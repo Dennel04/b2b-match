@@ -27,20 +27,20 @@ const EMPTY_BUYER_TERMS: BuyerTerms = {
 };
 
 /**
- * Весь матчинг идёт через service-role: текст проблемы читается только на сервере
- * и наружу не уходит ни на одном шаге.
+ * All matching runs through the service role: the problem text is read server-side only and
+ * never leaves at any step.
  *
- * Два этапа по порядку:
- *   1. Машинная сверка условий — бесплатно отсекает несовместимых по деньгам,
- *      срокам, формату контракта и требованиям.
- *   2. Claude оценивает только тех, кто прошёл.
+ * Two stages, in order:
+ *   1. Mechanical terms check — free, filters out anyone incompatible on money, timing,
+ *      contract format or requirements.
+ *   2. Claude scores only the survivors.
  */
 export async function findMatches(problemId: string): Promise<Match[]> {
   const admin = adminClient();
 
   const { data: problem, error: pErr } = await admin
     .from('problems').select('*').eq('id', problemId).single();
-  if (pErr || !problem) throw pErr ?? new Error('Проблема не найдена');
+  if (pErr || !problem) throw pErr ?? new Error('Problem not found');
 
   const { data: sellers } = await admin
     .from('companies')
@@ -50,7 +50,7 @@ export async function findMatches(problemId: string): Promise<Match[]> {
 
   const buyerTerms: BuyerTerms = problem.buyer_terms ?? EMPTY_BUYER_TERMS;
 
-  // Этап 1: машинная сверка. Ни одна сторона не видит чисел другой.
+  // Stage 1: mechanical check. Neither side sees the other's figures.
   const viable = (sellers ?? [])
     .filter((s) => s.profile_json)
     .map((s) => ({
@@ -67,7 +67,7 @@ export async function findMatches(problemId: string): Promise<Match[]> {
 
   if (!viable.length) return [];
 
-  // Этап 2: смысловая оценка тех, кто прошёл по условиям.
+  // Stage 2: semantic scoring of whoever cleared the terms.
   const { results } = await ask(
     MatchScoresSchema,
     matchPrompt(
@@ -101,8 +101,8 @@ export async function findMatches(problemId: string): Promise<Match[]> {
 }
 
 /**
- * Ядро продукта: переговоры агентов. Люди в контур не входят.
- * Результат кешируется в базе — на сцене ничего не должно висеть.
+ * The core of the product: the agents negotiate with no human in the loop.
+ * The result is cached in the database — nothing may hang on stage.
  */
 export async function negotiate(matchId: string): Promise<Negotiation> {
   const admin = adminClient();
@@ -111,7 +111,7 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
     .select('*, problems(text, buyer_terms), seller:companies!matches_seller_company_id_fkey(profile_json)')
     .eq('id', matchId)
     .single();
-  if (!m) throw new Error('Матч не найден');
+  if (!m) throw new Error('Match not found');
 
   if (m.agent_dialogue_json && m.deal_envelope_json) {
     return { lines: m.agent_dialogue_json, envelope: m.deal_envelope_json };
@@ -164,9 +164,9 @@ export async function generateBrief(matchId: string): Promise<string> {
              seller:companies!matches_seller_company_id_fkey(name, profile_json)`)
     .eq('id', matchId)
     .single();
-  if (!m) throw new Error('Матч не найден');
+  if (!m) throw new Error('Match not found');
   if (m.brief_md) return m.brief_md;
-  if (m.status !== 'accepted') throw new Error('Брифинг только после согласия обеих сторон');
+  if (m.status !== 'accepted') throw new Error('Briefing requires both sides to have accepted');
 
   const seller = m.seller.profile_json as CompanyProfile;
   const envelope = m.deal_envelope_json as DealEnvelope | null;

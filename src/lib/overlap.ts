@@ -7,9 +7,9 @@ import type {
 } from '@/types';
 
 /**
- * Машинная проверка совместимости ДО вызова модели.
- * Смысл в приватности: ни одна сторона не видит чисел другой — платформа
- * сравнивает их внутри и наружу отдаёт только «сходится / не сходится».
+ * Mechanical compatibility check, run before the model is called.
+ * This is where the privacy claim lives: neither side sees the other's figures —
+ * the platform compares them server-side and emits only "fits / does not fit".
  */
 export function checkCompatibility(buyer: BuyerTerms, seller: SellerTerms): Compatibility {
   const budget = compareBudget(buyer.budget_ceiling, seller.budget_floor);
@@ -26,37 +26,37 @@ export function checkCompatibility(buyer: BuyerTerms, seller: SellerTerms): Comp
   };
 }
 
-/** Продавец проходит, если его минимальный чек не выше потолка покупателя. */
+/** The seller passes if their minimum deal size is at or below the buyer's ceiling. */
 function compareBudget(ceiling: MoneyRange | null, floor: MoneyRange | null): Compatibility['budget'] {
   if (!ceiling || !floor) return 'unknown';
-  // Разные периоды сравнивать нечестно: месяц приводим к году, разовый платёж — как есть.
+  // Comparing across periods is unfair, so normalise monthly to a year.
   const norm = (m: MoneyRange) => (m.period === 'monthly' ? m.amount * 12 : m.amount);
   return norm(floor) <= norm(ceiling) ? 'ok' : 'gap';
 }
 
-/** Продавец проходит, если освобождается не позже, чем покупателю надо начать. */
+/** The seller passes if they free up no later than the buyer needs to start. */
 function compareDates(availableFrom: string | null, startBy: string | null): Compatibility['timeline'] {
   if (!availableFrom || !startBy) return 'unknown';
   return new Date(availableFrom) <= new Date(startBy) ? 'ok' : 'gap';
 }
 
-/** Человекочитаемая сводка для агента-переговорщика. Цифр здесь нет и быть не должно. */
+/** Human-readable summary handed to the negotiating agents. Contains no figures, by design. */
 export function describeCompatibility(c: Compatibility): string {
   const fmt = (f: ContractFormat) => FORMAT_LABELS[f];
   return [
-    `Бюджет: ${{ ok: 'сходится', gap: 'не сходится', unknown: 'не заявлен' }[c.budget]}`,
-    `Сроки: ${{ ok: 'сходятся', gap: 'не сходятся', unknown: 'не заявлены' }[c.timeline]}`,
-    `Общие форматы контракта: ${c.contract_formats.map(fmt).join(', ') || 'нет'}`,
+    `Budget: ${{ ok: 'compatible', gap: 'incompatible', unknown: 'not stated' }[c.budget]}`,
+    `Timeline: ${{ ok: 'compatible', gap: 'incompatible', unknown: 'not stated' }[c.timeline]}`,
+    `Contract formats both sides accept: ${c.contract_formats.map(fmt).join(', ') || 'none'}`,
     c.missing_requirements.length
-      ? `Не закрыты требования: ${c.missing_requirements.join(', ')}`
-      : 'Все требования покупателя закрыты',
+      ? `Unmet buyer requirements: ${c.missing_requirements.join(', ')}`
+      : 'All buyer requirements are met',
   ].join('\n');
 }
 
 export const FORMAT_LABELS: Record<ContractFormat, string> = {
-  pilot_first: 'пилот 2-4 недели',
-  fixed_price: 'фикс за проект',
-  monthly_retainer: 'помесячный ретейнер',
-  time_and_materials: 'почасовая оплата',
-  outcome_based: 'оплата за результат',
+  pilot_first: 'paid pilot, 2-4 weeks',
+  fixed_price: 'fixed price per project',
+  monthly_retainer: 'monthly retainer',
+  time_and_materials: 'time and materials',
+  outcome_based: 'outcome-based',
 };

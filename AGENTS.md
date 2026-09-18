@@ -10,4 +10,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ---
 
-Правила этого проекта — в `CLAUDE.md`. Прочитай его перед работой, независимо от того, какой ты агент.
+This project's rules are in `CLAUDE.md`. Read it before doing anything, whichever agent you are.

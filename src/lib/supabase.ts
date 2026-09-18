@@ -5,10 +5,10 @@ import { cookies } from 'next/headers';
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-/** Клиент для браузера. Уважает RLS. */
+/** Browser client. Subject to RLS. */
 export const browserClient = () => createBrowserClient(URL, ANON);
 
-/** Клиент для Server Components и Server Actions. Уважает RLS, знает пользователя. */
+/** Client for Server Components and Server Actions. Subject to RLS, knows the user. */
 export async function serverClient() {
   const store = await cookies();
   return createServerClient(URL, ANON, {
@@ -18,7 +18,7 @@ export async function serverClient() {
         try {
           list.forEach(({ name, value, options }) => store.set(name, value, options));
         } catch {
-          // вызов из Server Component — куки выставит middleware
+          // called from a Server Component — middleware will set the cookies
         }
       },
     },
@@ -26,8 +26,8 @@ export async function serverClient() {
 }
 
 /**
- * Обходит RLS. ТОЛЬКО для матчинга на сервере.
- * Ничего, что прочитано этим клиентом из problems, не возвращать на клиент напрямую.
+ * Bypasses RLS. Server-side matching ONLY.
+ * Nothing this client reads from `problems` may be returned to a client directly.
  */
 export const adminClient = () =>
   createClient(URL, process.env.SUPABASE_SERVICE_ROLE_KEY!, {

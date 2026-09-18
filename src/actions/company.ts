@@ -12,7 +12,7 @@ export async function saveCompany(input: {
 }) {
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
-  if (!user) throw new Error('Не авторизован');
+  if (!user) throw new Error('Not authenticated');
 
   const { data, error } = await db
     .from('companies')

@@ -20,9 +20,8 @@ export const NegotiationSchema = z.object({
 });
 
 /**
- * Ядро продукта: переговоры идут между машинами, люди в контур не входят.
- * Агент покупателя обязан защищать исходный текст проблемы — это не стилистика,
- * а требование к продукту.
+ * The core of the product: the negotiation happens between machines, with no human in the loop.
+ * The buyer agent protecting the raw problem text is a product requirement, not a style note.
  */
 export const negotiatePrompt = (opts: {
   problemText: string;
@@ -31,37 +30,40 @@ export const negotiatePrompt = (opts: {
   sellerServices: string[];
   compatibilitySummary: string;
 }) => `
-Разыграй переговоры двух AI-агентов, представляющих свои компании. Люди с обеих сторон
-о существовании друг друга пока не знают и увидят только итог.
+Play out a negotiation between two AI agents representing their companies. The humans on both
+sides do not yet know the other exists and will only ever see the outcome.
 
-АГЕНТ ПОКУПАТЕЛЯ знает проблему своей компании (СТРОГО КОНФИДЕНЦИАЛЬНО):
+THE BUYER'S AGENT knows its company's problem (STRICTLY CONFIDENTIAL):
 """${opts.problemText}"""
-Стоп-факторы покупателя: ${opts.dealbreakers.join('; ') || 'не заявлены'}
+Buyer dealbreakers: ${opts.dealbreakers.join('; ') || 'none stated'}
 
-АГЕНТ ПРОДАВЦА знает свою компанию:
+THE SELLER'S AGENT knows its own company:
 """${opts.sellerSummary}"""
-Услуги: ${opts.sellerServices.join(', ')}
+Services: ${opts.sellerServices.join(', ')}
 
-Платформа уже сверила коммерческие условия машинно и сообщает обоим агентам только результат:
+The platform has already compared the commercial terms mechanically and tells both agents only
+the result:
 ${opts.compatibilitySummary}
 
-ЖЁСТКИЕ ПРАВИЛА:
-- Агент покупателя НИКОГДА не цитирует текст проблемы, не называет сумм, имён, клиентов
-  и внутренних цифр. Он говорит на уровне задачи: «нужна помощь с X, объём примерно такой».
-  Раскрывает ровно столько, сколько нужно для следующего вопроса, и не больше.
-- Ни один агент не называет конкретных денег. Бюджет уже сверен платформой — обсуждать
-  можно только формат оплаты, не суммы.
-- Агент продавца отвечает по существу: делали ли похожее, за какой срок, чем рискуем.
-  Врать и обещать невозможное нельзя — если не делали, так и говорит.
-- 8 реплик, начинает buyer_agent, чередуются, каждая 1-2 предложения, живой язык.
-- Агенты должны сойтись на одном формате контракта из общих или честно признать,
-  что не сходятся.
+HARD RULES:
+- The buyer's agent NEVER quotes the problem text and never names amounts, clients, or internal
+  figures. It speaks at task level: "we need help with X, roughly this scale." It reveals
+  exactly as much as the next question requires, and no more.
+- Neither agent names a specific sum. Budget has already been checked by the platform; only the
+  payment format is open for discussion.
+- The seller's agent answers substantively: have they done this before, in what timeframe, what
+  the risks are. It must not overpromise — if they have not done it, it says so.
+- 8 lines total, buyer_agent starts, alternating, 1-2 sentences each, natural language.
+- The agents must converge on one contract format from the shared set, or state honestly that
+  they cannot.
 
-На выходе кроме диалога дай envelope:
-- verdict: proceed, только если продавец реально способен решить задачу И есть общий
-  формат контракта. Во всех сомнительных случаях — reject, лучше не тратить время людей.
-- agreed_format: формат, на котором сошлись, или null.
-- open_questions: 1-3 вопроса, которые агенты решить не смогли и которые люди должны
-  обсудить на встрече. Это самая ценная часть — она пойдёт в брифинг.
-- confidence: насколько уверен, что встреча будет полезной обеим сторонам.
+Besides the transcript, return the envelope:
+- verdict: 'proceed' only if the seller can genuinely solve this AND a shared contract format
+  exists. When in doubt, 'reject' — a wasted human meeting costs more than a missed match.
+- agreed_format: the format they settled on, or null.
+- open_questions: 1-3 questions the agents could not settle that the humans must discuss. This
+  is the most valuable field — it becomes the briefing.
+- confidence: how sure you are the meeting would be worth both sides' time.
+
+Write in English.
 `.trim();

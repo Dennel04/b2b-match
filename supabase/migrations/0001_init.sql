@@ -1,4 +1,4 @@
--- Схема B2B Match. Менять только после объявления команде.
+-- B2B Match schema. Announce in the team chat before changing it.
 
 create extension if not exists "pgcrypto";
 
@@ -13,17 +13,17 @@ create table companies (
   website text,
   role company_role not null default 'both',
   profile_json jsonb,
-  seller_terms jsonb,       -- SellerTerms: минимальный чек, форматы, доступность, возможности
+  seller_terms jsonb,       -- SellerTerms: deal floor, contract formats, availability, capabilities
   created_at timestamptz not null default now()
 );
 
--- 🔒 Приватная таблица. Читает только владелец. Матчинг идёт с service-role ключом на сервере.
+-- Private table. Owner-only reads. Matching runs server-side with the service role key.
 create table problems (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references companies(id) on delete cascade,
   text text not null,
   interview_json jsonb,
-  buyer_terms jsonb,        -- 🔒 BuyerTerms: потолок бюджета, форматы, сроки, требования
+  buyer_terms jsonb,        -- BuyerTerms: budget ceiling, formats, timing, requirements
   urgency urgency_level not null default 'medium',
   created_at timestamptz not null default now()
 );
@@ -35,9 +35,9 @@ create table matches (
   problem_id uuid not null references problems(id) on delete cascade,
   score int not null check (score between 0 and 100),
   reasoning_public text not null,
-  compatibility_json jsonb,   -- результат машинной сверки условий
-  agent_dialogue_json jsonb,  -- транскрипт переговоров агентов
-  deal_envelope_json jsonb,   -- о чём агенты договорились
+  compatibility_json jsonb,   -- result of the mechanical terms check
+  agent_dialogue_json jsonb,  -- transcript of the agent negotiation
+  deal_envelope_json jsonb,   -- what the agents settled on
   status match_status not null default 'proposed',
   brief_md text,
   created_at timestamptz not null default now()
@@ -52,17 +52,17 @@ alter table companies enable row level security;
 alter table problems  enable row level security;
 alter table matches   enable row level security;
 
--- Профили компаний читают все авторизованные (это витрина услуг), пишет только владелец.
+-- Any authenticated user can read company profiles (that is the storefront); owner writes.
 create policy companies_read on companies for select to authenticated using (true);
 create policy companies_write on companies for all to authenticated
   using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
--- Проблемы: только владелец компании. Никаких исключений.
+-- Problems: company owner only. No exceptions.
 create policy problems_owner on problems for all to authenticated
   using (exists (select 1 from companies c where c.id = problems.company_id and c.owner_id = auth.uid()))
   with check (exists (select 1 from companies c where c.id = problems.company_id and c.owner_id = auth.uid()));
 
--- Матчи видит любая из двух сторон.
+-- A match is visible to either party.
 create policy matches_participant on matches for select to authenticated
   using (exists (
     select 1 from companies c

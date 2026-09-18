@@ -11,27 +11,27 @@ export const MatchScoresSchema = z.object({
 });
 
 /**
- * ВАЖНО: reasoning_public увидит продавец. Прямые цитаты из проблемы запрещены —
- * это ядро приватности продукта, а не косметика.
+ * IMPORTANT: reasoning_public is read by the seller. Verbatim quotes from the problem are
+ * forbidden — that is the core privacy guarantee of the product, not a style preference.
  */
 export const matchPrompt = (
   problemText: string,
   sellers: { id: string; summary: string; services: string[] }[],
 ) => `
-Компания-покупатель описала свою проблему (КОНФИДЕНЦИАЛЬНО, её текст никому не показывают):
+A buying company has described its problem. This text is CONFIDENTIAL and is shown to nobody:
 """
 ${problemText}
 """
 
-Ниже список компаний-продавцов. Оцени каждого от 0 до 100: насколько он реально может решить
-эту проблему.
+Below is a list of vendors. Score each from 0 to 100 on how well they could actually solve it.
 
-${sellers.map((s) => `[${s.id}]\n${s.summary}\nУслуги: ${s.services.join(', ')}`).join('\n\n')}
+${sellers.map((s) => `[${s.id}]\n${s.summary}\nServices: ${s.services.join(', ')}`).join('\n\n')}
 
-Для каждого верни reasoning_public — 2 предложения о том, почему совпадение есть.
-Жёсткое правило: reasoning_public увидит продавец, поэтому НЕ цитируй текст проблемы,
-не называй сумм, имён, внутренних деталей. Пиши на уровне категории:
-"компании нужна помощь с X в области Y".
+For each, return reasoning_public: two sentences on why this is a match.
+Hard rule: the seller will read reasoning_public, so do NOT quote the problem text, and do not
+mention amounts, names, or internal details. Stay at category level, e.g. "this company needs
+help with X in the Y area".
 
-Оценивай строго. 80+ только если услуга прямо закрывает проблему.
+Score strictly. Only give 80+ when the vendor's service directly addresses the problem.
+Write in English.
 `.trim();
