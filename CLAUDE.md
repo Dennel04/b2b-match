@@ -39,6 +39,13 @@ any prompt sent on behalf of the other side.
 - All user-facing copy, prompts and model output are in **English** — the judges are
   English-speaking.
 
+## Design references (not product code)
+
+- `src/app/lab/` — seven versions of the dashboard, one per design skill, on fake data.
+  `/lab/f` is the chosen direction so far. Never import from it; read `src/app/lab/README.md`.
+- `drafts/design/` — Claude Design output: page layouts to rebuild in `src/`.
+- `.claude/skills/` — design skills for this repo; `b2b-match-ui` holds the product UI rules.
+
 ## Priority
 
 Ship the end-to-end demo path in `PLAN.md` §3 first. The agent negotiation is part of that

@@ -1,0 +1,167 @@
+/* Motion and textures for the /lab design variants. Reduced motion is handled in globals.css. */
+
+/* Generic staggered entry: set --i on the element for the cascade. */
+@keyframes lab-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.lab-rise {
+  animation: lab-rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+/* F: heavy blur-in (high-end-visual-design). */
+@keyframes lab-soft-in {
+  from { opacity: 0; transform: translateY(28px); filter: blur(10px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+.lab-soft-in {
+  animation: lab-soft-in 0.9s cubic-bezier(0.32, 0.72, 0, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms);
+}
+
+/* A: the wax seal presses down once. */
+@keyframes lab-seal {
+  0% { opacity: 0; transform: scale(1.6) rotate(-18deg); }
+  70% { opacity: 1; transform: scale(0.94) rotate(-6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(-8deg); }
+}
+.lab-seal {
+  animation: lab-seal 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+  animation-delay: calc(0.35s + var(--i, 0) * 120ms);
+}
+
+/* E: CRT scanlines and a blinking cursor. */
+.lab-scanlines {
+  background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.22) 2px, rgba(0, 0, 0, 0.22) 4px
+  );
+}
+@keyframes lab-blink { 50% { opacity: 0; } }
+.lab-blink { animation: lab-blink 1s steps(1) infinite; }
+
+/* Meters that fill from the left (score bars). */
+@keyframes lab-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.lab-fill {
+  transform-origin: left center;
+  animation: lab-fill 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(0.2s + var(--i, 0) * 90ms);
+}
+
+/* G: redaction bars sweep over the specifics that never left (the one authored moment). */
+@keyframes lab-redact {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.lab-redact {
+  position: relative;
+  white-space: nowrap;
+}
+.lab-redact::after {
+  content: '';
+  position: absolute;
+  inset: 0.08em -0.12em;
+  background: var(--lab-marker, #ffe45c);
+  mix-blend-mode: multiply;
+  transform-origin: left center;
+  animation: lab-redact 0.55s cubic-bezier(0.7, 0, 0.2, 1) both;
+  animation-delay: calc(0.5s + var(--i, 0) * 220ms);
+}
+
+/* Soft pulse for the one live element per page. */
+@keyframes lab-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.lab-pulse { animation: lab-pulse 1.8s ease-in-out infinite; }
+
+/* Film grain for variants that ask for a physical surface. Fixed layer, never scrolls. */
+.lab-grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* K, M: scroll-driven reveals (CSS only, no GSAP). Browsers without support show content as is. */
+@supports (animation-timeline: view()) {
+  @keyframes lab-view-rise {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: none; }
+  }
+  .lab-view {
+    animation: lab-view-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+  @keyframes lab-scrub-word {
+    from { opacity: 0.12; }
+    to { opacity: 1; }
+  }
+  .lab-scrub > span {
+    animation: lab-scrub-word linear both;
+    animation-timeline: view();
+    animation-range: cover 10% cover 45%;
+  }
+  @keyframes lab-scale-in {
+    from { transform: scale(0.86); filter: brightness(0.6); }
+    to { transform: scale(1); filter: none; }
+  }
+  .lab-scale-view {
+    animation: lab-scale-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+}
+
+/* K: marquee. */
+@keyframes lab-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.lab-marquee { animation: lab-marquee 40s linear infinite; }
+
+/* H: hold-to-accept fill, driven by a CSS transition on clip-path. */
+.lab-hold-fill {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.lab-hold:active .lab-hold-fill {
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 1.6s linear;
+}
+
+/* H: expandable rows via grid-template-rows, interruptible. */
+.lab-expand {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 240ms cubic-bezier(0.23, 1, 0.32, 1), opacity 240ms cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0;
+}
+.lab-expand[data-open='true'] { grid-template-rows: 1fr; opacity: 1; }
+.lab-expand > div { overflow: hidden; }
+
+/* I: glass tiers with an opaque fallback. */
+.lab-glass-regular, .lab-glass-thick {
+  background: rgba(250, 250, 252, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+@supports (backdrop-filter: blur(1px)) {
+  .lab-glass-regular {
+    background: rgba(250, 250, 252, 0.58);
+    backdrop-filter: blur(24px) saturate(1.6);
+  }
+  .lab-glass-thick {
+    background: rgba(250, 250, 252, 0.76);
+    backdrop-filter: blur(30px) saturate(1.5);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .lab-glass-regular, .lab-glass-thick { background: rgb(250, 250, 252); backdrop-filter: none; }
+}
