@@ -3,10 +3,10 @@
 /* Design tokens. Retuned to the direction chosen in drafts/design/problem-page.html:
    cool ground, slate-teal ink, green for compatibility, a warm seal tone for withheld detail. */
 :root {
-  --bg: #F4F6F8; --surface: #FFFFFF; --surface-alt: #EDF1F3;
-  --ink: #16323A; --ink-soft: #5C6E75; --ink-faint: #8E9897;
-  --border: #E4E9ED; --border-strong: #DDE3E7;
-  --accent: #2F6D52; --accent-strong: #1F5540; --accent-soft: #E8F0EC;
+  --bg: #F1F4F6; --surface: #FFFFFF; --surface-alt: #EAF0F2;
+  --ink: #13303A; --ink-soft: #566A72; --ink-faint: #8A9699;
+  --border: #E1E7EB; --border-strong: #D6DEE3;
+  --accent: #2A6A5A; --accent-strong: #1C5244; --accent-soft: #E2EFEA;
   /* Reserved for withheld detail and nothing else. */
   --gold: #8F6A35; --gold-soft: #F3ECDC;
   --danger: #9C4230;

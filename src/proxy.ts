@@ -34,7 +34,11 @@ export async function proxy(request: NextRequest) {
     return res;
   };
 
-  if (!signedIn && (path.startsWith("/dashboard") || path.startsWith("/onboarding"))) return redirectTo("/login");
+  // /dashboard?demo renders fake data only, so it may be opened signed out.
+  const demo = path === "/dashboard" && request.nextUrl.searchParams.has("demo");
+  if (!signedIn && !demo && (path.startsWith("/dashboard") || path.startsWith("/problems") || path.startsWith("/onboarding"))) {
+    return redirectTo("/login");
+  }
   if (signedIn && (path === "/" || path === "/login" || path === "/signup")) return redirectTo("/dashboard");
 
   return response;
