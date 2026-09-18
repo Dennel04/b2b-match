@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { Card, Field, Button, inputClass } from "@/components/ui";
+import { signUpConfirmed } from "@/actions/auth";
+import { Bezel, Field, PillButton, inputClass } from "./premium";
 
 // Not imported from @/lib/supabase: that module pulls in next/headers, which breaks client bundles.
 const browserClient = () =>
@@ -51,19 +52,11 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
         return;
       }
     } else {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${location.origin}/auth/callback?next=/onboarding` },
-      });
+      // Created already confirmed on the server, so no inbox round-trip; then a normal sign-in.
+      const failed = await signUpConfirmed(email, password);
+      const { error } = failed ? { error: { message: failed } } : await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         setError(error.message);
-        setBusy(null);
-        return;
-      }
-      // Email confirmation is on in Supabase: no session until the link is clicked.
-      if (!data.session) {
-        setNotice(`We sent a confirmation link to ${email}. Open it to finish signing up.`);
         setBusy(null);
         return;
       }
@@ -88,7 +81,7 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
   }
 
   return (
-    <Card className="w-full max-w-[460px]">
+    <Bezel className="w-full max-w-[460px]" inner="flex flex-col gap-6 p-6 sm:p-9">
       {/* Segmented control: the indicator slides, the content swaps. */}
       <div role="tablist" className="relative grid grid-cols-2 rounded-full bg-surface-alt p-1">
         <span
@@ -169,11 +162,11 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
           </p>
         )}
 
-        <Button type="submit" disabled={busy !== null} className="mt-1 w-full justify-between">
+        <PillButton type="submit" disabled={busy !== null} className="mt-1 w-full justify-between">
           {busy === "email" ? "One moment…" : copy.cta}
-        </Button>
+        </PillButton>
       </form>
-    </Card>
+    </Bezel>
   );
 }
 

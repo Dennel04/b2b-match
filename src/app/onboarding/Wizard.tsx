@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveCompany } from "@/actions/company";
-import { Button, Card, Chips, Field, FieldGroup, TagInput, inputClass } from "@/components/ui";
+import { Bezel, Chips, Eyebrow, Field, FieldGroup, PillButton, TagInput, inputClass } from "@/components/premium";
 import {
   EXTRAS_STORAGE_KEY, EXTRA_KEYS, FORMATS, INDUSTRIES, PERIODS, REQUIREMENTS, ROLES, SIZES,
   buys, readiness, sellerTermsFromDraft, sells, type Draft, type Period,
@@ -128,7 +128,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
     <div className="mx-auto grid w-full max-w-[1120px] gap-10 px-4 pb-24 pt-4 md:px-8 lg:grid-cols-[280px_1fr]">
       {/* Rail: steps and readiness */}
       <aside className="soft-in lg:sticky lg:top-8 lg:h-max">
-        <span className="text-[12px] font-medium text-ink-soft">Company setup</span>
+        <Eyebrow>Company setup</Eyebrow>
         <p className="mt-4 text-[13.5px] text-ink-soft">Signed in as {email}</p>
         <ol className="mt-6 flex gap-2 overflow-x-auto lg:flex-col lg:gap-1">
           {steps.map((s, i) => (
@@ -167,7 +167,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
         </div>
         <p className="mb-8 max-w-[60ch] text-[16px] leading-relaxed text-ink-soft">{current.lead}</p>
 
-        <Card>
+        <Bezel inner="flex flex-col gap-7 p-6 sm:p-9">
           {current.id === "company" && (
             <>
               <FieldGroup label="What brings you here?">
@@ -195,7 +195,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
                 <Field label="Company name" help="Shown only after both sides agree to meet.">
                   <input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="Nordkai Logistics OÜ" className={inputClass} />
                 </Field>
-                <Field label="Website" optional>
+                <Field label="Website" optionalTag>
                   <input value={d.website} onChange={(e) => set("website", e.target.value)} placeholder="nordkai.ee" className={inputClass} />
                 </Field>
                 <Field label="Industry">
@@ -204,7 +204,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
                     {INDUSTRIES.map((i) => <option key={i}>{i}</option>)}
                   </select>
                 </Field>
-                <Field label="City or region" optional>
+                <Field label="City or region" optionalTag>
                   <input value={d.location} onChange={(e) => set("location", e.target.value)} placeholder="Tallinn" className={inputClass} />
                 </Field>
               </div>
@@ -228,10 +228,10 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
               <Field label="Services" help="Type one and press Enter.">
                 <TagInput value={d.services} onChange={(v) => set("services", v)} placeholder="Customs automation" />
               </Field>
-              <Field label="Keywords" optional help="Words a buyer might use for their problem.">
+              <Field label="Keywords" optionalTag help="Words a buyer might use for their problem.">
                 <TagInput value={d.keywords} onChange={(v) => set("keywords", v)} placeholder="paperwork, filings, ERP" />
               </Field>
-              <Field label="Industries you know best" optional>
+              <Field label="Industries you know best" optionalTag>
                 <TagInput value={d.industriesServed} onChange={(v) => set("industriesServed", v)} placeholder="Logistics" />
               </Field>
               <FieldGroup label="What you can offer" help="Buyers can require these. If you meet one, tick it.">
@@ -248,7 +248,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
               <FieldGroup label="Contract formats you accept" help="A deal needs at least one format both sides accept.">
                 <Chips options={FORMATS} value={d.sellerFormats} onChange={(v) => set("sellerFormats", v)} />
               </FieldGroup>
-              <Field label="Free to start from" optional>
+              <Field label="Free to start from" optionalTag>
                 <input type="date" value={d.availableFrom} onChange={(e) => set("availableFrom", e.target.value)} className={`${inputClass} sm:max-w-[240px]`} />
               </Field>
             </>
@@ -256,7 +256,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
 
           {current.id === "buying" && (
             <>
-              <Field label="Typical budget ceiling" optional help="The most you would usually spend on one problem. Sellers never see it.">
+              <Field label="Typical budget ceiling" optionalTag help="The most you would usually spend on one problem. Sellers never see it.">
                 <Money amount={d.ceilingAmount} period={d.ceilingPeriod} onAmount={(v) => set("ceilingAmount", v)} onPeriod={(v) => set("ceilingPeriod", v)} placeholder="20000" />
               </Field>
               <FieldGroup label="Contract formats you would consider">
@@ -265,7 +265,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
               <FieldGroup label="Always required from a supplier">
                 <Chips options={REQUIREMENTS} value={d.mustHaves} onChange={(v) => set("mustHaves", v)} />
               </FieldGroup>
-              <Field label="Dealbreakers" optional help="Anything that rules a supplier out. Your agent checks these in the negotiation.">
+              <Field label="Dealbreakers" optionalTag help="Anything that rules a supplier out. Your agent checks these in the negotiation.">
                 <TagInput value={d.dealbreakers} onChange={(v) => set("dealbreakers", v)} placeholder="No offshore subcontracting" />
               </Field>
             </>
@@ -291,9 +291,9 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
 
           <div className="flex flex-wrap items-center gap-3 border-t border-line pt-6">
             {index > 0 && (
-              <Button type="button" variant="ghost" onClick={() => go(-1, false)}>
+              <PillButton type="button" variant="soft" icon={false} onClick={() => go(-1, false)}>
                 Back
-              </Button>
+              </PillButton>
             )}
             {current.id !== "ready" && (
               <button type="button" onClick={() => go(1, false)} className="cursor-pointer px-3 text-[14px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">
@@ -302,17 +302,17 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
             )}
             <div className="ml-auto">
               {current.id === "ready" ? (
-                <Button type="button" onClick={finish} disabled={saving}>
+                <PillButton type="button" onClick={finish} disabled={saving}>
                   {saving ? "Saving…" : "Go to dashboard"}
-                </Button>
+                </PillButton>
               ) : (
-                <Button type="button" onClick={() => go(1)} disabled={saving}>
+                <PillButton type="button" onClick={() => go(1)} disabled={saving}>
                   {saving ? "Saving…" : "Continue"}
-                </Button>
+                </PillButton>
               )}
             </div>
           </div>
-        </Card>
+        </Bezel>
 
         <p className="mt-6 text-center text-[13px] text-ink-faint">
           <Link href="/dashboard" className="underline-offset-4 hover:text-ink hover:underline">Finish later</Link>. Your progress is kept.
