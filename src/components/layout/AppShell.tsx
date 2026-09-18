@@ -75,7 +75,7 @@ export function AppShell({
             </span>
             <span
               aria-hidden
-              className="grid h-8 w-8 place-items-center rounded-full bg-accent-soft text-[11.5px] font-semibold text-accent-strong ring-1 ring-accent/20"
+              className="grid h-8 w-8 place-items-center rounded-full bg-ink text-[11.5px] font-semibold text-surface"
             >
               {initials}
             </span>
@@ -119,7 +119,7 @@ function NavLink({ item }: { item: NavItem }) {
       <Icon name={item.icon} />
       {item.label}
       {item.count ? (
-        <span className="ml-auto rounded-full bg-accent px-2 py-px text-[11px] font-semibold text-surface">{item.count}</span>
+        <span className="ml-auto rounded-full bg-ink px-2 py-px text-[11px] font-semibold text-surface">{item.count}</span>
       ) : null}
     </Link>
   );

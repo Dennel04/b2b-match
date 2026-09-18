@@ -53,7 +53,7 @@ Defined in `src/app/globals.css`. Never write raw hex in a component.
 | `--ink-soft` | `#5C6E75` | secondary text |
 | `--ink-faint` | `#8E9897` | metadata, timestamps |
 | `--border` | `#E4E9ED` | rules and card borders |
-| `--accent` | `#2F6D52` | compatibility and positive state only |
+| `--accent` | `#2F6D52` | **state only**, never decoration — see below |
 | `--gold` / `--gold-soft` | `#8F6A35` / `#F3ECDC` | **withheld or negotiable, nothing else** |
 
 Type: Plus Jakarta Sans, one family for the whole product, applied at the root.
@@ -65,6 +65,17 @@ Two densities, by zone:
 
 Pick the one that matches the screen's zone and do not mix them inside a screen. Icons: one set,
 no emoji.
+
+## Accent is a state, not a decoration
+
+Green appears only where it reports something true about the thing it sits on: a status chip,
+a step that is complete, a row that is ready to meet, a focused input. Gold means the same for
+withheld or unfinished.
+
+It never appears on a count, an avatar, a button hover, or anything whose only job is to be
+noticed. If a screen has no states, it has no green — the login screen is monochrome for
+exactly that reason. When in doubt, use `--ink`: a thing that is merely important is dark,
+not coloured.
 
 ## The three groups
 
