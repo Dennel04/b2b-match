@@ -12,6 +12,8 @@ Hackathon, 18–19 September 2026.
 |---|---|
 | `PLAN.md` | Scope, demo path, architecture, timeline |
 | `docs/RESEARCH.md` | Market research, competitors, answers for the judges |
+| `docs/JUDGING.md` | The scoring criteria, where we stand, what moves each score — read before deciding what to build next |
+| `docs/FRONTEND.md` | The verified backend contract, screen by screen |
 | `TEAM.md` | Who owns which files, how we stay in sync |
 | `CLAUDE.md` | Rules every Claude Code session must follow |
 
