@@ -56,8 +56,15 @@ Defined in `src/app/globals.css`. Never write raw hex in a component.
 | `--accent` | `#2F6D52` | compatibility and positive state only |
 | `--gold` / `--gold-soft` | `#8F6A35` / `#F3ECDC` | **withheld or negotiable, nothing else** |
 
-Type: Instrument Sans, one family. Radii: 10px cards, 8px buttons, 7px chips. Icons: lucide, one
-set, no emoji.
+Type: Plus Jakarta Sans, one family for the whole product, applied at the root.
+
+Two densities, by zone:
+- **Signed-out and onboarding** — `@/components/premium`: soft bezels, pill buttons, more air.
+- **Working screens** — `@/components/ui`: hairline cards at 10px, rectangular buttons at 8px,
+  chips at 7px, tight rows.
+
+Pick the one that matches the screen's zone and do not mix them inside a screen. Icons: one set,
+no emoji.
 
 ## The three groups
 

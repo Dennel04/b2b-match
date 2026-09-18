@@ -1,18 +1,15 @@
-import { Instrument_Sans, Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 
-/** The product's only typeface. Adding a second one is a design decision, not a detail. */
-export const sans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-instrument",
-});
-
-/** Display and UI face of the login, sign-up and onboarding screens. */
+/**
+ * The product's only typeface. Applied once on <html> in layout.tsx, so every screen
+ * inherits it. Adding a second face is a decision for the whole team, not a detail of
+ * one screen.
+ */
 export const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-jakarta",
 });
 
-/** Put on the wrapper of a screen that uses the login/onboarding look. */
-export const premiumFont = `${jakarta.variable} font-[family-name:var(--font-jakarta)]`;
+/** Kept so the login and onboarding screens keep working; it is now a no-op. */
+export const premiumFont = "";

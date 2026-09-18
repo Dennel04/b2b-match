@@ -20,7 +20,7 @@
   --color-gold-soft: var(--seal-soft);
   --font-serif: var(--font-spectral), Georgia, serif;
   --color-danger: var(--danger);
-  --font-sans: var(--font-instrument), -apple-system, sans-serif;
+  --font-sans: var(--font-jakarta), -apple-system, sans-serif;
   --radius-card: var(--radius-card);
   --radius-button: var(--radius-button);
   --radius-chip: var(--radius-chip);

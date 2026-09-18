@@ -68,8 +68,13 @@ Three layers, and they do not mix:
 token, not a one-off colour. The reference for every value is
 `drafts/design/problem-page.html`; the rules it encodes are in `.claude/skills/b2b-match-ui`.
 
-One typeface: Instrument Sans, in `app/fonts.ts`. Adding a second is a design decision for the
-whole team, not a detail of one screen.
+One typeface: **Plus Jakarta Sans**, declared in `app/fonts.ts` and applied once on `<html>`.
+Adding a second is a decision for the whole team, not a detail of one screen.
+
+**Shape may differ by zone, and that is intentional.** Signed-out and onboarding screens are
+richer — soft bezels, pill buttons, more air. Working screens are denser and flatter — hairline
+cards, rectangular buttons, tighter rows. One palette, one typeface, two densities, chosen on
+purpose. What is not allowed is a third density, or a screen that picks its own colours.
 
 ## Types
 
