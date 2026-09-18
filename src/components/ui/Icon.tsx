@@ -55,6 +55,12 @@ const PATHS = {
       <path d="m15 5 4 4" />
     </>
   ),
+  "log-out": (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5M21 12H9" />
+    </>
+  ),
   lock: (
     <>
       <rect x="3" y="11" width="18" height="11" rx="2" />

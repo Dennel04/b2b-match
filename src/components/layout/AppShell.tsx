@@ -48,8 +48,17 @@ export function AppShell({
             <NavLink key={item.href} item={item} />
           ))}
         </nav>
-        <div className="mt-auto border-t border-line px-3 py-4">
+        <div className="mt-auto flex flex-col gap-1 border-t border-line px-3 py-4">
           <NavLink item={{ href: "/settings", label: "Settings", icon: "settings" }} />
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              className="flex w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-3 py-2 text-[13.5px] text-ink-soft transition-colors hover:bg-surface-alt/60 hover:text-ink"
+            >
+              <Icon name="log-out" />
+              Log out
+            </button>
+          </form>
         </div>
       </aside>
 
@@ -68,6 +77,12 @@ export function AppShell({
             >
               {initials}
             </span>
+            {/* The sidebar is hidden on phones, so its log-out button moves up here. */}
+            <form action="/auth/signout" method="post" className="md:hidden">
+              <button type="submit" aria-label="Log out" className="grid h-8 w-8 cursor-pointer place-items-center rounded-[9px] text-ink-soft hover:bg-surface-alt hover:text-ink">
+                <Icon name="log-out" />
+              </button>
+            </form>
           </div>
         </header>
 
