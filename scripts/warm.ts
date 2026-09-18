@@ -1,7 +1,8 @@
 /**
  * Pre-generate everything the demo will show, so nothing calls the model on stage.
- * Run: npm run warm            — every problem: find matches, negotiate each one
- *      npm run warm -- --one   — a single problem, for a quick end-to-end test
+ * Run: npm run warm                        — every problem: find matches, negotiate each one
+ *      npm run warm -- --one               — the first problem only, for a quick end-to-end test
+ *      npm run warm -- --company=Apteek    — problems of companies whose name contains this
  *
  * Results are cached in the database; re-running only fills what is missing.
  */
@@ -10,6 +11,7 @@ import { adminClient } from '../src/lib/supabase';
 import type { Match } from '../src/types';
 
 const onlyOne = process.argv.includes('--one');
+const companyFilter = process.argv.find((a) => a.startsWith('--company='))?.slice('--company='.length).toLowerCase();
 
 async function main() {
   const db = adminClient();
@@ -20,11 +22,13 @@ async function main() {
   if (error) throw error;
   if (!problems?.length) throw new Error('No problems in the database — run npm run seed first');
 
-  const todo = onlyOne ? problems.slice(0, 1) : problems;
+  const ownerOf = (p: unknown) => (p as { companies: { name: string } }).companies.name;
+  let todo = companyFilter ? problems.filter((p) => ownerOf(p).toLowerCase().includes(companyFilter)) : problems;
+  if (onlyOne) todo = todo.slice(0, 1);
   console.log(`${todo.length} problem(s) to warm\n`);
 
   for (const p of todo) {
-    const owner = (p as unknown as { companies: { name: string } }).companies.name;
+    const owner = ownerOf(p);
     console.log(`▶ ${owner}: "${p.text.slice(0, 70)}…"`);
 
     const { data: existing } = await db.from('matches').select('*').eq('problem_id', p.id);

@@ -16,8 +16,11 @@ export const thingPrompt = (args) => `...`.trim();
 ```
 
 Call it through `ask(ThingSchema, thingPrompt(args), { effort })` from `src/lib/claude.ts`.
-`ask` uses structured outputs, so the model physically cannot return a different shape —
-do not add defensive parsing around it.
+`ask` sends the schema to the model as JSON Schema, validates the reply with zod and retries
+once with the validation error; a second failure throws. Callers get a typed value or an
+exception — do not add defensive parsing around it. (The provider is a deployment setting:
+`ANTHROPIC_BASE_URL` in `.env.local` points the same client at DeepSeek's Anthropic-compatible
+endpoint, so prompts must not rely on Anthropic-only features such as structured outputs.)
 
 Effort guide: `low` for the interview (one short turn), `high` for matching and for the
 negotiation envelope (real judgment), `medium` for each negotiation turn (eight of them per

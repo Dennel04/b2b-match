@@ -37,8 +37,11 @@ any prompt sent on behalf of the other side.
   shown — never query `matches` from a component and project the fields yourself.
 - `adminClient()` and `SUPABASE_SERVICE_ROLE_KEY` are allowed only in `src/actions/` and
   `scripts/`. Never in a component.
-- Parse model output only through `ask()` in `src/lib/claude.ts` — it enforces a zod schema.
-  No hand-rolled `JSON.parse` on a model response.
+- Parse model output only through `ask()` in `src/lib/claude.ts` — it validates against the
+  zod schema and retries once. No hand-rolled `JSON.parse` on a model response anywhere else.
+- The model provider is configured in `.env.local`, not in code: `ANTHROPIC_BASE_URL` routes the
+  Anthropic SDK to DeepSeek's Anthropic-compatible endpoint (see `.env.example`). Use only
+  features both providers support — no structured outputs, no prefill, no beta headers.
 - Do not change `src/types.ts` or `supabase/migrations/` without saying so in the team chat
   first. Every teammate builds against them. Migrations are forward-only: a new `000N_*.sql`,
   never an edit to one that has been applied.
