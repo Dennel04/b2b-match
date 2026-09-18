@@ -70,12 +70,16 @@ progress of the negotiation visible round by round — a minute of visible work,
   agent reused the wording of the ask; we did not loosen the check, we rewrote the prompt."
 This is what turns "privacy" from a claim into code. +1–2 Ideation.
 
-**4. Name the customer and bring real problems.** Not "B2B companies" — "one chamber of
-commerce or accelerator with 400 member companies; Estonian SMEs in one vertical first." Then
-the cheapest validation there is (`docs/RESEARCH.md` §7.4): message people at 5–10 companies
-tonight and ask them to write their current problem into a box, now. Three replies make a slide
-— "we asked N Estonian companies, here is what they wrote" (anonymised) — that answers "would
-anyone disclose a problem?" better than any research. +2 Applicability.
+**4. Say who it is for — precisely.** No customer is expected at a hackathon and we are not
+claiming one. But the criterion literally asks "can you say who it is for?", and "companies in
+general" is the answer every team in the room gives. Ours: *Estonian service SMEs of 10–100
+people that win clients through cold outreach and referrals today; entry through one community
+— an accelerator or an industry association — where both sides already exist* (`docs/RESEARCH.md`
+§7.3). One sentence, said out loud, on a slide. Optional and cheap if anyone has the contacts
+(§7.4): ask people at a few companies to write their current problem into a box tonight — not as
+customers, as evidence that people will disclose a problem at all, which is the first question
+the jury will ask. Without it, the answer is the mechanism itself (blind match, isolated agents,
+the leak guard), which is fine — then the "who it is for" line has to be sharp. +2 Applicability.
 
 **5. Show a rejection.** A pair that fits perfectly on meaning and is killed by the budget
 filter, and one negotiation where the agents said no. Both exist in the seeded data. A negative
