@@ -55,8 +55,8 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
   for (const m of views) {
     // Anonymous until both sides accept: getMatchView() leaves the name null before that.
     const party = { id: m.id, name: m.seller.name ?? firstSentence(m.seller.summary), place: m.reasoning_public };
-    if (m.status === "declined" || m.negotiation?.envelope.verdict === "reject") d.declined++;
-    else if (m.status !== "proposed" || m.negotiation?.envelope.verdict === "proceed")
+    if (m.status === "declined" || m.negotiation?.envelope?.verdict === "reject") d.declined++;
+    else if (m.status !== "proposed" || m.negotiation?.envelope?.verdict === "proceed")
       d.matched.push({ ...party, state: STATE[m.status], ready: m.status === "proposed", score: m.score });
     else d.awaiting.push({ ...party, area: openArea(m) });
   }
