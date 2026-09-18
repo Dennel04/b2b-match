@@ -133,8 +133,9 @@ export interface Match {
   score: number;                       // 0..100
   reasoning_public: string;            // no verbatim quotes from the problem
   compatibility_json: Compatibility | null;
-  agent_dialogue_json: AgentDialogueLine[] | null;
-  deal_envelope_json: DealEnvelope | null;
+  agent_dialogue_json: AgentDialogueLine[] | null;   // grows line by line while negotiate() runs
+  deal_envelope_json: DealEnvelope | null;           // set only when the negotiation finished
+  negotiation_started_at: string | null;
   status: MatchStatus;
   brief_md: string | null;
   created_at: string;
@@ -168,6 +169,8 @@ export interface MatchView {
   seller: { name: string | null; summary: string };
   problem_text: string | null;
   compatibility: Compatibility | null;
-  negotiation: Negotiation | null;
+  /** Lines appear one at a time while `negotiating`; `envelope` arrives last. */
+  negotiation: { lines: AgentDialogueLine[]; envelope: DealEnvelope | null } | null;
+  negotiating: boolean;                      // poll getMatchView() every 2-3 s while true
   brief_md: string | null;
 }

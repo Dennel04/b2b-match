@@ -12,7 +12,7 @@ a form action; never from a client component directly with fetch. All types are 
 | Call | Returns | Takes | Notes |
 |---|---|---|---|
 | `findMatches(problemId)` | `Match[]` | 7–25 s | Runs the mechanical filter, then the model scores the survivors. Inserts rows with `status: 'proposed'`. Returns `[]` when nothing passes — that is a valid result, show it ("nothing above threshold"), don't treat it as an error. |
-| `negotiate(matchId)` | `Negotiation` = `{ lines, envelope }` | **45–80 s first time, instant after** | The 8-line agent transcript plus the `DealEnvelope`. Cached in the row; calling it again returns the stored result. Sets `status: 'declined'` if the agents' verdict is `reject`. |
+| `negotiate(matchId)` | `Negotiation` = `{ lines, envelope }` | **45–80 s first time, instant after** | The 8-line agent transcript plus the `DealEnvelope`. Cached in the row; calling it again returns the stored result. Sets `status: 'declined'` if the agents' verdict is `reject`. **Stores each line as it is produced** — poll `getMatchView` meanwhile to show progress (§3). Throws "already running" if called twice. |
 | `getMatchView(matchId)` | `MatchView` | instant | **The one read path for a match screen.** Projected for the current viewer — see §3. |
 | `setMatchStatus(matchId, action)` | `Match` | instant | `action` is `'interested' \| 'accept' \| 'decline'`. Enforces the order (§4); throws on an illegal move. |
 | `generateBrief(matchId)` | `string` (markdown) | ~10 s first time | Only for `status === 'accepted'`; throws otherwise. Cached in `brief_md`. |
@@ -44,10 +44,19 @@ Onboarding calls, same rules: `saveCompany(input)` (create or update the signed-
   seller: { name: string | null, summary },               // name only for the seller, or once accepted
   problem_text: string | null,               // the buyer's own text; null on the seller's side
   compatibility: Compatibility | null,       // budget/timeline 'ok' | 'gap' | 'unknown' — never amounts
-  negotiation: { lines, envelope } | null,   // null until negotiate() has run
+  negotiation: { lines, envelope: DealEnvelope | null } | null,  // lines grow while running; envelope arrives last
+  negotiating: boolean,                      // true while negotiate() is running for this match
   brief_md: string | null,                   // only when accepted
 }
 ```
+
+**Live progress.** Start `negotiate(id)` from a button action (it resolves when the whole thing
+is done). While it runs, poll `getMatchView(id)` every 2–3 s — a `useEffect` with `setInterval`
+calling a tiny server action, or `router.refresh()` on a timer. Render `negotiation.lines` as
+they arrive; "round N of 4" is `Math.ceil(lines.length / 2)`; stop polling when `negotiating`
+is `false`. `envelope` is `null` until the last call, then the outcome appears. A seller line can
+never leak (that agent never has the problem), and buyer lines are checked before they are
+stored, so showing the partial transcript live is safe.
 
 The projection is done server-side on purpose. Render what you are given; never query `matches`
 or `problems` from a component and decide yourself what to hide.
@@ -100,8 +109,9 @@ wrong button is a confusing error, not a security hole — but don't rely on tha
 
 - `.env.local` — ask for it; it holds the Supabase keys, the DeepSeek key and
   `ANTHROPIC_BASE_URL` (the model provider is a deployment setting, see `.env.example`).
-- Migrations: `0001` is applied; **`0002_privacy_fixes.sql` must be run in the Supabase SQL Editor**
-  before the demo. Until then any signed-in user can read vendors' `seller_terms`.
+- Migrations: `0001` is applied; **`0002_privacy_fixes.sql` and `0003_negotiation_progress.sql`
+  must be run in the Supabase SQL Editor**, in that order. Until 0002, any signed-in user can
+  read vendors' `seller_terms`; until 0003, `negotiate()` fails on a missing column.
 - Demo account: the user that owns all seeded companies (the one in `SEED_OWNER_ID`). Sign in as
   it and you see every problem and every match with `viewer: 'both'`. Any other account sees
   only its own rows.

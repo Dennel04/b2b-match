@@ -33,6 +33,12 @@ const SCORE_THRESHOLD = 70;
 /** Four exchanges: enough to converge on a format, short enough to read on stage. */
 const ROUNDS = 4;
 
+/** A negotiation with no envelope and a stamp older than this is abandoned, not running. */
+const STALE_AFTER_MS = 5 * 60 * 1000;
+
+const isRunning = (startedAt: string | null, envelope: unknown) =>
+  !envelope && !!startedAt && Date.now() - new Date(startedAt).getTime() < STALE_AFTER_MS;
+
 const EMPTY_BUYER_TERMS: BuyerTerms = {
   budget_ceiling: null,
   contract_formats: [],
@@ -139,6 +145,9 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
   if (m.agent_dialogue_json && m.deal_envelope_json) {
     return { lines: m.agent_dialogue_json, envelope: m.deal_envelope_json };
   }
+  if (isRunning(m.negotiation_started_at, m.deal_envelope_json)) {
+    throw new Error('The negotiation is already running — poll getMatchView() for progress');
+  }
 
   const problemText = m.problems.text as string;
   const seller = m.seller.profile_json as CompanyProfile;
@@ -149,6 +158,14 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
   const compatibilitySummary = describeCompatibility(compatibility);
 
   const lines: AgentDialogueLine[] = [];
+  // Each line is stored as it is produced, so a screen polling getMatchView() sees the rounds.
+  const publish = () =>
+    admin.from('matches').update({ agent_dialogue_json: lines }).eq('id', matchId);
+
+  await admin
+    .from('matches')
+    .update({ agent_dialogue_json: [], deal_envelope_json: null, negotiation_started_at: new Date().toISOString() })
+    .eq('id', matchId);
 
   for (let round = 0; round < ROUNDS; round++) {
     const isLast = round === ROUNDS - 1;
@@ -174,6 +191,7 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
       );
     }
     lines.push({ speaker: 'buyer_agent', text: buyer.text, withheld: buyer.withheld });
+    await publish();
 
     // Note what is NOT passed here: problemText, buyerTerms, dealbreakers.
     const vendor = await ask(
@@ -188,11 +206,16 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
       { effort: 'medium' },
     );
     lines.push({ speaker: 'seller_agent', text: vendor.text });
+    await publish();
   }
 
   // Fail closed: a transcript carrying the problem across must never reach the other side.
   const leaks = findLeaks(problemText, lines);
   if (leaks.length) {
+    await admin
+      .from('matches')
+      .update({ agent_dialogue_json: null, negotiation_started_at: null })
+      .eq('id', matchId);
     throw new Error(`Negotiation discarded — the problem text leaked at ${describeLeaks(leaks)}`);
   }
 
@@ -304,8 +327,9 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
   if (!isBuyer && !isSeller) throw new Error('Not a party to this match');
 
   const accepted = row.status === 'accepted';
-  const negotiation: Negotiation | null =
-    row.agent_dialogue_json && row.deal_envelope_json
+  const negotiating = isRunning(row.negotiation_started_at, row.deal_envelope_json);
+  const negotiation: MatchView['negotiation'] =
+    row.agent_dialogue_json && (row.deal_envelope_json || negotiating)
       ? { lines: row.agent_dialogue_json, envelope: row.deal_envelope_json }
       : null;
 
@@ -327,6 +351,7 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
     problem_text: isBuyer ? row.problems.text : null,
     compatibility: row.compatibility_json,
     negotiation,
+    negotiating,
     brief_md: accepted ? row.brief_md : null,
   };
 }
