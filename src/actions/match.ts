@@ -23,6 +23,7 @@ import type {
   Match,
   MatchAction,
   MatchStatus,
+  MatchView,
   Negotiation,
   SellerTerms,
 } from '@/types';
@@ -261,6 +262,65 @@ export async function setMatchStatus(matchId: string, action: MatchAction): Prom
     .from('matches').update({ status }).eq('id', matchId).select().single();
   if (error) throw error;
   return data as Match;
+}
+
+/**
+ * The one read path for a match screen. Loads with the service role, then projects by role:
+ * the problem text goes only to its owner, names only once both sides accepted. This is where
+ * "what the buyer sees / what the seller sees" is decided — not in a component.
+ */
+export async function getMatchView(matchId: string): Promise<MatchView> {
+  const db = await serverClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: m } = await adminClient()
+    .from('matches')
+    .select(
+      `*, problems(text),
+       buyer:companies!matches_buyer_company_id_fkey(name, owner_id, profile_json),
+       seller:companies!matches_seller_company_id_fkey(name, owner_id, profile_json)`,
+    )
+    .eq('id', matchId)
+    .single();
+  if (!m) throw new Error('Match not found');
+
+  const row = m as unknown as Match & {
+    problems: { text: string };
+    buyer: { name: string; owner_id: string; profile_json: CompanyProfile | null };
+    seller: { name: string; owner_id: string; profile_json: CompanyProfile | null };
+  };
+
+  const isBuyer = row.buyer.owner_id === user.id;
+  const isSeller = row.seller.owner_id === user.id;
+  if (!isBuyer && !isSeller) throw new Error('Not a party to this match');
+
+  const accepted = row.status === 'accepted';
+  const negotiation: Negotiation | null =
+    row.agent_dialogue_json && row.deal_envelope_json
+      ? { lines: row.agent_dialogue_json, envelope: row.deal_envelope_json }
+      : null;
+
+  return {
+    id: row.id,
+    status: row.status,
+    score: row.score,
+    reasoning_public: row.reasoning_public,
+    viewer: isBuyer && isSeller ? 'both' : isBuyer ? 'buyer' : 'seller',
+    buyer: {
+      name: accepted || isBuyer ? row.buyer.name : null,
+      industry: row.buyer.profile_json?.industry ?? 'undisclosed industry',
+      size_hint: row.buyer.profile_json?.size_hint ?? '',
+    },
+    seller: {
+      name: accepted || isSeller ? row.seller.name : null,
+      summary: row.seller.profile_json?.summary ?? '',
+    },
+    problem_text: isBuyer ? row.problems.text : null,
+    compatibility: row.compatibility_json,
+    negotiation,
+    brief_md: accepted ? row.brief_md : null,
+  };
 }
 
 function nextStatus(

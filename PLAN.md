@@ -79,8 +79,10 @@ say "this is just another spam channel".
    on money, timing, format or requirements — neither side sees the other's figures — then
    **Claude scores only the survivors**.
 4. **The core:** the buyer's agent and the seller's agent negotiate. No human is in the loop and
-   neither yet knows the other exists. The buyer's agent protects the problem text; the agents
-   converge on a contract format and record what is left for the humans.
+   neither yet knows the other exists. The seller's agent is a separate model call that is never
+   handed the problem text — it knows only what the buyer's agent says out loud. The buyer's
+   agent flags each turn where it refused to reveal a specific (`withheld`); the agents converge
+   on a contract format and record what is left for the humans.
 5. Only after a `proceed` verdict does the buyer see an anonymous match → "Interested".
    The seller is notified → "Accept".
 6. A **briefing** is generated: who's who, the ask, what the agents settled, what's left for the
@@ -128,10 +130,18 @@ internally. See `docs/RESEARCH.md` §6.
 go out in one request: "score each 0-100, explain in two sentences, return JSON." Above 70 we
 store a match.
 
-**Stage 3 — the agents negotiate.** The buyer's agent knows the problem and the dealbreakers,
-the seller's agent knows its own company, both know the compatibility result but not the
-figures. Output: a transcript plus a `DealEnvelope` — verdict, agreed contract format, open
-questions for the humans, confidence.
+**Stage 3 — the agents negotiate, in isolation.** Four rounds, and each round is **two separate
+model calls**. The buyer's agent gets the problem, the dealbreakers and the transcript so far.
+The seller's agent gets its own profile and the transcript — `sellerTurnPrompt()` in
+`src/prompts/negotiate.ts` has no problem-text argument, which is what makes "the vendor never
+saw your problem" a property of the code. Both agents know the stage-1 result, never the figures.
+
+After the last round a deterministic leak guard (`src/lib/leak.ts`) checks the transcript for
+phrases and specific figures from the problem; a transcript that fails is discarded, never
+stored. A third call — which also never sees the problem — reads the transcript and returns the
+`DealEnvelope`: verdict, agreed contract format (must be in the stage-1 intersection), open
+questions for the humans, confidence. `budget_compatible` and `earliest_start` are copied from
+stage 1, not asked of the model.
 
 In the pitch: "at scale we replace stage 2 with embeddings plus LLM reranking." Stage 1 does
 not change — it is already O(n) and free.
@@ -141,6 +151,12 @@ The problems table is protected by RLS (row-level security — rules in the data
 deciding who may read which row): the owner sees their own problems, nobody else ever does.
 Matching runs server-side with the service role key. The seller receives only the explanation
 the model wrote **without** quoting the problem.
+
+Migration `0002` closes the two gaps 0001 left: a company row is readable by its owner only (the
+old policy exposed `seller_terms`, i.e. the vendor's price floor, to every signed-in user), and
+clients can no longer write `matches` at all — status moves only through `setMatchStatus()`,
+which enforces the double opt-in order. Screens read a match through `getMatchView()`, which
+projects by role: the problem text goes to its owner only, names appear only once accepted.
 
 ### Schema (draft)
 ```
@@ -159,9 +175,10 @@ runInterview(turns: InterviewTurn[]): Promise<{ done, follow_up, summary, urgenc
 saveProblem(input: ProblemInput): Promise<Problem>
 checkCompatibility(buyer: BuyerTerms, seller: SellerTerms): Compatibility  // pure, no AI
 findMatches(problemId: string): Promise<Match[]>                          // terms check → Claude
-negotiate(matchId: string): Promise<Negotiation>                          // agent negotiation
-setMatchStatus(matchId, action: 'interested'|'accept'|'decline'): Promise<Match>
-generateBrief(matchId: string): Promise<string /* markdown */>
+negotiate(matchId: string): Promise<Negotiation>                          // 2 calls/round, leak-checked, cached
+setMatchStatus(matchId, action: 'interested'|'accept'|'decline'): Promise<Match>  // enforces the opt-in order
+generateBrief(matchId: string): Promise<string /* markdown */>            // accepted matches only
+getMatchView(matchId: string): Promise<MatchView>                         // what THIS viewer may see
 ```
 All types live in `src/types.ts`. It is the single source of truth: the frontend builds
 against fake objects of that shape without waiting for the backend.
@@ -202,7 +219,8 @@ it blocks the demo.
 - Everyone stays in their own folders. See `TEAM.md`.
 - Schema and `types.ts` change only after telling everyone.
 - Prompts live in `src/prompts/`, one file per task — easy to edit without digging through code.
-- Only change the terms-comparison logic (`src/lib/overlap.ts`) together with `npm run check`.
+- Only change the terms comparison (`src/lib/overlap.ts`) or the leak guard (`src/lib/leak.ts`)
+  together with `npm run check` — both have self-checks that run there.
 - For the demo, AI responses are cached in the database so nothing hangs on stage.
 
 ---
@@ -212,7 +230,9 @@ it blocks the demo.
 1. **Lead with privacy, not matching.** Show two screens side by side: what the buyer sees,
    what the seller sees. Without that contrast a match looks like ordinary search.
 2. **Highlight the refusal.** In the transcript, mark the line where the buyer's agent declined
-   to reveal a detail. Not "they had a nice chat" — "here it protected its client".
+   to reveal a detail. Not "they had a nice chat" — "here it protected its client". The pipeline
+   flags these lines itself (`withheld: true` on `AgentDialogueLine`) — render the flag, do not
+   hardcode the moment.
 3. **Show a rejected match.** A pair that fits perfectly on meaning, killed by the budget
    filter. A negative result is more convincing than a positive one.
 4. **Say the line out loud:** *"We don't show the numbers. We show that the numbers match."*

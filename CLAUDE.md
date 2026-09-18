@@ -10,10 +10,12 @@ files: `TEAM.md`.
 ## Verify your work
 
 ```bash
-npm run check   # tsc --noEmit + overlap self-checks
+npm run check   # next typegen + tsc --noEmit + overlap and leak self-checks
 ```
 
-Run it after any change to `src/lib/overlap.ts`, `src/types.ts`, or `src/actions/`.
+Run it after any change to `src/lib/overlap.ts`, `src/lib/leak.ts`, `src/prompts/negotiate.ts`,
+`src/types.ts`, or `src/actions/`. It works on a fresh clone — `next typegen` generates the
+route types `tsc` needs.
 
 ## Invariants
 
@@ -21,14 +23,25 @@ IMPORTANT: the `problems` table is private. Its text must never reach another co
 client, and never appear verbatim in `reasoning_public`, in an agent's dialogue line, or in
 any prompt sent on behalf of the other side.
 
+- The seller's agent is a separate model call that never receives the problem text.
+  `sellerTurnPrompt()` and `envelopePrompt()` in `src/prompts/negotiate.ts` have no
+  problem-text argument; do not add one, and do not pass a summary of it either.
+- Every transcript goes through `findLeaks()` in `src/lib/leak.ts` before it is stored. A
+  transcript that fails is discarded. If negotiations start failing the guard, fix the prompt;
+  never loosen the guard.
 - Budget figures are compared only inside `checkCompatibility()`. One side's number must
   never enter the other side's prompt or response. Expose compatibility, not amounts.
+- Match status changes only through `setMatchStatus()`, which enforces the double opt-in
+  order (buyer `interested` → seller `accept`). Clients cannot write `matches` (migration
+  0002). A match screen reads through `getMatchView()`, which decides per viewer what is
+  shown — never query `matches` from a component and project the fields yourself.
 - `adminClient()` and `SUPABASE_SERVICE_ROLE_KEY` are allowed only in `src/actions/` and
   `scripts/`. Never in a component.
 - Parse model output only through `ask()` in `src/lib/claude.ts` — it enforces a zod schema.
   No hand-rolled `JSON.parse` on a model response.
 - Do not change `src/types.ts` or `supabase/migrations/` without saying so in the team chat
-  first. Every teammate builds against them.
+  first. Every teammate builds against them. Migrations are forward-only: a new `000N_*.sql`,
+  never an edit to one that has been applied.
 - Never commit secrets. They live in `.env.local`.
 
 ## Working style

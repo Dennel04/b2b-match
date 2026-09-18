@@ -351,17 +351,25 @@ expose it. It is seen by:
 
 - our Postgres, in plaintext,
 - anyone holding the service role key, which is the whole team,
-- the Anthropic API, where we send it inside a prompt.
+- the Anthropic API, where we send it inside the buyer agent's prompt.
+
+What is **not** on that list any more: the counterparty's agent. The negotiation runs as two
+separate model calls per round, and the seller agent's prompt takes no problem text at all
+(`sellerTurnPrompt()` in `src/prompts/negotiate.ts` — printable on stage). A deterministic guard
+(`src/lib/leak.ts`) then rejects any transcript that carries a phrase or a figure across. The
+first version had one call playing both agents with the problem in shared context; that was the
+"isolation in a prompt" a judge would have caught, and it is gone.
 
 **Say this instead:**
 
-> "No human at the counterparty company ever sees the problem statement. Ever. Even after the
-> meeting is accepted, the seller receives a summary, not the raw text."
+> "No human at the counterparty company ever sees the problem statement — and neither does the
+> agent acting for them. It is a separate model call that is never handed the text. Even after
+> the meeting is accepted, the seller receives a summary, not the raw text."
 
-That is true, it is verifiable on screen, and it is enough. If someone asks "but do *you* see
-it?", the honest answer is: "today, yes — the platform is a trusted intermediary, like a dark
-pool or an escrow. The next step is confidential computing so that we don't either." That answer
-is stronger than an exaggeration that got caught.
+That is true, it is verifiable on screen and in the code, and it is enough. If someone asks
+"but do *you* see it?", the honest answer is: "today, yes — the platform is a trusted
+intermediary, like a dark pool or an escrow. The next step is confidential computing so that we
+don't either." That answer is stronger than an exaggeration that got caught.
 
 ### 6.6 What this framing changes in the product
 
@@ -377,7 +385,8 @@ Three hard consequences for 24 hours:
 2. **The demo risks becoming invisible.** If everything happens inside machines, there is nothing
    on screen. So the centrepiece is **the negotiation transcript itself**, with the moment
    highlighted where the buyer's agent refused to disclose a detail. That is the only way to show
-   the invisible.
+   the invisible. (The pipeline marks those lines itself — `withheld` on each buyer turn — so the
+   highlight is real, not staged.)
 3. **Cold start gets worse, not better.** If people cannot browse a catalogue, the platform has
    no pull until density exists: you arrive, fill a form, and leave to wait. In the demo that is
    solved by seeding; in the pitch, by an honest answer about starting inside one community.

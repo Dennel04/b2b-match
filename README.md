@@ -1,9 +1,10 @@
 # B2B Match
 
 A dark pool for business problems. Companies describe their services publicly and their
-problems privately. Two AI agents negotiate behind a wall — no human on either side sees the
-other's data — and people are introduced only once the machines agree, with a briefing already
-written.
+problems privately. Two AI agents negotiate behind a wall — the vendor's agent is a separate
+model call that is never handed the buyer's problem, and a deterministic guard rejects any
+transcript that carries it across — and people are introduced only once the machines agree,
+with a briefing already written.
 
 Hackathon, 18–19 September 2026.
 
@@ -27,14 +28,15 @@ npm run dev
 ## Supabase
 
 1. Create a project at supabase.com.
-2. SQL Editor → run `supabase/migrations/0001_init.sql`.
+2. SQL Editor → run every file in `supabase/migrations/` in order (`0001`, then `0002`, …).
+   They are forward-only; a project that has run `0001` only needs the newer ones.
 3. Copy the keys from Settings → API into `.env.local`.
 
 ## Commands
 
 ```bash
 npm run dev     # development server
-npm run check   # typecheck + overlap self-checks — run before every push
+npm run check   # route typegen + typecheck + overlap/leak self-checks — run before every push
 npm run seed    # 18 seeded companies with profiles, terms and problems
 ```
 

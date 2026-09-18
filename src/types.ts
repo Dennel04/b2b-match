@@ -153,3 +153,21 @@ export interface AnonymousMatchView {
 }
 
 export type MatchAction = 'interested' | 'accept' | 'decline';
+
+/**
+ * A match as one viewer may see it. Projected server-side by role: the problem text is present
+ * only for its owner, and names appear only once both sides have accepted.
+ */
+export interface MatchView {
+  id: string;
+  status: MatchStatus;
+  score: number;
+  reasoning_public: string;
+  viewer: 'buyer' | 'seller' | 'both';
+  buyer: { name: string | null; industry: string; size_hint: string };
+  seller: { name: string | null; summary: string };
+  problem_text: string | null;
+  compatibility: Compatibility | null;
+  negotiation: Negotiation | null;
+  brief_md: string | null;
+}
