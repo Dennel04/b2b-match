@@ -6,7 +6,8 @@ import { InterviewSchema, interviewPrompt } from '@/prompts/interview';
 import type { InterviewTurn, Problem, ProblemInput } from '@/types';
 
 export async function runInterview(turns: InterviewTurn[]) {
-  return ask(InterviewSchema, interviewPrompt(turns), { effort: 'low' });
+  const today = new Date().toISOString().slice(0, 10);
+  return ask(InterviewSchema, interviewPrompt(turns, today), { effort: 'low' });
 }
 
 export async function saveProblem(input: ProblemInput): Promise<Problem> {

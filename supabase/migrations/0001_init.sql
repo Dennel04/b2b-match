@@ -12,8 +12,8 @@ create table companies (
   name text not null,
   website text,
   role company_role not null default 'both',
-  raw_scraped_text text,
   profile_json jsonb,
+  seller_terms jsonb,       -- SellerTerms: минимальный чек, форматы, доступность, возможности
   created_at timestamptz not null default now()
 );
 
@@ -23,6 +23,7 @@ create table problems (
   company_id uuid not null references companies(id) on delete cascade,
   text text not null,
   interview_json jsonb,
+  buyer_terms jsonb,        -- 🔒 BuyerTerms: потолок бюджета, форматы, сроки, требования
   urgency urgency_level not null default 'medium',
   created_at timestamptz not null default now()
 );
@@ -34,7 +35,9 @@ create table matches (
   problem_id uuid not null references problems(id) on delete cascade,
   score int not null check (score between 0 and 100),
   reasoning_public text not null,
-  agent_dialogue_json jsonb,
+  compatibility_json jsonb,   -- результат машинной сверки условий
+  agent_dialogue_json jsonb,  -- транскрипт переговоров агентов
+  deal_envelope_json jsonb,   -- о чём агенты договорились
   status match_status not null default 'proposed',
   brief_md text,
   created_at timestamptz not null default now()

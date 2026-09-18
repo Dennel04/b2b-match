@@ -1,22 +1,14 @@
 'use server';
 
-import { ask } from '@/lib/claude';
-import { scrapeSite } from '@/lib/scrape';
 import { serverClient } from '@/lib/supabase';
-import { ProfileSchema, profilePrompt } from '@/prompts/profile';
-import type { CompanyProfile } from '@/types';
-
-export async function scrapeAndProfile(website: string): Promise<CompanyProfile> {
-  const text = await scrapeSite(website);
-  return ask(ProfileSchema, profilePrompt(text));
-}
+import type { CompanyProfile, SellerTerms } from '@/types';
 
 export async function saveCompany(input: {
   name: string;
   website: string | null;
   role: 'seller' | 'buyer' | 'both';
   profile_json: CompanyProfile | null;
-  raw_scraped_text?: string | null;
+  seller_terms?: SellerTerms | null;
 }) {
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();

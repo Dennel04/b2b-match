@@ -1,15 +1,40 @@
 'use server';
 
 import { ask, askText } from '@/lib/claude';
+import { checkCompatibility, describeCompatibility, FORMAT_LABELS } from '@/lib/overlap';
 import { adminClient, serverClient } from '@/lib/supabase';
-import { DialogueSchema, dialoguePrompt } from '@/prompts/dialogue';
-import { MatchScoresSchema, matchPrompt } from '@/prompts/match';
 import { briefPrompt } from '@/prompts/brief';
-import type { CompanyProfile, Match, MatchAction } from '@/types';
+import { MatchScoresSchema, matchPrompt } from '@/prompts/match';
+import { NegotiationSchema, negotiatePrompt } from '@/prompts/negotiate';
+import type {
+  BuyerTerms,
+  CompanyProfile,
+  DealEnvelope,
+  Match,
+  MatchAction,
+  Negotiation,
+  SellerTerms,
+} from '@/types';
 
 const SCORE_THRESHOLD = 70;
 
-/** Работает через service-role: проблема читается на сервере и наружу не уходит. */
+const EMPTY_BUYER_TERMS: BuyerTerms = {
+  budget_ceiling: null,
+  contract_formats: [],
+  start_by: null,
+  requirements: [],
+  dealbreakers: [],
+};
+
+/**
+ * Весь матчинг идёт через service-role: текст проблемы читается только на сервере
+ * и наружу не уходит ни на одном шаге.
+ *
+ * Два этапа по порядку:
+ *   1. Машинная сверка условий — бесплатно отсекает несовместимых по деньгам,
+ *      срокам, формату контракта и требованиям.
+ *   2. Claude оценивает только тех, кто прошёл.
+ */
 export async function findMatches(problemId: string): Promise<Match[]> {
   const admin = adminClient();
 
@@ -19,32 +44,53 @@ export async function findMatches(problemId: string): Promise<Match[]> {
 
   const { data: sellers } = await admin
     .from('companies')
-    .select('id, profile_json')
+    .select('id, profile_json, seller_terms')
     .in('role', ['seller', 'both'])
     .neq('id', problem.company_id);
 
-  const candidates = (sellers ?? [])
-    .filter((s) => s.profile_json)
-    .map((s) => {
-      const p = s.profile_json as CompanyProfile;
-      return { id: s.id, summary: p.summary, services: p.services };
-    });
-  if (!candidates.length) return [];
+  const buyerTerms: BuyerTerms = problem.buyer_terms ?? EMPTY_BUYER_TERMS;
 
+  // Этап 1: машинная сверка. Ни одна сторона не видит чисел другой.
+  const viable = (sellers ?? [])
+    .filter((s) => s.profile_json)
+    .map((s) => ({
+      id: s.id,
+      profile: s.profile_json as CompanyProfile,
+      compatibility: checkCompatibility(buyerTerms, (s.seller_terms ?? {
+        budget_floor: null,
+        contract_formats: [],
+        available_from: null,
+        capabilities: [],
+      }) as SellerTerms),
+    }))
+    .filter((s) => !s.compatibility.hard_fail);
+
+  if (!viable.length) return [];
+
+  // Этап 2: смысловая оценка тех, кто прошёл по условиям.
   const { results } = await ask(
     MatchScoresSchema,
-    matchPrompt(problem.text, candidates),
+    matchPrompt(
+      problem.text,
+      viable.map((s) => ({
+        id: s.id,
+        summary: s.profile.summary,
+        services: s.profile.services,
+      })),
+    ),
     { effort: 'high' },
   );
 
+  const byId = new Map(viable.map((s) => [s.id, s]));
   const rows = results
-    .filter((r) => r.score >= SCORE_THRESHOLD)
+    .filter((r) => r.score >= SCORE_THRESHOLD && byId.has(r.seller_company_id))
     .map((r) => ({
       buyer_company_id: problem.company_id,
       seller_company_id: r.seller_company_id,
       problem_id: problemId,
       score: Math.round(r.score),
       reasoning_public: r.reasoning_public,
+      compatibility_json: byId.get(r.seller_company_id)!.compatibility,
       status: 'proposed' as const,
     }));
   if (!rows.length) return [];
@@ -52,6 +98,50 @@ export async function findMatches(problemId: string): Promise<Match[]> {
   const { data, error } = await admin.from('matches').insert(rows).select();
   if (error) throw error;
   return data as Match[];
+}
+
+/**
+ * Ядро продукта: переговоры агентов. Люди в контур не входят.
+ * Результат кешируется в базе — на сцене ничего не должно висеть.
+ */
+export async function negotiate(matchId: string): Promise<Negotiation> {
+  const admin = adminClient();
+  const { data: m } = await admin
+    .from('matches')
+    .select('*, problems(text, buyer_terms), seller:companies!matches_seller_company_id_fkey(profile_json)')
+    .eq('id', matchId)
+    .single();
+  if (!m) throw new Error('Матч не найден');
+
+  if (m.agent_dialogue_json && m.deal_envelope_json) {
+    return { lines: m.agent_dialogue_json, envelope: m.deal_envelope_json };
+  }
+
+  const seller = m.seller.profile_json as CompanyProfile;
+  const buyerTerms: BuyerTerms = m.problems.buyer_terms ?? EMPTY_BUYER_TERMS;
+
+  const result = await ask(
+    NegotiationSchema,
+    negotiatePrompt({
+      problemText: m.problems.text,
+      dealbreakers: buyerTerms.dealbreakers,
+      sellerSummary: seller.summary,
+      sellerServices: seller.services,
+      compatibilitySummary: describeCompatibility(m.compatibility_json),
+    }),
+    { effort: 'high' },
+  );
+
+  await admin
+    .from('matches')
+    .update({
+      agent_dialogue_json: result.lines,
+      deal_envelope_json: result.envelope,
+      status: result.envelope.verdict === 'reject' ? 'declined' : 'proposed',
+    })
+    .eq('id', matchId);
+
+  return result;
 }
 
 export async function setMatchStatus(matchId: string, action: MatchAction): Promise<Match> {
@@ -63,24 +153,6 @@ export async function setMatchStatus(matchId: string, action: MatchAction): Prom
     .from('matches').update({ status }).eq('id', matchId).select().single();
   if (error) throw error;
   return data as Match;
-}
-
-/** Wow-фича демо. Кешируем в базе: на сцене ничего не должно висеть. */
-export async function generateDialogue(matchId: string) {
-  const admin = adminClient();
-  const { data: m } = await admin
-    .from('matches')
-    .select('*, problems(text), seller:companies!matches_seller_company_id_fkey(profile_json)')
-    .eq('id', matchId)
-    .single();
-  if (!m) throw new Error('Матч не найден');
-  if (m.agent_dialogue_json) return m.agent_dialogue_json;
-
-  const seller = m.seller.profile_json as CompanyProfile;
-  const { lines } = await ask(DialogueSchema, dialoguePrompt(m.problems.text, seller.summary));
-
-  await admin.from('matches').update({ agent_dialogue_json: lines }).eq('id', matchId);
-  return lines;
 }
 
 export async function generateBrief(matchId: string): Promise<string> {
@@ -97,6 +169,8 @@ export async function generateBrief(matchId: string): Promise<string> {
   if (m.status !== 'accepted') throw new Error('Брифинг только после согласия обеих сторон');
 
   const seller = m.seller.profile_json as CompanyProfile;
+  const envelope = m.deal_envelope_json as DealEnvelope | null;
+
   const brief = await askText(
     briefPrompt({
       buyerName: m.buyer.name,
@@ -104,6 +178,8 @@ export async function generateBrief(matchId: string): Promise<string> {
       problemText: m.problems.text,
       sellerSummary: seller.summary,
       score: m.score,
+      agreedFormat: envelope?.agreed_format ? FORMAT_LABELS[envelope.agreed_format] : null,
+      openQuestions: envelope?.open_questions ?? [],
     }),
   );
 
