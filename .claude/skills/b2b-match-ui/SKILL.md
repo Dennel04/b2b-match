@@ -1,68 +1,128 @@
 ---
 name: b2b-match-ui
-description: Project-specific UI rules for the B2B Match hackathon MVP (private buyer problems, blind matching, double opt-in, meeting brief). Use whenever building or changing any screen, component or copy in src/app or src/components - onboarding, company profile, AI interview, matches, agent dialogue, brief. Use together with frontend-design for visual direction.
+description: The settled UI for B2B Match — layout, tokens, group vocabulary, privacy rules and copy. Use whenever building or changing any screen, component or copy in src/app or src/components. The visual direction is decided; this skill is the direction, not a starting point for finding one.
 ---
 
-# B2B Match - UI rules
+# B2B Match — UI
 
-Read `PLAN.md` (sections 1, 3) and `CLAUDE.md` first. This skill only adds what is specific to this product's interface. For visual direction use `frontend-design`; for a final audit use `web-design-guidelines`; for palette/font lookup use `ui-ux-pro-max`.
+The direction is settled. The reference screen is `drafts/design/problem-page.html` — open it over
+http (`cd drafts/design && python3 -m http.server 8080`), not `file://`. Build every new screen
+from it. Do not invent a second visual language, and do not go looking for a direction.
 
-## Design brief (starting point for the frontend-design plan step)
+Read `PLAN.md` (sections 1, 3) and `CLAUDE.md` first. This skill adds only what is specific to
+the interface.
 
-- **Subject:** a discreet B2B introduction service. Buyers state real problems privately; sellers only ever see an anonymised match. No cold outreach.
-- **Audience:** operations/sales leads at small and mid-size companies. They are busy, sceptical of "another sales tool", and care about who sees their data.
-- **Primary job of the UI:** make the buyer feel *in control and safe*, and make the seller understand *why* they were matched. Trust beats flash.
-- **Tone:** calm, precise, confidential. Closer to a private bank or a notary than to a growth-hacking SaaS. Not playful, no hype words.
-- **Signature element (spend boldness here, keep the rest quiet):** the *reveal*. A match starts as a redacted card (blocked-out company name and problem) and visibly opens up as each side opts in. Privacy is the product, so it must be visible in the design, not only in a footnote.
-- Run the frontend-design plan/critique pass and avoid its listed generic defaults. Decide palette and type for this brief; do not copy another project's.
+## The idea the interface carries
 
-## Privacy rules in the UI (hard rules, they mirror CLAUDE.md)
+A confidential document that two parties read differently. The buyer writes a real problem; the
+other company never reads it. Two agents negotiate; people meet only after both consent.
 
-1. Anything from the `problems` table is shown **only** to the owning company. Never render it in a seller view, a match card, the agent dialogue or the brief beyond what the server returned as `reasoning_public` / brief text.
-2. Never build UI that concatenates or "helpfully" echoes problem text into seller-facing copy. Seller-facing text comes from the server fields only.
-3. Every place where the buyer types or sees their own problem carries a persistent lock marker and the line "Only the matching system sees this. Sellers never do." Use the same marker and wording everywhere.
-4. Before the buyer opts in, seller identity is hidden from the buyer as well (blind match): show industry, size, service category, score and reasoning, not name, website or contacts.
-5. Reveal only follows status: `proposed` -> anonymous card; `buyer_interested` -> seller is notified, buyer's company profile (not the problem) becomes visible to the seller; `accepted` -> both identities and the brief; `declined` -> card collapses to a neutral "Declined" state, no details.
+Tone: calm, precise, confidential. Closer to a notary than to a growth SaaS. No hype, no
+playfulness, no celebration of matches.
 
-## Screens and what each must show
+## Layout
 
-| Screen | Must have |
-|---|---|
-| Sign-in / role | Role choice (seller / buyer / both), one-line promise of privacy |
-| Profile (seller) | URL input, visible progress while scraping ("Reading your site...", "Structuring your services..."), then an **editable** AI draft - the user always confirms before saving |
-| AI interview (buyer) | One question at a time, the follow-up appears after each answer, progress indicator (3-4 steps), lock marker always visible, final summary the user can edit |
-| Matches | Card per match: score (0-100), 2-sentence public reasoning, status chip, primary action per status. Sorted by score. Empty state that says what to do next |
-| Agent dialogue | Read-only transcript of two AI agents, clearly labelled as agents (not people), each side visually distinct, collapsible so the demo can skip it |
-| Brief | Rendered markdown: who is who, allowed problem summary, 3 opening questions, meeting slot link. Copy/print friendly |
+Two columns. A fixed 216px sidebar on the left, everything else in a flex column on the right.
 
-## Status vocabulary (one name per state, use it everywhere, buttons and toasts included)
+- **Sidebar** — white, `border-right` 1px. A 60px header holding only the product name, aligned
+  to the top bar's height so the two bottom borders form one line. Then nav items: icon, label,
+  optional count chip. Active item gets a `#EDF1F3` fill and weight 600. Utility items sit at the
+  bottom behind a `border-top`, pushed down with `margin-top:auto`.
+- **Top bar** — 60px, white, `border-bottom`. Left: back chevron, case reference, status chip,
+  and the control that acts on that status. Right, pushed with `margin-left:auto`: page-level
+  controls, then the privacy marker, then the avatar.
+- **Content** — `max-width:1240px`, `padding:0 32px`, centred. The sidebar already gives the
+  outer gutter; do not add 48px again.
+- **Footer** — one row, `margin-top:auto`, 12px muted text. A working screen, not a landing page:
+  no link columns, no paragraph.
 
-| Status | Label shown | Buyer action | Seller action |
+## Tokens
+
+Defined in `src/app/globals.css`. Never write raw hex in a component.
+
+| Role | Light | Use |
+|---|---|---|
+| `--bg` | `#F4F6F8` | page ground, cool, never cream |
+| `--surface` | `#FFFFFF` | cards, bars, sidebar |
+| `--surface-alt` | `#EDF1F3` | active nav, quiet panels |
+| `--ink` | `#16323A` | text; a real slate-teal, never a tinted black |
+| `--ink-soft` | `#5C6E75` | secondary text |
+| `--ink-faint` | `#8E9897` | metadata, timestamps |
+| `--border` | `#E4E9ED` | rules and card borders |
+| `--accent` | `#2F6D52` | compatibility and positive state only |
+| `--gold` / `--gold-soft` | `#8F6A35` / `#F3ECDC` | **withheld or negotiable, nothing else** |
+
+Type: Instrument Sans, one family. Radii: 10px cards, 8px buttons, 7px chips. Icons: lucide, one
+set, no emoji.
+
+## The three groups
+
+Every list of counterparties uses these three names and nothing else. Header is the label, a
+count chip, and a short right-aligned fact.
+
+| Group | Fact | Row action |
+|---|---|---|
+| **Matched** | Every term cleared | `Open` |
+| **Awaiting** | One term apart, and willing to move | `Ask` |
+| **Declined** | Nothing was sent to them | `Review` (collapsed to one row, never a list) |
+
+Declined never names a company. It is one line — "Could help if you moved a term" — and a button.
+Showing rejections is deliberate: a product that only shows successes reads as a salesman.
+
+Awaiting rows carry a chip naming the *area* of the concession (`Deadline`, `Contract format`,
+`Price`) in the gold tone, never the vendor's figures.
+
+## Privacy rules (hard, they mirror CLAUDE.md)
+
+1. Anything from `problems` renders only for the owning company. Seller-facing text comes from
+   server fields (`reasoning_public`, brief) verbatim — never concatenate or echo problem text.
+2. Never render a figure that came from the other side. The interface states that terms are
+   compatible, never what they are. This includes tooltips, summaries and charts.
+3. Counterparties are anonymous until both sides consent: industry, size, city, score — never
+   name, logo, website or contact. Names appear only at `accepted`.
+4. Reveal follows status exactly: `proposed` → anonymous; `buyer_interested` → seller sees the
+   buyer's company profile, never the problem; `accepted` → identities and brief; `declined` →
+   collapses to a neutral state with no details.
+5. The word for what the other side cannot see is **withheld** — not "hidden", not "encrypted".
+   The platform can read it; the copy must not imply otherwise.
+
+## Status vocabulary
+
+One name per state, in buttons, chips and toasts alike.
+
+| Status | Shown | Buyer action | Seller action |
 |---|---|---|---|
-| `proposed` | New match | "I'm interested" / "Not now" | - (not visible yet) |
-| `buyer_interested` | Interest sent | - | "Accept" / "Decline" |
+| `proposed` | New match | Interested / Not now | — |
+| `buyer_interested` | Interest sent | — | Accept / Decline |
 | `accepted` | Meeting confirmed | View brief | View brief |
-| `declined` | Declined | - | - |
-
-## AI-loading states (the demo lives or dies here)
-
-- Every AI call takes seconds. Never show a bare spinner: show named steps or skeleton cards in the final layout so nothing jumps.
-- Matching: "Comparing your problem with N companies..." then cards appear. A "Show cached result" fallback path must exist (PLAN.md section 7: cache AI answers).
-- Every AI call has an error state with a retry button and a plain explanation. Server Actions may fail on stage; the UI must not white-screen.
-- Optimistic status changes are fine, but roll back visibly on failure.
+| `declined` | Declined | — | — |
 
 ## Copy
 
-- English UI copy by default (jury at TalTech is likely international). If the team decides on another language, change this line and translate all strings in one pass.
-- Sentence case, active voice, buttons say what happens: "Send interest", not "Submit". Same word in button, toast and status.
-- Errors say what happened and how to fix it. No apologies, no "Oops".
-- Use real-looking content in mocks (seed-like Estonian/Nordic company names, believable problems), never lorem ipsum or "Company A".
+Every line has to earn its place. Before writing one, ask what already says it — the label, the
+chip, or the button. If something else says it, cut the line.
 
-## Working rules for the frontend
+- A button names what happens: `Accept meeting`, not `Submit`. `Review`, not `View`, when the
+  thing being reviewed is the user's own terms.
+- Status reads from the user's side: `Ready to meet`, not `A meeting is recommended`.
+- A row's title says what a company does; its subtitle says where. Never both in both.
+- Never call the buyer's text "data" or "an entry". It is a problem someone wrote down.
+- Empty states are invitations: say what would change the situation.
+- Sentence case, active voice, English.
+- Real content in mocks — real Estonian companies, believable problems. Never lorem ipsum.
 
-- Types come from `src/types.ts` (import, never edit). Build screens against typed fake data in `src/lib/mock-data.ts` first, then swap in the Server Actions from `src/actions/` (contract: PLAN.md section 4) without changing markup.
-- Stay inside `src/app/**` and `src/components/**`. Do not touch `src/actions`, `src/prompts`, migrations or `src/types.ts` (other people's zones).
-- Tailwind only. Design tokens (colors, radii, spacing, fonts) live in one place (`tailwind.config` / CSS variables), never raw hex in components. No new UI libraries unless the whole team agrees; if shadcn/ui is adopted, agree on it once and use it everywhere.
-- Quality floor (do not announce, just do): mobile-first, visible keyboard focus, `prefers-reduced-motion` respected, contrast 4.5:1, all form fields labelled, icons from one set (no emoji as icons).
-- Priority is the demo path (PLAN.md section 3). Polish those six steps before anything else; nothing outside the demo path gets design time until the path works end to end.
-- When a screen is done, run `web-design-guidelines` on its files and fix findings before merging.
+## AI-loading states
+
+The demo lives here. Never a bare spinner: named steps or skeletons in the final layout so
+nothing jumps. Every AI call has an error state with a retry and a plain explanation. Cached
+results must be servable on stage (PLAN.md §7).
+
+## Working rules
+
+- Types come from `src/types.ts` — import, never edit.
+- Stay inside `src/app/**` and `src/components/**`.
+- Tailwind only, tokens only, no new UI libraries.
+- Quality floor, unannounced: works at phone width, visible keyboard focus, reduced motion
+  respected, contrast holds, every field labelled.
+- Priority is the demo path (PLAN.md §3). Nothing outside it gets design time until it works
+  end to end.
