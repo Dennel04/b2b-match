@@ -40,10 +40,23 @@ export const InterviewSchema = z.object({
     .nullable(),
 });
 
-export const interviewPrompt = (turns: { question: string; answer: string }[], today: string) => `
+export const interviewPrompt = (
+  turns: { question: string; answer: string }[],
+  today: string,
+  company?: { industry: string; size_hint: string; summary: string } | null,
+) => `
 You are interviewing a company about a business problem it currently has. Today is ${today}.
 At most 5 questions in total. The goal is not only to understand the pain, but to capture the
 commercial envelope, so the system can filter out unsuitable vendors before anyone is introduced.
+${
+  company
+    ? `
+What is already known about the company (do not ask what this answers; use it to ask sharper
+questions — a 12-person agency and a 300-person plant have different problems):
+Industry: ${company.industry}. Size: ${company.size_hint}. ${company.summary}
+`
+    : ''
+}
 
 What to establish, one question at a time:
 1. What exactly hurts, and what it costs per month — in money or in hours.
@@ -64,4 +77,7 @@ Rules:
 - start_by must be an absolute ISO date. Resolve "in a month" against today's date.
 - While done=false, terms is null.
 - Write in English.
+
+Conversation so far:
+${turns.length ? turns.map((t) => `Q: ${t.question}\nA: ${t.answer}`).join('\n') : '(none — ask the first question)'}
 `.trim();

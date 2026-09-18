@@ -17,9 +17,35 @@ a form action; never from a client component directly with fetch. All types are 
 | `setMatchStatus(matchId, action)` | `Match` | instant | `action` is `'interested' \| 'accept' \| 'decline'`. Enforces the order (§4); throws on an illegal move. |
 | `generateBrief(matchId)` | `string` (markdown) | ~10 s first time | Only for `status === 'accepted'`; throws otherwise. Cached in `brief_md`. |
 
-Onboarding calls, same rules: `saveCompany(input)` (create or update the signed-in user's company),
-`runInterview(turns)` → `{ done, follow_up, summary, urgency, terms }` (one turn ≈ 3–5 s; loop until
-`done`), `saveProblem(input)` → `Problem`.
+Onboarding calls, same rules: `draftCompanyProfile(website?)` → `CompanyDraft` (§2a),
+`saveCompany(input)` (create or update the signed-in user's company), `runInterview(turns, company?)`
+→ `{ done, follow_up, summary, urgency, terms }` (one turn ≈ 3–5 s; loop until `done`; pass the
+company's `profile_json` so the questions skip what it already answers), `saveProblem(input)` → `Problem`.
+
+## 2a. Onboarding with (almost) no typing — how to build that page
+
+The goal: a person signs up and **sees their company already filled in**, then confirms.
+
+1. Right after sign-up, call `draftCompanyProfile()` with no argument — it reads the website
+   behind the user's email domain (`anna@nordkai.ee` → `https://nordkai.ee`). Takes 10–20 s;
+   show "Reading your website…" with the pages it is trying, not a bare spinner. Offer a
+   "My site is elsewhere" field that calls `draftCompanyProfile('https://…')` instead.
+2. It returns a `CompanyDraft`: `profile` (name, industry, size, services, keywords, summary),
+   `role` guess, `seller_terms.capabilities` with one `evidence` string per capability, and
+   `pages_read`. Render it as a **pre-filled form**, headed "Here is what we read on your site —
+   correct anything that's wrong". Capabilities are checkboxes, pre-ticked, each with its
+   evidence as help text ("ISO 27001 — from /about"). Unticking is one click.
+3. Personal mailbox (gmail etc.) or a site that cannot be read → the call throws with a plain
+   message. Catch it and show the same form empty, with the message as a hint. Never block.
+4. Submit → `saveCompany({ name, website, role, profile_json, seller_terms })`. Done.
+
+**Do not ask for money, contract formats or availability on this page.** The draft leaves
+`budget_floor`, `contract_formats` and `available_from` empty on purpose, and the matching
+filter treats empty as "unknown — don't filter", so a vendor with nothing but a website already
+takes part in matching. Ask for those *lazily*, at the moment they matter: when a match shows
+`compatibility.budget === 'unknown'` or `contract_formats` is empty, show one inline prompt on
+that match ("Set your minimum deal size to be considered") that saves through `saveCompany`.
+One field in context beats ten fields up front.
 
 ## 2. The screens, and which call feeds each
 

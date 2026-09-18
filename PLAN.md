@@ -106,7 +106,9 @@ say "this is just another spam channel".
 - Streaming the agent negotiation live on screen
 
 ### Explicitly not doing
-- **Website scraping** — cut; the profile is typed in 30 seconds
+- **Manual profile forms as the default** — `draftCompanyProfile()` reads the site behind the
+  user's email domain and pre-fills everything except money; the person confirms. Commercial
+  terms are asked lazily, on the first match that needs them (see `docs/FRONTEND.md` §2a)
 - OAuth integrations with Notion/Slack/CRM — a roadmap slide only
 - Payments, human-to-human chat, mobile app, admin panel, email campaigns
 

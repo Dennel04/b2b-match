@@ -68,6 +68,19 @@ export interface CompanyProfile {
   summary: string;            // 2-3 sentences, safe to show the other side
 }
 
+/**
+ * What draftCompanyProfile() read off the company's website. Shown back as "confirm or edit":
+ * every field is a guess with evidence, and money is deliberately absent — it is never inferred.
+ */
+export interface CompanyDraft {
+  website: string;
+  role: CompanyRole;
+  profile: CompanyProfile;
+  seller_terms: SellerTerms;            // capabilities filled from evidence; floor/formats/date left empty
+  evidence: string[];                   // one entry per capability, same order
+  pages_read: string[];
+}
+
 export interface Company {
   id: string;
   owner_id: string;

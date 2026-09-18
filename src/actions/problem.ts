@@ -3,11 +3,18 @@
 import { ask } from '@/lib/claude';
 import { serverClient } from '@/lib/supabase';
 import { InterviewSchema, interviewPrompt } from '@/prompts/interview';
-import type { InterviewTurn, Problem, ProblemInput } from '@/types';
+import type { CompanyProfile, InterviewTurn, Problem, ProblemInput } from '@/types';
 
-export async function runInterview(turns: InterviewTurn[]) {
+/**
+ * One interview turn. Pass the caller's company profile when there is one: the questions get
+ * sharper and the ones the profile already answers are skipped.
+ */
+export async function runInterview(turns: InterviewTurn[], company?: CompanyProfile | null) {
   const today = new Date().toISOString().slice(0, 10);
-  return ask(InterviewSchema, interviewPrompt(turns, today), { effort: 'low' });
+  const context = company
+    ? { industry: company.industry, size_hint: company.size_hint, summary: company.summary }
+    : null;
+  return ask(InterviewSchema, interviewPrompt(turns, today, context), { effort: 'low' });
 }
 
 export async function saveProblem(input: ProblemInput): Promise<Problem> {

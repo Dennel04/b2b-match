@@ -1,7 +1,46 @@
 'use server';
 
+import { ask } from '@/lib/claude';
+import { domainFromEmail, normaliseWebsite, readWebsite } from '@/lib/scrape';
 import { serverClient } from '@/lib/supabase';
-import type { CompanyProfile, SellerTerms } from '@/types';
+import { ProfileDraftSchema, profileDraftPrompt } from '@/prompts/profile';
+import type { CompanyDraft, CompanyProfile, SellerTerms } from '@/types';
+
+/**
+ * Zero-typing onboarding. Pass a website, or nothing to use the signed-in user's email domain.
+ * ~10-20 s. Throws with a plain message when the site cannot be read — the screen then falls
+ * back to the manual form. The result is a draft: show it, let them edit, then saveCompany().
+ */
+export async function draftCompanyProfile(website?: string): Promise<CompanyDraft> {
+  let site = website?.trim();
+  if (!site) {
+    const db = await serverClient();
+    const { data: { user } } = await db.auth.getUser();
+    const domain = user?.email ? domainFromEmail(user.email) : null;
+    if (!domain) throw new Error('No company website to read — enter it, or fill the profile by hand');
+    site = domain;
+  }
+  site = normaliseWebsite(site);
+
+  const pages = await readWebsite(site);
+  if (!pages.length) throw new Error(`Could not read ${site} — fill the profile by hand`);
+
+  const draft = await ask(ProfileDraftSchema, profileDraftPrompt(site, pages), { effort: 'medium' });
+
+  return {
+    website: site,
+    role: draft.role_guess,
+    profile: draft.profile,
+    seller_terms: {
+      budget_floor: null,
+      contract_formats: [],
+      available_from: null,
+      capabilities: draft.capabilities,
+    },
+    evidence: draft.evidence,
+    pages_read: pages.map((p) => p.url),
+  };
+}
 
 export async function saveCompany(input: {
   name: string;

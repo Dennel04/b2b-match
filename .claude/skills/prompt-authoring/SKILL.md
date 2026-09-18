@@ -46,7 +46,12 @@ That is enforced in prompt text, so treat these as code:
   Neither agent names money: the platform already compared the numbers, only the payment
   format is negotiable.
 - `interview.ts` — when asking for the budget ceiling, tell the user why: the number is
-  never shown to any vendor, it only filters who they see.
+  never shown to any vendor, it only filters who they see. The prompt receives the previous
+  turns and, when known, the company profile — keep both in it, or the model restarts the
+  interview every call.
+- `profile.ts` — drafts a profile from the company's website. Nothing without evidence in the
+  page text, and **never a money figure**: `budget_floor` stays null and is asked later, on the
+  first match that needs it.
 
 ## What the negotiation must return
 
