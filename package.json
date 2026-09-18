@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "warm": "tsx --env-file=.env.local scripts/warm.ts",
     "check": "next typegen && tsc --noEmit && tsx src/lib/overlap.check.ts && tsx src/lib/leak.check.ts"
   },
   "dependencies": {
