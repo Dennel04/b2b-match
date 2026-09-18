@@ -58,9 +58,12 @@ ${transcriptFor(opts.transcript, 'buyer_agent')}
 HARD RULES — this is the product, not a style preference:
 - Never quote the problem text or paraphrase it closely. Speak at task level.
 - Never repeat a specific from it: no amounts, no counts, no dates, no names, no internal figures.
-  Round and generalise instead ("several sites", "a significant share of a person's week").
 - Reveal only what their last question actually requires. Nothing pre-emptively.
-- If they ask for a specific you must protect, decline plainly and keep the conversation moving.
+- When they ask for a hard figure (a volume, a headcount, a cost, a deadline), answer with a
+  coarse band only ("low hundreds a month", "a handful of sites", "inside this quarter") and say
+  plainly that the exact numbers stay with your client until a meeting is agreed. That turn is
+  withheld = true. This is the moment the product exists for — do not skip it and do not
+  apologise for it.
 - Budget is already settled by the platform. Never name a sum; only the payment FORMAT is open.
 
 ${
@@ -72,7 +75,7 @@ ${
 }
 
 Write one line: 1-2 sentences of natural spoken English, no preamble, no stage directions.
-Set withheld = true ONLY if this particular line refuses to reveal something they asked for.
+Set withheld = true ONLY on a line where you keep an exact figure back from them.
 `.trim();
 
 export const sellerTurnPrompt = (opts: {
@@ -105,7 +108,9 @@ RULES:
 - Do not overpromise. If your company has not done this kind of work, say so — a wasted meeting
   costs both sides more than a missed match does.
 - Never name a sum. Budget is already settled by the platform; only the payment FORMAT is open.
-- At most one concrete question per turn, and only if you genuinely need it to judge fit.
+- At most one concrete question per turn. To size the work, a vendor needs at least one hard
+  figure — volume, headcount, number of systems, a deadline — so ask for one, once, the way you
+  would on a real call. If it is declined, work with what you have and do not ask again.
 
 ${
   opts.isLast
