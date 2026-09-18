@@ -62,9 +62,11 @@ one envelope call. The envelope is the product, the transcript is the demo.
   for 1-3 concrete questions humans must settle.
 - Bias `verdict` toward `reject`: a wasted human meeting costs more than a missed match.
 
-After the turns, `findLeaks()` (`src/lib/leak.ts`) rejects a transcript that repeats a
-six-word phrase or a specific number from the problem. If a prompt change makes negotiations
-start failing that guard, fix the prompt — never loosen the guard to make the demo pass.
+Every buyer line is checked with `findLeaks()` (`src/lib/leak.ts`) as it is produced — an
+eight-word phrase or a specific number from the problem gets the line regenerated once with
+the offending fragment quoted back — and the finished transcript is checked again and
+discarded if anything slipped through. If a prompt change makes negotiations start failing
+that guard, fix the prompt — never loosen the guard to make the demo pass.
 
 ## Dates
 

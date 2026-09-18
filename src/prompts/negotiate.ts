@@ -40,6 +40,8 @@ export const buyerTurnPrompt = (opts: {
   transcript: AgentDialogueLine[];
   isFirst: boolean;
   isLast: boolean;
+  /** Set when the previous attempt reused the problem's wording; the line is regenerated once. */
+  rephrase?: string;
 }) => `
 You are the AI agent for a BUYING company, negotiating with a vendor's agent. No human is
 watching either side, and the vendor does not know who your client is.
@@ -56,7 +58,8 @@ Transcript so far:
 ${transcriptFor(opts.transcript, 'buyer_agent')}
 
 HARD RULES — this is the product, not a style preference:
-- Never quote the problem text or paraphrase it closely. Speak at task level.
+- Never quote the problem text or paraphrase it closely. Speak at task level, and always in
+  your own words — never reuse your client's phrasing, even for the ask itself.
 - Never repeat a specific from it: no amounts, no counts, no dates, no names, no internal figures.
 - Reveal only what their last question actually requires. Nothing pre-emptively.
 - When they ask for a hard figure (a volume, a headcount, a cost, a deadline), answer with a
@@ -74,6 +77,11 @@ ${
       : 'Answer what they asked, then probe the thing that would most change your client\'s decision.'
 }
 
+${
+  opts.rephrase
+    ? `\nYour previous attempt reused this exact wording from the confidential text: "${opts.rephrase}". Say the same thing in different words.\n`
+    : ''
+}
 Write one line: 1-2 sentences of natural spoken English, no preamble, no stage directions.
 Set withheld = true ONLY on a line where you keep an exact figure back from them.
 `.trim();

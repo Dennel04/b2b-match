@@ -7,8 +7,12 @@ import type { AgentDialogueLine } from '@/types';
  * IS the product, so it is verified deterministically before anything reaches the other side.
  */
 
-/** Six words in a row from the problem is a quote, not a coincidence. */
-const PHRASE_LENGTH = 6;
+/**
+ * Eight words in a row from the problem is a quote, not a coincidence. Six was too tight: the
+ * buyer's agent must state the ask ("we need a design partner to…") and the problem text states
+ * it too, so ordinary task-level phrasing collided on 4 of 7 seeded negotiations.
+ */
+const PHRASE_LENGTH = 8;
 
 /** Single digits ("2-4 weeks", "one of three") are ambient; specifics are 10 and up. */
 const SPECIFIC_NUMBER = 10;

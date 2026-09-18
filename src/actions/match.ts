@@ -153,18 +153,26 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
   for (let round = 0; round < ROUNDS; round++) {
     const isLast = round === ROUNDS - 1;
 
-    const buyer = await ask(
-      BuyerTurnSchema,
-      buyerTurnPrompt({
-        problemText,
-        dealbreakers: buyerTerms.dealbreakers,
-        compatibilitySummary,
-        transcript: lines,
-        isFirst: round === 0,
-        isLast,
-      }),
-      { effort: 'medium' },
-    );
+    const buyerPrompt = {
+      problemText,
+      dealbreakers: buyerTerms.dealbreakers,
+      compatibilitySummary,
+      transcript: lines,
+      isFirst: round === 0,
+      isLast,
+    };
+    let buyer = await ask(BuyerTurnSchema, buyerTurnPrompt(buyerPrompt), { effort: 'medium' });
+
+    // Check each buyer line as it is produced: one regeneration is cheaper than discarding
+    // the whole negotiation at the end, and the final guard below still fails closed.
+    const slip = findLeaks(problemText, [{ speaker: 'buyer_agent', text: buyer.text }]);
+    if (slip.length) {
+      buyer = await ask(
+        BuyerTurnSchema,
+        buyerTurnPrompt({ ...buyerPrompt, rephrase: slip[0].fragment }),
+        { effort: 'medium' },
+      );
+    }
     lines.push({ speaker: 'buyer_agent', text: buyer.text, withheld: buyer.withheld });
 
     // Note what is NOT passed here: problemText, buyerTerms, dealbreakers.
