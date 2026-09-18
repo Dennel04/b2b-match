@@ -56,6 +56,17 @@ Send these one at a time, in this order.
 > sides have agreed to meet. Either show all of them anonymously, or make it unmistakable that
 > this one is named because both sides already consented.
 
-> Build the screen where the buyer sees, side by side, their own problem and the much smaller
-> amount that actually reached the vendor. That comparison is the product's entire argument and
-> it does not exist yet.
+> The lower half of the screen is empty. Do not fill it with statistics, metric tiles or a
+> chart. Two things belong there.
+>
+> First, a comparison: on one side the buyer's problem in their own words with the specific
+> details that never left marked in place, on the other side — visibly smaller — the two
+> sentences the vendors actually received. The difference in volume between the two is the
+> product's entire argument, and it is not on the screen yet.
+>
+> Second, a record of what the system did on the buyer's behalf while they waited: terms
+> checked against nine companies, seven eliminated with a reason each, two agents entered
+> negotiation, the negotiation with one of them finished and is waiting on the buyer. Treat it
+> as the case log of PRB-4f21, in the same register as that reference number — not as an
+> activity feed with avatars and timestamps. A buyer who fills in a form and waits has no
+> reason to come back; this is what gives them one.
