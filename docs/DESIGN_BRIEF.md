@@ -283,3 +283,119 @@ variations of one layout.
 > combination out at full fidelity, desktop first. Then show me the same screen at phone width.
 
 Replace the numbers with whichever two actually work.
+
+---
+
+## 9. Same brief for Lovable
+
+**Do not connect this repo.** Lovable cannot import an existing repository — it only exports to
+a repo it creates itself. Its default stack is TanStack Start / React + Vite, not Next.js. Treat
+Lovable as a mockup generator whose output we port by hand.
+
+Why it is still worth using: it emits React + Tailwind, and this project already runs Tailwind
+v4, so the JSX ports into `src/components/` almost verbatim. Claude Design emits HTML, which has
+to be rewritten into components.
+
+**Porting checklist**
+- Copy the JSX into `src/components/`, keep the Tailwind classes.
+- Add `'use client'` to any component with state or handlers.
+- Strip react-router imports; this app routes with the App Router.
+- Replace shadcn/ui imports with plain markup unless we decide to install shadcn.
+- Data comes from `src/types.ts`. Do not keep Lovable's invented field names.
+
+### First message for Lovable
+
+Paste everything between the lines. It is the §8 brief plus the constraints Lovable needs, or it
+will try to build a whole application.
+
+---
+
+Build a static mockup of ONE screen. No backend, no database, no authentication, no routing, no
+Supabase. Hardcode all data. This is a visual prototype whose code we port into an existing
+Next.js app by hand — keep it to React components with Tailwind classes, and avoid libraries
+beyond what is needed to render.
+
+Product: a confidential matching platform for small B2B companies in Estonia.
+
+A company writes down an operational problem it has right now, with real numbers. That text is
+never published and never shown to another company. Vendors separately describe what they sell.
+The platform compares both sides' commercial terms server-side, then two AI agents — one acting
+for each company — negotiate on their owners' behalf. Neither human knows the other exists until
+the agents agree.
+
+Users are ordinary companies: a 40-person freight forwarder, a 12-person software shop. Cautious
+about disclosure, unimpressed by dashboards.
+
+The idea the interface has to carry: **a confidential document, partly readable.**
+
+THE SCREEN: the two-sided view.
+
+The same problem rendered twice on one screen — what the buyer wrote, and what the seller is
+allowed to see. The seller's side is the buyer's side with information physically removed: not a
+separate card, not a summary panel, but visibly the same document with parts withheld.
+
+Below it, the negotiation transcript between the two agents, alternating. One line must be
+visually marked: the moment the buyer's agent declines to disclose a detail. That single mark is
+the product's entire argument and should be the most deliberate moment on the page. The
+transcript ends with the verdict, the contract format both agents settled on, and two questions
+they could not resolve.
+
+Nothing else on this screen may compete with the withheld information and the refusal.
+
+REAL CONTENT — use this, no placeholder text.
+
+Buyer: Nordkai Logistics, Tallinn, 40 employees, freight forwarding.
+What they wrote, verbatim: "We're still doing customs paperwork by hand across three warehouses.
+It eats about 60 hours a month between two people, and we've had two fines this year from filing
+errors. We tried a freelancer last spring and it didn't stick."
+
+Seller: Rebase OÜ, Tartu, 12 employees, process automation for logistics.
+
+What the seller is allowed to see: "A mid-sized logistics company needs help automating a manual
+back-office process across several sites. They have tried an external contractor before without
+success."
+
+Transcript: eight lines, alternating, buyer's agent first. The marked line — the seller's agent
+asks how many filings per month; the buyer's agent gives a range and says the exact figures stay
+with its client until a meeting is agreed. Outcome: proceed, monthly retainer, two open questions.
+
+Budgets are compatible but neither figure is ever displayed. The interface states that terms
+match; it never shows an amount from either side.
+
+VISUAL DIRECTION.
+
+The signature device is withheld information. Whatever form it takes, it must be unmistakable
+that something exists and is being withheld deliberately, rather than simply absent. Spend the
+boldness there; keep everything else quiet.
+
+Four values in the palette: a paper ground that is cool rather than cream; a dark ink that is a
+real colour rather than a tinted black; one signal colour used only for compatibility states;
+one muted tone for withheld content. Compatible and incompatible must be distinguishable without
+relying on hue alone.
+
+One or two type families, clearly distinct if two. Choose deliberately — not Inter, not the
+default system stack. The problem text is the most important content on the screen and should
+read as something a person wrote, not as UI chrome.
+
+Do not use any of these. They show up in generated work regardless of subject and read as a tell:
+near-black background with one acid-green or vermilion accent; cream background with a
+high-contrast serif and a terracotta accent; identical rounded cards with the same soft grey
+shadow on everything; tracked-out all-caps eyebrow labels above headings; monospace for small
+data labels; meta strings joined by middle dots; an arrow appended to button text; one word in a
+headline coloured or italicised; numbered markers 01 / 02 / 03 on things that are not a sequence.
+
+Copy rules: plain language, sentence case, active voice. Never call the buyer's text "data" — it
+is a problem someone wrote down. The word for what the seller cannot see is "withheld", not
+"hidden" and not "encrypted".
+
+Desktop first, then make it work at phone width.
+
+---
+
+### Then
+
+Lovable builds one direction at a time, so iterate in place rather than asking for four
+alternatives the way you would in Claude Design:
+
+> The withheld information doesn't read as deliberate — it looks like the text is simply
+> missing. Try a different treatment that makes the removal itself visible.
