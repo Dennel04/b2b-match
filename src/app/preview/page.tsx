@@ -129,7 +129,7 @@ export default function PreviewPage() {
                   }
                 >
                   <p className="mb-1.5 text-xs font-medium text-ink-soft">
-                    {buyer ? 'Nordkai&rsquo;s agent' : 'Rebase&rsquo;s agent'}
+                    {buyer ? 'Nordkai’s agent' : 'Rebase’s agent'}
                   </p>
                   <p className="leading-relaxed">{line.text}</p>
                 </div>
