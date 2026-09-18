@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import { Bezel, Field, PillButton, inputClass } from "./premium";
 
 // Not imported from @/lib/supabase: that module pulls in next/headers, which breaks client bundles.
 const browserClient = () =>
@@ -12,15 +13,15 @@ type Mode = "login" | "signup";
 
 const COPY = {
   login: { title: "Welcome back", subtitle: "Log in to see your matches.", cta: "Log in" },
-  signup: { title: "Create your account", subtitle: "Set up your company in under two minutes.", cta: "Create account" },
+  signup: { title: "Create your account", subtitle: "Then set up your company. Every step can be skipped.", cta: "Create account" },
 } as const;
 
-const inputClass =
-  "rounded-sm border border-line-strong bg-bg px-3.5 py-3 text-[14.5px] text-ink outline-none placeholder:text-ink-faint focus:border-accent focus:ring-2 focus:ring-accent-soft motion-reduce:transition-none";
+/** Where each mode lands: new accounts go through company setup first. */
+const NEXT: Record<Mode, string> = { login: "/dashboard", signup: "/onboarding" };
 
-export function AuthForm({ initialError }: { initialError?: string }) {
+export function AuthForm({ initialError, initialMode = "login" }: { initialError?: string; initialMode?: Mode }) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("login");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState<"email" | "google" | null>(null);
@@ -53,7 +54,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${location.origin}/auth/callback` },
+        options: { emailRedirectTo: `${location.origin}/auth/callback?next=/onboarding` },
       });
       if (error) {
         setError(error.message);
@@ -68,7 +69,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
       }
     }
 
-    router.replace("/dashboard");
+    router.replace(NEXT[mode]);
     router.refresh();
   }
 
@@ -77,7 +78,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
     setError(null);
     const { error } = await browserClient().auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
+      options: { redirectTo: `${location.origin}/auth/callback?next=${NEXT[mode]}` },
     });
     // On success the browser is already navigating to Google.
     if (error) {
@@ -87,8 +88,14 @@ export function AuthForm({ initialError }: { initialError?: string }) {
   }
 
   return (
-    <div className="flex w-full max-w-[420px] flex-col gap-[26px]">
-      <div role="tablist" className="flex rounded-sm border border-line bg-surface-alt p-1">
+    <Bezel className="w-full max-w-[460px]" inner="flex flex-col gap-6 p-6 sm:p-9">
+      {/* Segmented control: the indicator slides, the content swaps. */}
+      <div role="tablist" className="relative grid grid-cols-2 rounded-full bg-surface-alt p-1">
+        <span
+          aria-hidden
+          className="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-surface shadow-[0_1px_3px_rgba(22,50,58,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+          style={{ transform: mode === "login" ? "translateX(0)" : "translateX(100%)" }}
+        />
         {(["login", "signup"] as const).map((m) => (
           <button
             key={m}
@@ -96,8 +103,8 @@ export function AuthForm({ initialError }: { initialError?: string }) {
             role="tab"
             aria-selected={mode === m}
             onClick={() => switchMode(m)}
-            className={`flex-1 cursor-pointer rounded-[1px] py-2.5 text-sm font-semibold transition-colors motion-reduce:transition-none ${
-              mode === m ? "bg-surface text-ink" : "text-ink-faint hover:text-ink"
+            className={`relative z-10 cursor-pointer rounded-full py-2.5 text-sm font-semibold transition-colors duration-200 ${
+              mode === m ? "text-ink" : "text-ink-faint hover:text-ink"
             }`}
           >
             {m === "login" ? "Log in" : "Sign up"}
@@ -105,78 +112,68 @@ export function AuthForm({ initialError }: { initialError?: string }) {
         ))}
       </div>
 
-      <div className="flex flex-col gap-[18px] rounded-sm border border-line bg-surface p-6 sm:p-8">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-serif text-[22px] font-semibold">{copy.title}</h1>
-          <p className="text-[13px] text-ink-soft">{copy.subtitle}</p>
-        </div>
-
-        <button
-          type="button"
-          onClick={onGoogle}
-          disabled={busy !== null}
-          className="flex cursor-pointer items-center justify-center gap-2.5 rounded-sm border border-line-strong bg-surface px-5 py-3 text-[14.5px] font-semibold text-ink transition-colors motion-reduce:transition-none hover:border-ink-soft disabled:cursor-default disabled:opacity-60"
-        >
-          <GoogleIcon />
-          {busy === "google" ? "Redirecting…" : "Continue with Google"}
-        </button>
-
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-line" />
-          <span className="text-xs text-ink-faint">or with email</span>
-          <div className="h-px flex-1 bg-line" />
-        </div>
-
-        <form onSubmit={onSubmit} className="flex flex-col gap-[18px]">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[12.5px] font-semibold text-ink-soft">Work email</span>
-            <input
-              type="email"
-              required
-              autoComplete="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={inputClass}
-            />
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-[12.5px] font-semibold text-ink-soft">Password</span>
-            <input
-              type="password"
-              required
-              minLength={6}
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={inputClass}
-            />
-            {mode === "signup" && <span className="text-xs text-ink-faint">At least 6 characters.</span>}
-          </label>
-
-          {error && (
-            <p role="alert" className="text-[13px] text-danger">
-              {error}
-            </p>
-          )}
-          {notice && (
-            <p role="status" className="rounded-sm bg-accent-soft px-3.5 py-3 text-[13px] text-ink">
-              {notice}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={busy !== null}
-            className="mt-1 cursor-pointer rounded-sm bg-accent px-5 py-[13px] text-[14.5px] font-semibold text-[#FCFAF3] transition-colors motion-reduce:transition-none hover:bg-accent-strong disabled:cursor-default disabled:opacity-60"
-          >
-            {busy === "email" ? "One moment…" : copy.cta}
-          </button>
-        </form>
+      <div>
+        <h1 className="text-[26px] font-bold tracking-[-0.03em]">{copy.title}</h1>
+        <p className="mt-1 text-[14px] text-ink-soft">{copy.subtitle}</p>
       </div>
-    </div>
+
+      <button
+        type="button"
+        onClick={onGoogle}
+        disabled={busy !== null}
+        className="flex h-12 cursor-pointer items-center justify-center gap-2.5 rounded-full bg-ink/[0.05] text-[14.5px] font-semibold transition-[background-color,transform] duration-200 hover:bg-ink/[0.08] active:scale-[0.98] disabled:cursor-default disabled:opacity-60"
+      >
+        <GoogleIcon />
+        {busy === "google" ? "Redirecting…" : "Continue with Google"}
+      </button>
+
+      <div className="flex items-center gap-3">
+        <div className="h-px flex-1 bg-line" />
+        <span className="text-xs text-ink-faint">or with email</span>
+        <div className="h-px flex-1 bg-line" />
+      </div>
+
+      <form onSubmit={onSubmit} className="flex flex-col gap-5">
+        <Field label="Work email">
+          <input
+            type="email"
+            required
+            autoComplete="email"
+            placeholder="you@company.ee"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Password" help={mode === "signup" ? "At least 6 characters." : undefined}>
+          <input
+            type="password"
+            required
+            minLength={6}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+
+        {error && (
+          <p role="alert" className="rounded-2xl bg-danger/10 px-4 py-3 text-[13.5px] text-danger">
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p role="status" className="rounded-2xl bg-accent-soft px-4 py-3 text-[13.5px] text-ink">
+            {notice}
+          </p>
+        )}
+
+        <PillButton type="submit" disabled={busy !== null} className="mt-1 w-full justify-between">
+          {busy === "email" ? "One moment…" : copy.cta}
+        </PillButton>
+      </form>
+    </Bezel>
   );
 }
 

@@ -34,8 +34,8 @@ export async function proxy(request: NextRequest) {
     return res;
   };
 
-  if (!signedIn && path.startsWith("/dashboard")) return redirectTo("/login");
-  if (signedIn && (path === "/" || path === "/login")) return redirectTo("/dashboard");
+  if (!signedIn && (path.startsWith("/dashboard") || path.startsWith("/onboarding"))) return redirectTo("/login");
+  if (signedIn && (path === "/" || path === "/login" || path === "/signup")) return redirectTo("/dashboard");
 
   return response;
 }
