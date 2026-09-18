@@ -1,286 +1,189 @@
-# Lovable prompt — the whole product
+# Lovable prompt — the idea only
 
-Open this file, copy everything between the two rules, paste as the first message in Lovable.
+Copy everything between the two rules and paste it as the first message in Lovable.
+
+This describes the product and the rules it has to obey. It deliberately says nothing about
+layout, colour, typography or what screens exist — that is Lovable's job, and seeing how it
+interprets the idea unprompted is the point of the exercise.
+
+A version that does pin down the visual direction is in `DESIGN_BRIEF.md` §9, for later.
 
 Do not connect this repo — Lovable cannot import an existing repository, and its stack is not
-Next.js. This is a clickable visual prototype. We port what we like by hand.
+Next.js. Treat the result as a visual prototype we port by hand.
 
 ---
 
-Build a clickable visual prototype of a product called **B2B Match**. Six screens, hardcoded
-data, navigation between them. No backend, no database, no authentication, no Supabase, no API
-calls. Everything on screen is fixed content I give you below. Desktop first, then make every
-screen work at phone width.
+Design and build a clickable prototype of a product called **B2B Match**. Work out for yourself
+what screens it needs and how it should look. Use hardcoded data throughout — no backend, no
+database, no authentication, no API calls. Below is the idea and the rules it has to obey.
 
-## What the product is, and why it exists
+## The problem in the market
 
-Business-to-business selling today runs on cold outreach. Sellers buy lists and email thousands
-of companies; reply rates have fallen to around 3%. Buyers drown in pitches for things they
-don't need, and the one vendor who could actually help them is lost in that noise.
+Business-to-business selling runs on cold outreach. Sellers buy lists and email thousands of
+companies; reply rates have fallen to roughly three percent and keep falling. Buyers get buried
+in pitches for things they don't need, and the one vendor who could genuinely help them is lost
+somewhere in that noise. Meanwhile two thirds of business buyers now say they would rather
+complete a purchase without talking to a salesperson at all.
 
-The inversion: instead of sellers hunting buyers, **the buyer writes down the problem they
-actually have** — the real one, with numbers — and the system finds who can solve it.
+Both sides are doing enormous work to find each other and mostly failing.
 
-The obvious objection is why any company would write down its problems. A company does not want
-competitors knowing what is broken, and does not want to be buried in offers the moment it
-admits a weakness. So the product is built around one rule:
+## The inversion
 
-**Nobody at the other company ever reads the problem. Not before the match, not after it.**
-
-Instead, two AI agents — one representing each company — talk to each other inside the platform.
-The buyer's agent knows the problem and protects it, revealing only enough to test whether the
-vendor is real. The seller's agent answers, and asks its own questions. Only if the agents
-conclude the two companies should meet are the humans told anything at all, and then each is
-asked to consent. Only after both consent do they meet, with a briefing already written.
-
-The financial analogy that explains it in one sentence: **a dark pool for business problems.**
-On a stock exchange, a large institution does not publish its order, because the intention
-itself is worth money and the market would move against it. The order goes into a dark pool,
-gets matched internally, and becomes public only after execution. A company with a burning
-operational problem is in exactly that position: saying it out loud costs you your negotiating
-position and buys you a hundred sales calls.
-
-Commercial terms work the same way. The buyer states the most they will pay. The seller states
-the least they will accept. **Neither figure is ever shown to the other side, or anywhere in the
-interface.** The platform compares them internally and reports one thing: the terms match, or
-they don't. This is the single most important behaviour in the product, and the interface must
-never break it — not in a tooltip, not in a summary, not in a chart.
-
-## Who uses it
-
-Ordinary small and mid-sized European companies, based in Estonia. A forty-person freight
-forwarder. A twelve-person software shop. An accounting firm. These are not traders, not
-enterprise procurement departments, not startups. They are careful about what they disclose,
-they are not impressed by dashboards full of metrics, and they will abandon anything that feels
-like a sales tool pointed at them.
-
-The interface has to feel like a **confidential document that two parties read differently** —
-not like a CRM, not like an analytics product, not like a marketplace listing page.
-
-## The six screens
-
-### 1. Vendor setup
-
-A vendor describes what they sell and the terms they work under. Two parts on one page.
-
-Profile: company name, city, headcount, industry, a short summary of what they do, and a list of
-services.
-
-Working terms — this is the part that makes matching possible, so it should feel consequential
-rather than like a settings form:
-- Minimum engagement size, with a currency and whether it is one-off or monthly.
-- Which contract formats they accept, multiple allowed: a paid pilot of two to four weeks, fixed
-  price per project, monthly retainer, time and materials, payment on outcome.
-- The date they are free from.
-- What they can meet: signing a data processing agreement, ISO 27001, keeping data in the EU,
-  working in Estonian, working in English, being on site, having references in the client's
-  industry.
-
-Use for the mockup: **Rebase OÜ**, Tartu, 12 people, process automation for logistics.
-"We take manual back-office work in logistics companies and turn it into software. Usually
-customs and freight documentation, warehouse reporting, and the handoffs between them."
-Services: process automation, document workflow, systems integration, WMS implementation.
-Minimum €2,500 monthly. Accepts monthly retainer and time and materials. Free from 25 September
-2026. Meets: signs a DPA, holds ISO 27001, works in English and Estonian.
-
-### 2. Buyer interview
-
-Instead of an empty text box, the buyer is interviewed by an AI, one question at a time, up to
-five questions. Previous questions and answers stay visible above the current one, so it reads as
-a conversation building up rather than a form.
-
-The five questions in order: what exactly hurts and what it costs per month in money or hours;
-what they have already tried and why it failed; the most they are willing to pay and whether
-that is one-off or monthly; which contract formats they would consider; and any hard
-requirements or absolute dealbreakers.
-
-**The budget question is the hardest moment in the whole product.** Nobody wants to name their
-ceiling. So next to that question the interface has to say plainly, in its own voice, that no
-vendor will ever see the number — it exists only to decide which vendors the buyer is shown.
-Treat that sentence as a designed element, not as fine print. It is the reason the field gets
-filled in at all.
-
-Show this screen at the third question, budget, with the first two already answered.
-
-Use for the mockup: **Nordkai Logistics**, Tallinn, 40 people, freight forwarding.
-Their answer to question one, verbatim, in their own voice — do not tidy it up:
-"We're still doing customs paperwork by hand across three warehouses. It eats about 60 hours a
-month between two people, and we've had two fines this year from filing errors."
-Answer to question two: "We tried a freelancer last spring. He was good but he left after two
-months and nothing was documented, so we went back to paper."
-Their terms, for later screens: ceiling €4,000 monthly, would consider a paid pilot or a monthly
-retainer, must start before 15 November 2026, requires a signed DPA and Estonian-language
-support.
-
-### 3. The search
-
-Two stages, shown honestly as two stages, because the first one is the argument.
-
-**Stage one is mechanical and involves no AI at all.** Every vendor is checked against the
-buyer's terms: is their minimum at or below the buyer's ceiling, are they free in time, is there
-any contract format both sides accept, do they meet every hard requirement. Anyone who fails is
-eliminated before a single AI call.
-
-**Stage two** reads the problem and scores whoever survived on whether they can actually solve
+Instead of sellers hunting buyers, the buyer writes down the problem they actually have right
+now — the real one, in their own words, with real numbers. The system then finds who can solve
 it.
 
-**Eliminations must be visible, with their reasons.** This is counterintuitive and it is the
-point: showing a vendor that fits the problem perfectly and was still rejected proves the system
-is thinking rather than agreeing. Do not tuck this behind a toggle.
+That sounds obvious, and it has been tried many times. It fails for one reason, and the whole
+product is an answer to that reason.
 
-Use for the mockup, four vendors:
-- **Rebase OÜ** — passed both stages, score 91.
-- **Meridian Systems**, Tallinn, 80 people, enterprise process consulting — perfect fit on the
-  problem, eliminated at stage one because their minimum engagement is above the buyer's ceiling.
-  Say it as "their minimum engagement is above your ceiling" and **never show either number**.
-- **Kadaka Digital**, Pärnu, 6 people, web and integrations — eliminated at stage one, cannot
-  sign a data processing agreement.
-- **Vektor Consult**, Tartu, 25 people, logistics consulting — passed stage one, scored 48 at
-  stage two: they advise on process but do not build software, so the manual work would remain.
+## Why it normally fails, and the rule that follows
 
-### 4. The two readings and the negotiation — the screen that matters
+A company will not write down what is broken inside it.
 
-If you build only one screen properly, build this one.
+Admitting a weakness in public means competitors learn about it, and it means being buried in
+sales offers the moment you do. Publishing your need is expensive: it costs you your negotiating
+position, and it costs you your inbox. So buyers stay quiet, vendors have nothing to respond to,
+and the marketplace dies.
 
-**Top half: the same problem, twice.**
+So the product is built on one rule, and everything else follows from it:
 
-On the left, wide: the buyer's own problem exactly as they wrote it. Inside that text, the
-specific details that never left their side are marked. The buyer can still read their own words
-— the mark means "this stayed here", not "this is hidden from you". Five things are marked: the
-word "customs", "three warehouses", "about 60 hours a month between two people", "two fines this
-year", "a freelancer last spring".
+**No human at the other company ever reads the problem. Not before a match, not after one.**
 
-On the right, narrower: everything the vendor actually received. It is two sentences:
+## How that is possible
+
+Two AI agents, one representing each company, talk to each other inside the platform.
+
+The buyer's agent knows the problem and its job is to protect it. It reveals only as much as is
+needed to test whether this vendor is real — the shape of the task, never the specifics, never
+the numbers, never who the client is. The seller's agent answers substantively, says honestly
+what it has and hasn't done before, and asks its own questions.
+
+The humans are not in this conversation and do not know it is happening. They do not know the
+other company exists.
+
+Only if the agents conclude that the two companies should meet is anything surfaced to people at
+all. Each side is then asked, separately, whether they are interested — the buyer sees an
+anonymous vendor, the vendor sees an anonymous buyer. Identities are revealed to each other only
+after both have said yes. Nobody can push their way to the other side of that gate.
+
+After both consent, they meet, and the platform has already written the briefing: who each of
+them is, what the ask is, what the agents already settled, and what is left for the humans to
+decide.
+
+## The analogy that explains it in one line
+
+**This is a dark pool for business problems.**
+
+On a stock exchange, an institution with a large order does not publish it. The intention itself
+is worth money — the moment the market sees it, the price moves against them. So the order goes
+into a dark pool, is matched internally against the other side, and becomes public only after it
+has executed.
+
+A company with a burning operational problem is in exactly that position. Saying out loud that
+your warehouse operation is failing costs you your negotiating position with every vendor who
+hears it, and buys you a hundred phone calls. So the intention stays dark, gets matched
+internally, and surfaces only once it has found its counterparty.
+
+## The rule about money, which is the same rule again
+
+The buyer states the most they are willing to pay. The vendor states the least they will accept.
+
+**Neither figure is ever shown to the other side, or anywhere in the product.**
+
+The platform compares them internally and reports exactly one thing: the terms are compatible,
+or they are not. Same for the contract shape — a paid pilot, fixed price, a monthly retainer,
+time and materials, payment on outcome. Each side says what they will accept; the product shows
+only what both accept, never either side's full position.
+
+This is not a privacy setting that can be toggled. It is the product. If a number from one side
+ever appears anywhere the other side can see it — in a summary, a tooltip, a chart, a
+notification — the product has failed and there is no reason for anyone to use it.
+
+The same applies to hard requirements: whether a vendor will sign a data protection agreement,
+holds a security certification, keeps data inside the EU, works in the local language, can be on
+site, has references in the buyer's industry. These are checked mechanically before any AI is
+involved. A vendor who fails any of them never enters the conversation at all.
+
+## Two stages, and why the rejections matter
+
+Matching happens in two stages.
+
+The first is mechanical and involves no AI: does this vendor's minimum fit under this buyer's
+ceiling, are they available in time, is there any contract shape both sides accept, do they meet
+every hard requirement. Anyone who fails is eliminated immediately.
+
+The second stage reads the problem and judges whether the survivors can actually solve it.
+
+The eliminations are as important to show as the matches. A vendor who understands the problem
+perfectly and is still rejected — because their smallest engagement is above what the buyer can
+pay, or because they will not sign the data agreement — is the most convincing evidence that the
+system is thinking rather than agreeing. A product that only ever shows successes looks like it
+is selling something.
+
+## How it makes money
+
+The vendor pays, and only when a buyer has accepted a meeting. Never for being shown, never for
+a lead, never a subscription for access.
+
+This matters because every competing product charges for exposure, which quietly rewards
+spamming everyone. Here a rejection costs the platform nothing and earns the vendor nothing, so
+there is no reason to chase a bad match.
+
+## Who uses this
+
+Ordinary small and mid-sized companies in Estonia. A forty-person freight forwarder. A
+twelve-person software shop. An accounting firm. A logistics consultancy.
+
+They are not traders, not enterprise procurement departments, not venture-backed startups. They
+are careful about what they disclose, unmoved by dashboards full of metrics, and they will walk
+away from anything that feels like a sales tool aimed at them. The person using it is often the
+owner, doing this between two other jobs.
+
+## A real case to build the prototype around
+
+Use this throughout instead of placeholder text. Both companies are fictional but the situation
+is ordinary.
+
+**The buyer — Nordkai Logistics**, Tallinn, 40 people, freight forwarding.
+What they wrote, in their own words, unedited:
+"We're still doing customs paperwork by hand across three warehouses. It eats about 60 hours a
+month between two people, and we've had two fines this year from filing errors. We tried a
+freelancer last spring and it didn't stick."
+They can pay up to €4,000 a month. They would consider a short paid pilot or a monthly retainer.
+They must start before mid-November. They need a signed data protection agreement and support in
+Estonian.
+
+**The vendor — Rebase OÜ**, Tartu, 12 people, process automation for logistics companies. They
+turn manual back-office work into software — customs and freight documentation, warehouse
+reporting, and the handoffs between them. Their smallest engagement is €2,500 a month. They work
+on retainer or time and materials. They are free from late September. They sign data protection
+agreements, hold ISO 27001, and work in both English and Estonian.
+
+**The vendors who don't make it**, for whatever you build to show rejections:
+Meridian Systems, Tallinn, 80 people, enterprise process consulting — understands the problem
+completely, but their smallest engagement is far above what Nordkai can pay.
+Kadaka Digital, Pärnu, 6 people, web development and integrations — will not sign a data
+protection agreement.
+Vektor Consult, Tartu, 25 people, logistics consulting — clears every requirement, but they
+advise on process rather than build software, so the manual work would still be there afterwards.
+
+**What the vendor's agent was actually given about the problem** — this, and nothing more:
 "A mid-sized logistics company needs help automating a manual back-office process across several
 sites. They have tried an external contractor before without success."
 
-The argument is made by the difference in mass. A full paragraph of sealed specifics on one
-side, a thin column on the other. Under the right column: "Nothing else crossed."
+Notice the distance between what Nordkai wrote and what Rebase received. Everything specific —
+that it is customs, that there are three warehouses, the sixty hours, the two fines, the
+freelancer — stayed on Nordkai's side and was never transmitted. That distance is the product.
 
-**Bottom half: the transcript.** Eight lines, the two agents alternating, buyer's agent first.
+## What I want from you
 
-1. Buyer's agent — "My client runs a multi-site operation and is losing significant staff time to
-   a manual back-office process. Have you replaced a paper-based workflow at this scale before?"
-2. Seller's agent — "Three logistics clients in the last two years, all multi-warehouse. We
-   typically cut manual handling by 70 to 80 percent inside the first quarter."
-3. Buyer's agent — "There have been compliance consequences from the current process. Do your
-   deployments cover filing accuracy, or only speed?"
-4. Seller's agent — "Both. Validation sits inside the filing step, so errors surface before
-   submission rather than after. To size this — how many filings a month, and how many people
-   touch them?"
-5. Buyer's agent — "Between one and two hundred a month, across several sites. The exact counts,
-   and what the current errors have cost, stay with my client until a meeting is agreed."
-6. Seller's agent — "That sits inside our normal range. A monthly retainer fits better than a
-   fixed price here — volume varies and you will want us reachable after go-live."
-7. Buyer's agent — "My client will consider a retainer. They need to begin before mid-November,
-   and they require a signed DPA and Estonian-language support."
-8. Seller's agent — "We are free from late September and we sign DPAs as standard.
-   Estonian-language support is available, though our written documentation is in English."
+Decide what screens this product needs and design them. Think about where a person enters, what
+they have to be persuaded of at each step, and what the hardest moment is — asking a company to
+type its budget into a box is not a form field, it is a moment of trust that has to be earned on
+screen.
 
-**Line 5 must be the most deliberate visual moment on the page.** It is the moment the buyer's
-agent was asked for exact figures and declined. Mark it with the same visual language used for
-the sealed details above, so the two read as the same act. A short note beside it: "Asked for
-exact figures. Declined."
+Then build it as a working clickable prototype with this data hardcoded.
 
-**Then the outcome:** the agents recommend meeting, confidence 84 of 100, contract format monthly
-retainer, budget shown only as "terms match", earliest start 25 September. Two questions the
-agents could not settle, which go to the humans: whether Estonian-language coverage extends to
-written documentation or only to support conversations, and whether the first month runs as a
-trial and counts toward the retainer.
-
-Close the screen with the line that states the principle: neither side was shown the other's
-budget; the platform compared them and reported only that they match.
-
-Nothing on this screen may compete with the sealed details and the refusal.
-
-### 5. Consent, both sides
-
-Two states of one screen, reachable from each other.
-
-**The buyer's view.** An anonymous vendor: industry, company size, the agents' explanation, the
-score, and the fact that terms match. **No company name and no amount.** One decision: interested,
-or not.
-
-**The vendor's view**, the mirror. They see that a company in freight forwarding, forty people,
-has a problem their services address; the agents' explanation; that terms match; the format
-agreed. They do not see the problem text and they do not see who it is. One decision: accept, or
-decline.
-
-Names are revealed to each other only after both have said yes. Make that sequence legible: it is
-the double opt-in, and it is the second half of the product's promise.
-
-### 6. The briefing
-
-What a person actually brings to the meeting. Sections: who's who; the ask; what the agents
-already settled; what's left for the two of you; three questions to open the conversation.
-
-"What's left for the two of you" is built from the two unresolved questions in screen 4, and it
-is the most useful part of the document — it should read that way, not as an afterthought.
-
-## Visual direction
-
-The subject is a confidential document that two parties read differently. Design from that, not
-from fintech and not from SaaS.
-
-**The signature device is withheld information.** Whatever form you give it, it must be
-unmistakable that something exists and is being deliberately withheld, rather than simply
-absent. This is the one place to spend boldness. Everything around it stays quiet and
-disciplined.
-
-Palette: four values. A paper ground that is cool rather than cream. A dark ink that is a real
-colour rather than a tinted black. One signal colour used only for compatibility states. One
-distinct tone reserved for withheld content and nothing else. Compatible and incompatible have
-to be distinguishable without relying on hue alone.
-
-Type: one or two families, clearly distinct if two. Choose deliberately — not Inter, not the
-default system stack. The buyer's problem text is the most important content in the product and
-should read as something a person wrote, not as interface chrome.
-
-**Do not use any of these.** They appear in generated work regardless of subject, and anyone who
-reviews a lot of product design reads them as a tell:
-- a near-black background with one bright acid-green or vermilion accent
-- a cream background with a high-contrast serif and a terracotta accent
-- identical rounded cards with the same soft grey shadow under every piece of content
-- tracked-out all-caps eyebrow labels above headings
-- monospace type for small data labels
-- meta strings joined by middle dots
-- an arrow appended to button text
-- one word in a headline coloured or italicised for emphasis
-- numbered markers 01 / 02 / 03 on things that are not a sequence
-
-Motion: one orchestrated moment only — the transcript arriving line by line, and the refusal
-landing. No entrance animation on every section, no hover transition on every card.
-
-Quality floor, unannounced: works at phone width, visible keyboard focus, reduced motion
-respected, contrast that holds.
-
-## How the product talks
-
-Plain language, sentence case, active voice. A button says what happens: "Accept meeting", not
-"Submit".
-
-Never call the buyer's text "data" or "an entry" — it is a problem someone wrote down. The word
-for what the vendor cannot see is **withheld**, not "hidden" and not "encrypted": the platform
-itself can read it, and the copy must not imply otherwise.
-
-Empty states are invitations, not apologies. No matches yet means "no vendor has cleared your
-terms", plus what would change that.
-
-Never display a figure that came from the other side. The correct phrasing is always that the
-terms are compatible, never what they are.
-
----
-
-## After the first result
-
-Lovable builds one direction at a time. Iterate in place rather than asking for alternatives:
-
-> The withheld details don't read as deliberate — it looks like the text is simply missing.
-> Try a treatment where the act of removal is itself visible.
-
-> Screen 3 buries the rejected vendors. Bring the eliminations up to the same weight as the
-> match — a vendor that fit the problem and was still rejected is the most convincing thing on
-> that screen.
-
-> Line 5 of the transcript isn't carrying enough. It should be the first thing the eye lands on
-> in the lower half of the screen.
+Make your own decisions about the visual language. The only thing I will say is that this
+product lives or dies on whether a cautious forty-person company believes that what they write
+will not reach anyone. Design something that earns that.
