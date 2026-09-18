@@ -106,6 +106,8 @@ export interface ProblemInput {
 export interface AgentDialogueLine {
   speaker: 'buyer_agent' | 'seller_agent';
   text: string;
+  /** The buyer's agent was asked for a specific and refused. This is the demo's key moment. */
+  withheld?: boolean;
 }
 
 /** Outcome of the machine negotiation: what the agents settled, what is left to humans. */
