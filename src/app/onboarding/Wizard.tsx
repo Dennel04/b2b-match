@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveCompany } from "@/actions/company";
-import { Bezel, Chips, Eyebrow, Field, FieldGroup, PillButton, TagInput, inputClass } from "@/components/premium";
+import { Bezel, Chips, Eyebrow, Field, FieldGroup, PillButton, Segmented, Select, TagInput, inputClass } from "@/components/premium";
 import {
   EXTRAS_STORAGE_KEY, EXTRA_KEYS, FORMATS, INDUSTRIES, PERIODS, REQUIREMENTS, ROLES, SIZES,
   buys, readiness, sellerTermsFromDraft, sells, type Draft, type Period,
@@ -34,18 +34,74 @@ function Visibility({ kind }: { kind: "public" | "private" }) {
 }
 
 function Money({
-  amount, period, onAmount, onPeriod, placeholder,
-}: { amount: string; period: Period; onAmount: (v: string) => void; onPeriod: (v: Period) => void; placeholder: string }) {
+  amount, period, onAmount, onPeriod, placeholder, label,
+}: { amount: string; period: Period; onAmount: (v: string) => void; onPeriod: (v: Period) => void; placeholder: string; label: string }) {
+  const shown = amount ? Number(amount).toLocaleString("en-US").replace(/,/g, " ") : "";
   return (
-    <div className="flex gap-2">
-      <div className="relative flex-1">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint">€</span>
-        <input inputMode="numeric" value={amount} onChange={(e) => onAmount(e.target.value.replace(/[^\d]/g, ""))} placeholder={placeholder} className={`${inputClass} pl-8`} />
+    <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+      <div className="relative min-w-0 flex-1">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[15px] font-semibold text-ink-faint">€</span>
+        <input
+          aria-label={label}
+          inputMode="numeric"
+          value={shown}
+          onChange={(e) => onAmount(e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+          placeholder={placeholder}
+          className={`${inputClass} pl-9 text-[17px] font-semibold tabular-nums tracking-[-0.01em]`}
+        />
       </div>
-      <select value={period} onChange={(e) => onPeriod(e.target.value as Period)} className={`${inputClass} w-auto cursor-pointer pr-8`}>
-        {PERIODS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-      </select>
+      <Segmented label="Period" value={period} onChange={onPeriod} options={PERIODS} />
     </div>
+  );
+}
+
+/** Quick picks next to a date: most answers are "now" or "in a few weeks". */
+function DatePick({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  // Dates are fixed at first render, so the picks do not shift while the step is open.
+  const [picks] = useState(() => {
+    const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
+    return [
+      { label: "Right away", value: inDays(0) },
+      { label: "In 2 weeks", value: inDays(14) },
+      { label: "In a month", value: inDays(30) },
+    ];
+  });
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {picks.map((p) => (
+        <button
+          key={p.label}
+          type="button"
+          aria-pressed={value === p.value}
+          onClick={() => onChange(value === p.value ? "" : p.value)}
+          className={`cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors ${
+            value === p.value ? "bg-ink text-surface" : "bg-surface-alt text-ink-soft hover:text-ink"
+          }`}
+        >
+          {p.label}
+        </button>
+      ))}
+      <input
+        type="date"
+        aria-label="Exact date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`${inputClass} h-10 w-auto cursor-pointer rounded-full px-4 text-[13.5px]`}
+      />
+    </div>
+  );
+}
+
+/** The 40-character floor the readiness check uses, shown while typing instead of after. */
+function LengthMeter({ length, min }: { length: number; min: number }) {
+  const ok = length >= min;
+  return (
+    <span className="flex items-center gap-2 text-[12px] font-medium">
+      <span className="h-1 w-16 overflow-hidden rounded-full bg-ink/10" aria-hidden>
+        <span className={`block h-full rounded-full transition-[width] duration-300 ${ok ? "bg-accent" : "bg-gold"}`} style={{ width: `${Math.min(100, (length / min) * 100)}%` }} />
+      </span>
+      <span className={ok ? "text-accent" : "text-ink-faint"}>{ok ? "Enough to match on" : `${min - length} more characters`}</span>
+    </span>
   );
 }
 
@@ -101,7 +157,6 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
   const index = steps.indexOf(current);
   const checklist = readiness(d);
   const missing = checklist.filter((i) => !i.done);
-  const doneCount = checklist.length - missing.length;
 
   /**
    * A step's mark in the rail comes from its answers, not its position: done when every required
@@ -116,6 +171,7 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
     return visited.has(id) && left ? "left" : "open";
   }
   const leftIn = (id: StepId) => checklist.filter((c) => c.step === id && !c.done).length;
+  const stepsDone = steps.filter((s) => stepState(s.id) === "done").length;
 
   /** Saves only when something changed, so moving between steps costs nothing otherwise. */
   async function persist() {
@@ -188,27 +244,17 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
           })}
         </ol>
         <div className="mt-8 hidden rounded-3xl bg-surface/70 p-5 ring-1 ring-ink/[0.05] lg:block">
-          <p className="text-[13px] font-semibold">Matcher readiness</p>
-          <p className="mt-1 text-[28px] font-extrabold tracking-[-0.04em]">{doneCount}<span className="text-[16px] font-semibold text-ink-faint"> / {checklist.length} answers</span></p>
+          <p className="text-[13px] font-semibold">Setup progress</p>
+          <p className="mt-1 text-[28px] font-extrabold tracking-[-0.04em]">{stepsDone}<span className="text-[16px] font-semibold text-ink-faint"> / {steps.length} steps</span></p>
           <div className="mt-2 flex gap-1" aria-hidden>
-            {checklist.map((c) => <span key={c.label} className={`h-1.5 flex-1 rounded-full ${c.done ? "bg-accent" : "bg-ink/10"}`} />)}
+            {steps.map((st) => {
+              const state = stepState(st.id);
+              return <span key={st.id} className={`h-1.5 flex-1 rounded-full ${state === "done" ? "bg-accent" : state === "left" ? "bg-gold" : "bg-ink/10"}`} />;
+            })}
           </div>
-          {missing.length ? (
-            <>
-              <p className="mt-3 text-[12.5px] leading-relaxed text-ink-soft">The answers the matcher needs, across your steps. Still missing:</p>
-              <ul className="mt-2 space-y-1">
-                {missing.map((c) => (
-                  <li key={c.label}>
-                    <button type="button" onClick={() => goTo(c.step)} className="cursor-pointer text-left text-[12.5px] font-medium text-ink underline-offset-4 hover:underline">
-                      {c.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="mt-3 text-[12.5px] leading-relaxed text-ink-soft">Everything the matcher needs is in.</p>
-          )}
+          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-soft">
+            {stepsDone === steps.length ? "Everything the matcher needs is in." : "A step turns green when its answers are in. Every step can be skipped for now."}
+          </p>
         </div>
       </aside>
 
@@ -221,6 +267,31 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
         <p className="mb-8 max-w-[60ch] text-[16px] leading-relaxed text-ink-soft">{current.lead}</p>
 
         <Bezel inner="flex flex-col gap-7 p-6 sm:p-9">
+          <div className="flex flex-wrap items-center gap-3 border-b border-line pb-5">
+            {index > 0 && (
+              <PillButton type="button" variant="soft" icon={false} onClick={() => go(-1)}>
+                Back
+              </PillButton>
+            )}
+            <span className="text-[12.5px] font-medium text-ink-faint">Step {index + 1} of {steps.length}</span>
+            <div className="ml-auto flex items-center gap-1">
+              {current.id !== "ready" && (
+                <button type="button" onClick={() => go(1)} className="cursor-pointer px-3 text-[14px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">
+                  Skip for now
+                </button>
+              )}
+              {current.id === "ready" ? (
+                <PillButton type="button" onClick={leave} disabled={saving}>
+                  {saving ? "Saving…" : "Go to dashboard"}
+                </PillButton>
+              ) : (
+                <PillButton type="button" onClick={() => go(1)} disabled={saving}>
+                  {saving ? "Saving…" : "Continue"}
+                </PillButton>
+              )}
+            </div>
+          </div>
+          {saveNote && <p role="status" className="rounded-2xl bg-gold-soft px-4 py-3 text-[13.5px] text-ink">{saveNote}</p>}
           {current.id === "company" && (
             <>
               <FieldGroup label="What brings you here?">
@@ -251,12 +322,9 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
                 <Field label="Website" optionalTag>
                   <input value={d.website} onChange={(e) => set("website", e.target.value)} placeholder="nordkai.ee" className={inputClass} />
                 </Field>
-                <Field label="Industry">
-                  <select value={d.industry} onChange={(e) => set("industry", e.target.value)} className={`${inputClass} cursor-pointer`}>
-                    <option value="">Choose one</option>
-                    {INDUSTRIES.map((i) => <option key={i}>{i}</option>)}
-                  </select>
-                </Field>
+                <FieldGroup label="Industry">
+                  <Select label="Industry" value={d.industry} onChange={(v) => set("industry", v)} options={INDUSTRIES.map((i) => ({ value: i, label: i }))} />
+                </FieldGroup>
                 <Field label="City or region" optionalTag>
                   <input value={d.location} onChange={(e) => set("location", e.target.value)} placeholder="Tallinn" className={inputClass} />
                 </Field>
@@ -269,7 +337,7 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
 
           {current.id === "offer" && (
             <>
-              <Field label="What you do, in 2–3 sentences" help="Shown to a buyer after you both agree. Say who you help and with what. Avoid slogans.">
+              <Field label="What you do, in 2–3 sentences" help={<span className="flex flex-wrap items-center justify-between gap-2"><span>Shown to a buyer after you both agree. Say who you help and with what.</span><LengthMeter length={d.summary.trim().length} min={40} /></span>}>
                 <textarea
                   value={d.summary}
                   onChange={(e) => set("summary", e.target.value)}
@@ -296,21 +364,21 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
           {current.id === "terms" && (
             <>
               <Field label="Smallest deal you take" help="Buyers below this are filtered out. They never learn the number, and neither do you learn theirs.">
-                <Money amount={d.floorAmount} period={d.floorPeriod} onAmount={(v) => set("floorAmount", v)} onPeriod={(v) => set("floorPeriod", v)} placeholder="5000" />
+                <Money label="Smallest deal you take" amount={d.floorAmount} period={d.floorPeriod} onAmount={(v) => set("floorAmount", v)} onPeriod={(v) => set("floorPeriod", v)} placeholder="5 000" />
               </Field>
               <FieldGroup label="Contract formats you accept" help="A deal needs at least one format both sides accept.">
                 <Chips options={FORMATS} value={d.sellerFormats} onChange={(v) => set("sellerFormats", v)} />
               </FieldGroup>
-              <Field label="Free to start from" optionalTag>
-                <input type="date" value={d.availableFrom} onChange={(e) => set("availableFrom", e.target.value)} className={`${inputClass} sm:max-w-[240px]`} />
-              </Field>
+              <FieldGroup label="Free to start from">
+                <DatePick value={d.availableFrom} onChange={(v) => set("availableFrom", v)} />
+              </FieldGroup>
             </>
           )}
 
           {current.id === "buying" && (
             <>
               <Field label="Typical budget ceiling" optionalTag help="The most you would usually spend on one problem. Sellers never see it.">
-                <Money amount={d.ceilingAmount} period={d.ceilingPeriod} onAmount={(v) => set("ceilingAmount", v)} onPeriod={(v) => set("ceilingPeriod", v)} placeholder="20000" />
+                <Money label="Typical budget ceiling" amount={d.ceilingAmount} period={d.ceilingPeriod} onAmount={(v) => set("ceilingAmount", v)} onPeriod={(v) => set("ceilingPeriod", v)} placeholder="20 000" />
               </Field>
               <FieldGroup label="Contract formats you would consider">
                 <Chips options={FORMATS} value={d.buyerFormats} onChange={(v) => set("buyerFormats", v)} />
@@ -345,31 +413,6 @@ export function Wizard({ initial, email, initialStep = "company" }: { initial: D
             </ul>
           )}
 
-          {saveNote && <p role="status" className="rounded-2xl bg-gold-soft px-4 py-3 text-[13.5px] text-ink">{saveNote}</p>}
-
-          <div className="flex flex-wrap items-center gap-3 border-t border-line pt-6">
-            {index > 0 && (
-              <PillButton type="button" variant="soft" icon={false} onClick={() => go(-1)}>
-                Back
-              </PillButton>
-            )}
-            {current.id !== "ready" && (
-              <button type="button" onClick={() => go(1)} className="cursor-pointer px-3 text-[14px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">
-                Skip for now
-              </button>
-            )}
-            <div className="ml-auto">
-              {current.id === "ready" ? (
-                <PillButton type="button" onClick={leave} disabled={saving}>
-                  {saving ? "Saving…" : "Go to dashboard"}
-                </PillButton>
-              ) : (
-                <PillButton type="button" onClick={() => go(1)} disabled={saving}>
-                  {saving ? "Saving…" : "Continue"}
-                </PillButton>
-              )}
-            </div>
-          </div>
         </Bezel>
 
         <p className="mt-6 text-center text-[13px] text-ink-faint">

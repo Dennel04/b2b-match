@@ -208,3 +208,158 @@ export function TagInput({
     </div>
   );
 }
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden
+      className={`shrink-0 text-ink-faint transition-transform duration-300 ${EASE} ${open ? "rotate-180" : ""}`}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+/**
+ * Dropdown in place of a native <select>: a soft trigger, a floating list with a check on the
+ * chosen option. Keyboard: arrows move, Enter or Space picks, Escape closes, a letter jumps.
+ */
+export function Select<T extends string>({
+  value,
+  onChange,
+  options,
+  placeholder = "Choose one",
+  label,
+}: {
+  value: T | "";
+  onChange: (next: T) => void;
+  options: { value: T; label: string }[];
+  placeholder?: string;
+  /** Accessible name, since the trigger is a button and not a labelled input. */
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const selected = options.find((o) => o.value === value);
+  const id = `select-${label.replace(/\W+/g, "-").toLowerCase()}`;
+
+  function show() {
+    setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+    setOpen(true);
+  }
+  function pick(i: number) {
+    onChange(options[i].value);
+    setOpen(false);
+  }
+  function onKey(e: React.KeyboardEvent) {
+    if (!open) {
+      if (["ArrowDown", "ArrowUp", "Enter", " "].includes(e.key)) {
+        e.preventDefault();
+        show();
+      }
+      return;
+    }
+    if (e.key === "Escape") setOpen(false);
+    else if (e.key === "ArrowDown") setActive((a) => Math.min(a + 1, options.length - 1));
+    else if (e.key === "ArrowUp") setActive((a) => Math.max(a - 1, 0));
+    else if (e.key === "Home") setActive(0);
+    else if (e.key === "End") setActive(options.length - 1);
+    else if (e.key === "Enter" || e.key === " ") pick(active);
+    else if (e.key.length === 1) {
+      const i = options.findIndex((o) => o.label.toLowerCase().startsWith(e.key.toLowerCase()));
+      if (i >= 0) setActive(i);
+      return;
+    } else return;
+    e.preventDefault();
+  }
+
+  return (
+    <div className="relative" onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setOpen(false)}>
+      <button
+        type="button"
+        role="combobox"
+        aria-label={label}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-activedescendant={open ? `${id}-${active}` : undefined}
+        onClick={() => (open ? setOpen(false) : show())}
+        onKeyDown={onKey}
+        className={`${inputClass} flex cursor-pointer items-center justify-between gap-3 text-left ${open ? "border-accent/50 ring-4 ring-accent/15" : ""}`}
+      >
+        <span className={selected ? "" : "text-ink-faint"}>{selected?.label ?? placeholder}</span>
+        <Chevron open={open} />
+      </button>
+      <ul
+        id={id}
+        role="listbox"
+        aria-label={label}
+        tabIndex={-1}
+        className={`absolute inset-x-0 top-full z-30 mt-2 max-h-72 origin-top overflow-auto rounded-2xl bg-surface p-1.5 shadow-[0_24px_48px_-20px_rgba(22,50,58,0.35)] ring-1 ring-ink/[0.07] transition-[opacity,transform] duration-200 ${EASE} ${
+          open ? "scale-100 opacity-100" : "pointer-events-none scale-[0.97] opacity-0"
+        }`}
+      >
+        {options.map((o, i) => {
+          const on = o.value === value;
+          return (
+            <li
+              key={o.value}
+              id={`${id}-${i}`}
+              role="option"
+              aria-selected={on}
+              onMouseDown={(e) => e.preventDefault()}
+              onMouseEnter={() => setActive(i)}
+              onClick={() => pick(i)}
+              className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-[14.5px] ${
+                i === active ? "bg-surface-alt" : ""
+              } ${on ? "font-semibold text-ink" : "text-ink-soft"}`}
+            >
+              {o.label}
+              {on && (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden className="text-accent">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+/** Two-way switch drawn as a pill: the indicator slides under the chosen side. */
+export function Segmented<T extends string>({
+  value,
+  onChange,
+  options,
+  label,
+}: {
+  value: T;
+  onChange: (next: T) => void;
+  options: readonly [{ value: T; label: string }, { value: T; label: string }];
+  label: string;
+}) {
+  const second = value === options[1].value;
+  return (
+    <div role="radiogroup" aria-label={label} className="relative grid shrink-0 grid-cols-2 rounded-full bg-surface-alt p-1">
+      <span
+        aria-hidden
+        className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-surface shadow-[0_1px_3px_rgba(22,50,58,0.12)] transition-transform duration-300 ${EASE}`}
+        style={{ transform: second ? "translateX(100%)" : "none" }}
+      />
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          role="radio"
+          aria-checked={o.value === value}
+          onClick={() => onChange(o.value)}
+          className={`relative z-10 cursor-pointer whitespace-nowrap rounded-full px-3.5 py-2 text-[13px] font-semibold transition-colors ${
+            o.value === value ? "text-ink" : "text-ink-faint hover:text-ink"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
