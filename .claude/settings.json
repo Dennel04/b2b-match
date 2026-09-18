@@ -9,6 +9,17 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/team-sync.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }
