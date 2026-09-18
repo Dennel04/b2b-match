@@ -1,35 +1,37 @@
 @import "tailwindcss";
 
-/* Design tokens from the Claude design mockup (Login.dc.html). */
+/* Design tokens. Retuned to the direction chosen in drafts/design/problem-page.html:
+   cool ground, slate-teal ink, green for compatibility, a warm seal tone for withheld detail. */
 :root {
-  --bg: #F5F2EA; --surface: #FFFFFF; --surface-alt: #EFE9DA;
-  --ink: #1C222B; --ink-soft: #5B6472; --ink-faint: #8B9096;
-  --border: #E1DACB; --border-strong: #CBC2AC;
-  --accent: #1F5C54; --accent-strong: #153F3A; --accent-soft: #E1EEEA;
-  --gold: #A9803F; --gold-soft: #F1E6CE;
-  --danger: #A2402F;
+  --bg: #F4F6F8; --surface: #FFFFFF; --surface-alt: #EDF1F3;
+  --ink: #16323A; --ink-soft: #5C6E75; --ink-faint: #8E9897;
+  --border: #E4E9ED; --border-strong: #DDE3E7;
+  --accent: #2F6D52; --accent-strong: #1F5540; --accent-soft: #E8F0EC;
+  /* Reserved for withheld detail and nothing else. */
+  --gold: #8F6A35; --gold-soft: #F3ECDC;
+  --danger: #9C4230;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #12161B; --surface: #191E24; --surface-alt: #20262D;
-    --ink: #ECE8DD; --ink-soft: #A7ACAF; --ink-faint: #6C7378;
-    --border: #2A3038; --border-strong: #3A424B;
-    --accent: #4CA79A; --accent-strong: #6FC2B4; --accent-soft: #1B2E2C;
-    --gold: #D3B172; --gold-soft: #2C2717;
-    --danger: #E08A78;
+    --bg: #101A1D; --surface: #17242A; --surface-alt: #1E2E34;
+    --ink: #E6EDEF; --ink-soft: #A0B1B5; --ink-faint: #6F8085;
+    --border: #253840; --border-strong: #334A53;
+    --accent: #5FA583; --accent-strong: #7CBF9E; --accent-soft: #172E26;
+    --gold: #C9A464; --gold-soft: #2E2617;
+    --danger: #D98872;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #12161B; --surface: #191E24; --surface-alt: #20262D;
-  --ink: #ECE8DD; --ink-soft: #A7ACAF; --ink-faint: #6C7378;
-  --border: #2A3038; --border-strong: #3A424B;
-  --accent: #4CA79A; --accent-strong: #6FC2B4; --accent-soft: #1B2E2C;
-  --gold: #D3B172; --gold-soft: #2C2717;
-  --danger: #E08A78;
+  --bg: #101A1D; --surface: #17242A; --surface-alt: #1E2E34;
+  --ink: #E6EDEF; --ink-soft: #A0B1B5; --ink-faint: #6F8085;
+  --border: #253840; --border-strong: #334A53;
+  --accent: #5FA583; --accent-strong: #7CBF9E; --accent-soft: #172E26;
+  --gold: #C9A464; --gold-soft: #2E2617;
+  --danger: #D98872;
   color-scheme: dark;
 }
 
@@ -48,7 +50,7 @@
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
   --color-danger: var(--danger);
-  --font-sans: var(--font-plex), -apple-system, sans-serif;
+  --font-sans: var(--font-instrument), -apple-system, sans-serif;
   --font-serif: var(--font-spectral), Georgia, serif;
 }
 

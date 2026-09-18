@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Spectral } from "next/font/google";
+import { Instrument_Sans, Spectral } from "next/font/google";
 import "./globals.css";
 
-const plex = IBM_Plex_Sans({
-  variable: "--font-plex",
+const instrument = Instrument_Sans({
+  variable: "--font-instrument",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plex.variable} ${spectral.variable} h-full antialiased`}
+      className={`${instrument.variable} ${spectral.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
