@@ -1,16 +1,15 @@
 import { AuthForm } from "@/components/AuthForm";
-import { Eyebrow } from "@/components/premium";
-import { SiteHeader } from "@/components/SiteHeader";
-import { premiumFont } from "../fonts";
+
+import {  } from "../fonts";
 
 /** Shared by /login and /signup: the promise on the left, the form on the right. */
 export function AuthScreen({ mode, error }: { mode: "login" | "signup"; error?: string }) {
   return (
-    <div className={`${premiumFont} flex min-h-dvh flex-col bg-bg text-ink`}>
-      <SiteHeader />
+    <div className={`flex min-h-dvh flex-col bg-bg text-ink`}>
+      
       <main className="mx-auto grid w-full max-w-[1200px] flex-1 items-center gap-14 px-4 pb-16 pt-6 md:px-8 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
         <section className="soft-in max-w-[560px]">
-          <Eyebrow>Private by design</Eyebrow>
+          <span className="text-[12px] font-medium text-ink-soft">Private by design</span>
           <h2 className="mt-6 text-[clamp(2.4rem,5vw,4.2rem)] font-extrabold leading-[1.02] tracking-[-0.045em]">
             Say what&rsquo;s broken. Only the right company hears about it.
           </h2>

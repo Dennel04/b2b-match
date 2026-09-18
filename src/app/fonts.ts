@@ -1,15 +1,8 @@
-import { Geist, Plus_Jakarta_Sans } from "next/font/google";
+import { Instrument_Sans } from "next/font/google";
 
-/** Display and UI face of the high-end-visual-design screens (login, onboarding). */
-export const jakarta = Plus_Jakarta_Sans({
+/** The product's only typeface. Adding a second one is a design decision, not a detail. */
+export const sans = Instrument_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-jakarta",
+  weight: ["400", "500", "600"],
+  variable: "--font-instrument",
 });
-
-/** Put on the wrapper of a screen that uses the premium look. */
-export const premiumFont = `${jakarta.variable} font-[family-name:var(--font-jakarta)]`;
-
-/** Face of the working screens (dashboard, problems). */
-export const geist = Geist({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-geist" });
-export const appFont = `${geist.variable} font-[family-name:var(--font-geist)]`;

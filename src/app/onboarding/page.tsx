@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
-import { SiteHeader } from "@/components/SiteHeader";
 import { serverClient } from "@/lib/supabase";
-import { premiumFont } from "../fonts";
+import {  } from "../fonts";
 import { draftFromCompany } from "./fields";
 import { Wizard } from "./Wizard";
 
@@ -22,8 +21,8 @@ export default async function OnboardingPage() {
     .maybeSingle();
 
   return (
-    <div className={`${premiumFont} flex min-h-dvh flex-col bg-bg text-ink`}>
-      <SiteHeader />
+    <div className={`flex min-h-dvh flex-col bg-bg text-ink`}>
+      
       <Wizard initial={draftFromCompany(company)} email={user.email ?? ""} />
     </div>
   );

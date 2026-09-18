@@ -4,6 +4,7 @@
 their problems privately. AI matches problem to solution, two AI agents negotiate behind a
 wall, and only after both sides consent do humans meet with a generated briefing.
 
+Where code goes and why: `ARCHITECTURE.md` — read it before adding a file.
 Full scope: `PLAN.md`. Market research and pitch answers: `docs/RESEARCH.md`. Who owns which
 files: `TEAM.md`.
 

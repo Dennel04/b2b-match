@@ -1,0 +1,78 @@
+/**
+ * Design tokens. The single source of colour, type and shape for the whole product.
+ * Values come from the reference screen: drafts/design/problem-page.html
+ *
+ * Never write a raw hex in a component. If a value is missing here, add it here.
+ */
+
+:root {
+  /* Surfaces — a cool paper ground, never cream */
+  --bg: #f4f6f8;
+  --surface: #ffffff;
+  --surface-alt: #edf1f3;
+
+  /* Ink — a real slate-teal, never a tinted black */
+  --ink: #16323a;
+  --ink-soft: #5c6e75;
+  --ink-faint: #8e9897;
+
+  /* Rules */
+  --border: #e4e9ed;
+  --border-strong: #dde3e7;
+
+  /* Compatibility and positive state only */
+  --accent: #2f6d52;
+  --accent-strong: #1f5540;
+  --accent-soft: #e8f0ec;
+
+  /* Reserved for withheld or negotiable detail. Nothing else may use it. */
+  --seal: #8f6a35;
+  --seal-soft: #f3ecdc;
+
+  --danger: #9c4230;
+
+  /* Shape */
+  --radius-card: 10px;
+  --radius-button: 8px;
+  --radius-chip: 7px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101a1d;
+    --surface: #17242a;
+    --surface-alt: #1e2e34;
+    --ink: #e6edef;
+    --ink-soft: #a0b1b5;
+    --ink-faint: #6f8085;
+    --border: #253840;
+    --border-strong: #334a53;
+    --accent: #5fa583;
+    --accent-strong: #7cbf9e;
+    --accent-soft: #172e26;
+    --seal: #c9a464;
+    --seal-soft: #2e2617;
+    --danger: #d98872;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #101a1d;
+  --surface: #17242a;
+  --surface-alt: #1e2e34;
+  --ink: #e6edef;
+  --ink-soft: #a0b1b5;
+  --ink-faint: #6f8085;
+  --border: #253840;
+  --border-strong: #334a53;
+  --accent: #5fa583;
+  --accent-strong: #7cbf9e;
+  --accent-soft: #172e26;
+  --seal: #c9a464;
+  --seal-soft: #2e2617;
+  --danger: #d98872;
+  color-scheme: dark;
+}

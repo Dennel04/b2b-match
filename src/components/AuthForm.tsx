@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { Bezel, Field, PillButton, inputClass } from "./premium";
+import { Card, Field, Button, inputClass } from "@/components/ui";
 
 // Not imported from @/lib/supabase: that module pulls in next/headers, which breaks client bundles.
 const browserClient = () =>
@@ -88,7 +88,7 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
   }
 
   return (
-    <Bezel className="w-full max-w-[460px]" inner="flex flex-col gap-6 p-6 sm:p-9">
+    <Card className="w-full max-w-[460px]">
       {/* Segmented control: the indicator slides, the content swaps. */}
       <div role="tablist" className="relative grid grid-cols-2 rounded-full bg-surface-alt p-1">
         <span
@@ -169,11 +169,11 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
           </p>
         )}
 
-        <PillButton type="submit" disabled={busy !== null} className="mt-1 w-full justify-between">
+        <Button type="submit" disabled={busy !== null} className="mt-1 w-full justify-between">
           {busy === "email" ? "One moment…" : copy.cta}
-        </PillButton>
+        </Button>
       </form>
-    </Bezel>
+    </Card>
   );
 }
 
