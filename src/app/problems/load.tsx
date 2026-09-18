@@ -3,7 +3,8 @@ import { getMatchView } from "@/actions/match";
 import { AppShell, initialsOf } from "@/components/layout";
 import { serverClient } from "@/lib/supabase";
 import type { BuyerTerms, MatchView } from "@/types";
-import { FORMATS } from "../onboarding/fields";
+import { FORMATS, draftFromCompany, readiness } from "../onboarding/fields";
+import { SetupCard } from "./SetupCard";
 import { DEMO } from "./demo";
 import { ProblemScreen, type ProblemScreenData } from "./ProblemScreen";
 
@@ -18,8 +19,9 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: company } = await db.from("companies").select("id, name").eq("owner_id", user.id).limit(1).maybeSingle();
+  const { data: company } = await db.from("companies").select("id, name, website, role, profile_json, seller_terms").eq("owner_id", user.id).limit(1).maybeSingle();
   if (!company) redirect("/onboarding");
+  const setup = <SetupCard items={readiness(draftFromCompany(company))} />;
 
   // RLS limits problems to their owner, so another company's id simply finds nothing.
   let query = db.from("problems").select("id, text, buyer_terms").eq("company_id", company.id);
@@ -30,7 +32,7 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
     if (problemId) notFound();
     return (
       <AppShell active="problems" initials={initialsOf(company.name)} bar={<span className="text-[14px] font-semibold">Problems</span>}>
-        <main />
+        <main>{setup}</main>
       </AppShell>
     );
   }
@@ -62,7 +64,7 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
   }
   d.matched.sort((a, b) => b.score - a.score);
 
-  return <ProblemScreen d={d} />;
+  return <ProblemScreen d={d} setup={setup} />;
 }
 
 const STATE: Record<MatchView["status"], string> = {

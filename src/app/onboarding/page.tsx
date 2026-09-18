@@ -3,12 +3,17 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { serverClient } from "@/lib/supabase";
 import { premiumFont } from "../fonts";
 import { draftFromCompany } from "./fields";
-import { Wizard } from "./Wizard";
+import { Wizard, type StepId } from "./Wizard";
+
+const STEP_IDS: StepId[] = ["company", "offer", "terms", "buying", "ready"];
 
 export const metadata = { title: "Set up your company — B2B Match" };
 
 /** Company setup. Every step is optional and skippable; answers prefill from a saved company. */
-export default async function OnboardingPage() {
+export default async function OnboardingPage({ searchParams }: PageProps<"/onboarding">) {
+  // ?step=terms opens that step directly: the dashboard links each missing answer to its step.
+  const { step } = await searchParams;
+  const initialStep = STEP_IDS.find((s) => s === step);
   const supabase = await serverClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -24,7 +29,7 @@ export default async function OnboardingPage() {
   return (
     <div className={`${premiumFont} flex min-h-dvh flex-col bg-bg text-ink`}>
       <SiteHeader />
-      <Wizard initial={draftFromCompany(company)} email={user.email ?? ""} />
+      <Wizard initial={draftFromCompany(company)} email={user.email ?? ""} initialStep={initialStep} />
     </div>
   );
 }

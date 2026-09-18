@@ -23,7 +23,7 @@ export interface ProblemScreenData {
 }
 
 /** The buyer's problem screen, rebuilt from drafts/design/problem-page.html. */
-export function ProblemScreen({ d }: { d: ProblemScreenData }) {
+export function ProblemScreen({ d, setup }: { d: ProblemScreenData; setup?: React.ReactNode }) {
   return (
     <AppShell
       active="problems"
@@ -45,6 +45,7 @@ export function ProblemScreen({ d }: { d: ProblemScreenData }) {
       barRight={<BarButton icon="pencil">Edit</BarButton>}
     >
       <main className="flex flex-col">
+        {setup}
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-9 md:px-9">
           <h1 className="max-w-[24ch] text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">{d.title}</h1>
           <p className="mt-3 max-w-[60ch] text-[16.5px] leading-[1.6] text-ink-soft">{d.summary}</p>

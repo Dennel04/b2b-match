@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { saveCompany } from "@/actions/company";
@@ -10,7 +9,7 @@ import {
   buys, readiness, sellerTermsFromDraft, sells, type Draft, type Period,
 } from "./fields";
 
-type StepId = "company" | "offer" | "terms" | "buying" | "ready";
+export type StepId = "company" | "offer" | "terms" | "buying" | "ready";
 
 const STEPS: { id: StepId; title: string; visibility: "public" | "private" | null; lead: string }[] = [
   { id: "company", title: "Your company", visibility: "public", lead: "The basics. Buyers and sellers see your industry and size first; your name only after both agree to meet." },
@@ -50,10 +49,30 @@ function Money({
   );
 }
 
-export function Wizard({ initial, email }: { initial: Draft; email: string }) {
+/** Exactly what saveCompany() receives. Compared as JSON to know whether anything changed. */
+function payload(d: Draft) {
+  return {
+    name: d.name.trim(),
+    website: d.website.trim() || null,
+    role: d.role ?? ("both" as const),
+    profile_json: {
+      name: d.name.trim(),
+      industry: d.industry,
+      size_hint: d.size,
+      services: d.services,
+      keywords: d.keywords,
+      summary: d.summary.trim(),
+    },
+    seller_terms: sells(d.role) ? sellerTermsFromDraft(d) : null,
+  };
+}
+
+export function Wizard({ initial, email, initialStep = "company" }: { initial: Draft; email: string; initialStep?: StepId }) {
   const router = useRouter();
   const [d, setD] = useState<Draft>(initial);
-  const [step, setStep] = useState<StepId>("company");
+  const [step, setStep] = useState<StepId>(initialStep);
+  const [visited, setVisited] = useState<Set<StepId>>(() => new Set([initialStep]));
+  const [saved, setSaved] = useState(() => JSON.stringify(payload(initial)));
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState<string | null>(null);
 
@@ -77,33 +96,41 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
     () => STEPS.filter((s) => (s.id === "offer" || s.id === "terms" ? sells(d.role) : s.id === "buying" ? buys(d.role) : true)),
     [d.role],
   );
-  const index = steps.findIndex((s) => s.id === step);
-  const current = steps[index] ?? steps[0];
+  // A role change can remove the open step; fall back to the first one rather than index -1.
+  const current = steps.find((s) => s.id === step) ?? steps[0];
+  const index = steps.indexOf(current);
   const checklist = readiness(d);
-  const doneCount = checklist.filter((i) => i.done).length;
+  const missing = checklist.filter((i) => !i.done);
+  const doneCount = checklist.length - missing.length;
 
+  /**
+   * A step's mark in the rail comes from its answers, not its position: done when every required
+   * answer in it is given, "left" when the user has been there and something is still missing.
+   * Steps with only optional fields count as done once seen.
+   */
+  function stepState(id: StepId): "done" | "left" | "open" {
+    if (id === "ready") return missing.length ? "open" : "done";
+    const items = checklist.filter((c) => c.step === id);
+    const left = items.filter((c) => !c.done).length;
+    if (items.length ? left === 0 : visited.has(id)) return "done";
+    return visited.has(id) && left ? "left" : "open";
+  }
+  const leftIn = (id: StepId) => checklist.filter((c) => c.step === id && !c.done).length;
+
+  /** Saves only when something changed, so moving between steps costs nothing otherwise. */
   async function persist() {
-    if (!d.name.trim()) {
+    const next = payload(d);
+    const key = JSON.stringify(next);
+    if (key === saved) return;
+    if (!next.name) {
       setSaveNote("Add a company name to save to your account. Until then, answers stay in this browser.");
       return;
     }
     setSaving(true);
     setSaveNote(null);
     try {
-      await saveCompany({
-        name: d.name.trim(),
-        website: d.website.trim() || null,
-        role: d.role ?? "both",
-        profile_json: {
-          name: d.name.trim(),
-          industry: d.industry,
-          size_hint: d.size,
-          services: d.services,
-          keywords: d.keywords,
-          summary: d.summary.trim(),
-        },
-        seller_terms: sells(d.role) ? sellerTermsFromDraft(d) : null,
-      });
+      await saveCompany(next);
+      setSaved(key);
     } catch (e) {
       setSaveNote(`Could not save to your account: ${e instanceof Error ? e.message : "unknown error"}. Your answers are kept here.`);
     } finally {
@@ -111,14 +138,18 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
     }
   }
 
-  async function go(delta: 1 | -1, save = true) {
-    if (save && delta === 1) await persist();
-    const next = steps[Math.min(Math.max(index + delta, 0), steps.length - 1)];
-    setStep(next.id);
+  /** Every way of leaving a step (rail, Back, Skip, Continue) saves first and marks it seen. */
+  async function goTo(id: StepId) {
+    if (saving) return;
+    await persist();
+    setVisited((v) => new Set(v).add(current.id).add(id));
+    setStep(id);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function finish() {
+  const go = (delta: 1 | -1) => goTo(steps[Math.min(Math.max(index + delta, 0), steps.length - 1)].id);
+
+  async function leave() {
     await persist();
     router.push("/dashboard");
     router.refresh();
@@ -131,31 +162,53 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
         <Eyebrow>Company setup</Eyebrow>
         <p className="mt-4 text-[13.5px] text-ink-soft">Signed in as {email}</p>
         <ol className="mt-6 flex gap-2 overflow-x-auto lg:flex-col lg:gap-1">
-          {steps.map((s, i) => (
+          {steps.map((s, i) => {
+            const state = stepState(s.id);
+            const here = s.id === current.id;
+            return (
             <li key={s.id}>
               <button
                 type="button"
-                onClick={() => setStep(s.id)}
+                onClick={() => goTo(s.id)}
                 aria-current={s.id === current.id ? "step" : undefined}
                 className={`flex w-full cursor-pointer items-center gap-3 whitespace-nowrap rounded-full py-2 pl-2 pr-4 text-left text-[14px] transition-colors duration-200 ${
                   s.id === current.id ? "bg-surface font-semibold shadow-[0_1px_3px_rgba(22,50,58,0.1)]" : "text-ink-soft hover:text-ink"
                 }`}
               >
-                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-semibold ${i < index ? "bg-accent text-surface" : s.id === current.id ? "bg-ink text-surface" : "bg-ink/[0.06]"}`}>
-                  {i < index ? "✓" : i + 1}
+                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-semibold ${
+                  here ? "bg-ink text-surface" : state === "done" ? "bg-accent text-surface" : state === "left" ? "bg-gold-soft text-gold" : "bg-ink/[0.06]"
+                }`}>
+                  {state === "done" && !here ? "✓" : i + 1}
                 </span>
                 {s.title}
+                {state === "left" && !here && <span className="ml-auto pl-2 text-[12px] font-medium text-gold">{leftIn(s.id)} left</span>}
               </button>
             </li>
-          ))}
+            );
+          })}
         </ol>
         <div className="mt-8 hidden rounded-3xl bg-surface/70 p-5 ring-1 ring-ink/[0.05] lg:block">
           <p className="text-[13px] font-semibold">Matcher readiness</p>
-          <p className="mt-1 text-[28px] font-extrabold tracking-[-0.04em]">{doneCount}<span className="text-[16px] font-semibold text-ink-faint"> / {checklist.length}</span></p>
+          <p className="mt-1 text-[28px] font-extrabold tracking-[-0.04em]">{doneCount}<span className="text-[16px] font-semibold text-ink-faint"> / {checklist.length} answers</span></p>
           <div className="mt-2 flex gap-1" aria-hidden>
             {checklist.map((c) => <span key={c.label} className={`h-1.5 flex-1 rounded-full ${c.done ? "bg-accent" : "bg-ink/10"}`} />)}
           </div>
-          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-soft">Everything is optional now. The matcher starts working once these are filled.</p>
+          {missing.length ? (
+            <>
+              <p className="mt-3 text-[12.5px] leading-relaxed text-ink-soft">The answers the matcher needs, across your steps. Still missing:</p>
+              <ul className="mt-2 space-y-1">
+                {missing.map((c) => (
+                  <li key={c.label}>
+                    <button type="button" onClick={() => goTo(c.step)} className="cursor-pointer text-left text-[12.5px] font-medium text-ink underline-offset-4 hover:underline">
+                      {c.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="mt-3 text-[12.5px] leading-relaxed text-ink-soft">Everything the matcher needs is in.</p>
+          )}
         </div>
       </aside>
 
@@ -278,10 +331,15 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
                   <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-bold ${c.done ? "bg-accent text-surface" : "bg-ink/[0.06] text-ink-faint"}`}>
                     {c.done ? "✓" : ""}
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <p className={`text-[15px] font-semibold ${c.done ? "text-ink-soft line-through decoration-ink-faint/60" : ""}`}>{c.label}</p>
                     <p className="text-[13px] text-ink-soft">{c.why}</p>
                   </div>
+                  {!c.done && (
+                    <button type="button" onClick={() => goTo(c.step)} className="shrink-0 cursor-pointer rounded-full bg-ink/[0.05] px-3.5 py-1.5 text-[13px] font-semibold transition-colors hover:bg-ink/[0.09]">
+                      Fill in
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -291,18 +349,18 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
 
           <div className="flex flex-wrap items-center gap-3 border-t border-line pt-6">
             {index > 0 && (
-              <PillButton type="button" variant="soft" icon={false} onClick={() => go(-1, false)}>
+              <PillButton type="button" variant="soft" icon={false} onClick={() => go(-1)}>
                 Back
               </PillButton>
             )}
             {current.id !== "ready" && (
-              <button type="button" onClick={() => go(1, false)} className="cursor-pointer px-3 text-[14px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">
+              <button type="button" onClick={() => go(1)} className="cursor-pointer px-3 text-[14px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">
                 Skip for now
               </button>
             )}
             <div className="ml-auto">
               {current.id === "ready" ? (
-                <PillButton type="button" onClick={finish} disabled={saving}>
+                <PillButton type="button" onClick={leave} disabled={saving}>
                   {saving ? "Saving…" : "Go to dashboard"}
                 </PillButton>
               ) : (
@@ -315,7 +373,7 @@ export function Wizard({ initial, email }: { initial: Draft; email: string }) {
         </Bezel>
 
         <p className="mt-6 text-center text-[13px] text-ink-faint">
-          <Link href="/dashboard" className="underline-offset-4 hover:text-ink hover:underline">Finish later</Link>. Your progress is kept.
+          <button type="button" onClick={leave} disabled={saving} className="cursor-pointer underline-offset-4 hover:text-ink hover:underline">Finish later</button>. Your progress is kept.
         </p>
       </section>
     </div>

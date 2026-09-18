@@ -121,29 +121,35 @@ export function sellerTermsFromDraft(d: Draft): SellerTerms {
   };
 }
 
+/** The wizard steps that hold fields. "ready" is the summary step and holds none. */
+export type FieldStep = "company" | "offer" | "terms" | "buying";
+
 export interface ReadinessItem {
   label: string;
   done: boolean;
   why: string;
+  /** The wizard step where this answer is given. */
+  step: FieldStep;
 }
 
-/** What the matcher needs from this company. Only server-saved fields count. */
+/**
+ * What the matcher needs from this company, each tied to the step that asks for it. Only
+ * server-saved fields count. The buyer's first problem is not here: it is written per problem,
+ * not in company setup.
+ */
 export function readiness(d: Draft): ReadinessItem[] {
   const items: ReadinessItem[] = [
-    { label: "Company name", done: !!d.name.trim(), why: "Nothing can be saved without it." },
-    { label: "Buyer, seller or both", done: !!d.role, why: "Decides which side of the match you are on." },
-    { label: "Industry and size", done: !!d.industry && !!d.size, why: "Shown to the other side instead of your name." },
+    { step: "company", label: "Company name", done: !!d.name.trim(), why: "Nothing can be saved without it." },
+    { step: "company", label: "Buyer, seller or both", done: !!d.role, why: "Decides which side of the match you are on." },
+    { step: "company", label: "Industry and size", done: !!d.industry && !!d.size, why: "Shown to the other side instead of your name." },
   ];
   if (sells(d.role)) {
     items.push(
-      { label: "What you offer, in 2–3 sentences", done: d.summary.trim().length >= 40, why: "The matcher reads this against buyers' problems." },
-      { label: "At least one service", done: d.services.length > 0, why: "Used to find you in the first pass." },
-      { label: "Smallest deal you take", done: !!Number(d.floorAmount), why: "Checked against budgets without showing either figure." },
-      { label: "Contract formats you accept", done: d.sellerFormats.length > 0, why: "Deals with no shared format are filtered out." },
+      { step: "offer", label: "What you offer, in 2–3 sentences", done: d.summary.trim().length >= 40, why: "The matcher reads this against buyers' problems." },
+      { step: "offer", label: "At least one service", done: d.services.length > 0, why: "Used to find you in the first pass." },
+      { step: "terms", label: "Smallest deal you take", done: !!Number(d.floorAmount), why: "Checked against budgets without showing either figure." },
+      { step: "terms", label: "Contract formats you accept", done: d.sellerFormats.length > 0, why: "Deals with no shared format are filtered out." },
     );
-  }
-  if (buys(d.role)) {
-    items.push({ label: "Your first problem", done: false, why: "Described in a short AI interview after setup." });
   }
   return items;
 }
