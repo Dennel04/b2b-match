@@ -16,7 +16,7 @@ const COPY = {
 } as const;
 
 const inputClass =
-  "rounded-[9px] border border-line-strong bg-bg px-3.5 py-3 text-[14.5px] text-ink outline-none placeholder:text-ink-faint focus:border-accent focus:ring-2 focus:ring-accent-soft";
+  "rounded-sm border border-line-strong bg-bg px-3.5 py-3 text-[14.5px] text-ink outline-none placeholder:text-ink-faint focus:border-accent focus:ring-2 focus:ring-accent-soft motion-reduce:transition-none";
 
 export function AuthForm({ initialError }: { initialError?: string }) {
   const router = useRouter();
@@ -88,7 +88,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
 
   return (
     <div className="flex w-full max-w-[420px] flex-col gap-[26px]">
-      <div role="tablist" className="flex rounded-[10px] border border-line bg-surface-alt p-1">
+      <div role="tablist" className="flex rounded-sm border border-line bg-surface-alt p-1">
         {(["login", "signup"] as const).map((m) => (
           <button
             key={m}
@@ -96,8 +96,8 @@ export function AuthForm({ initialError }: { initialError?: string }) {
             role="tab"
             aria-selected={mode === m}
             onClick={() => switchMode(m)}
-            className={`flex-1 cursor-pointer rounded-[7px] py-2.5 text-sm font-semibold transition-colors ${
-              mode === m ? "bg-surface text-ink shadow-sm" : "text-ink-faint hover:text-ink"
+            className={`flex-1 cursor-pointer rounded-[1px] py-2.5 text-sm font-semibold transition-colors motion-reduce:transition-none ${
+              mode === m ? "bg-surface text-ink" : "text-ink-faint hover:text-ink"
             }`}
           >
             {m === "login" ? "Log in" : "Sign up"}
@@ -105,7 +105,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
         ))}
       </div>
 
-      <div className="flex flex-col gap-[18px] rounded-2xl border border-line bg-surface p-6 sm:p-8">
+      <div className="flex flex-col gap-[18px] rounded-sm border border-line bg-surface p-6 sm:p-8">
         <div className="flex flex-col gap-1">
           <h1 className="font-serif text-[22px] font-semibold">{copy.title}</h1>
           <p className="text-[13px] text-ink-soft">{copy.subtitle}</p>
@@ -115,7 +115,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
           type="button"
           onClick={onGoogle}
           disabled={busy !== null}
-          className="flex cursor-pointer items-center justify-center gap-2.5 rounded-[9px] border border-line-strong bg-surface px-5 py-3 text-[14.5px] font-semibold text-ink transition-colors hover:border-ink-soft disabled:cursor-default disabled:opacity-60"
+          className="flex cursor-pointer items-center justify-center gap-2.5 rounded-sm border border-line-strong bg-surface px-5 py-3 text-[14.5px] font-semibold text-ink transition-colors motion-reduce:transition-none hover:border-ink-soft disabled:cursor-default disabled:opacity-60"
         >
           <GoogleIcon />
           {busy === "google" ? "Redirecting…" : "Continue with Google"}
@@ -162,7 +162,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
             </p>
           )}
           {notice && (
-            <p role="status" className="rounded-[9px] bg-accent-soft px-3.5 py-3 text-[13px] text-ink">
+            <p role="status" className="rounded-sm bg-accent-soft px-3.5 py-3 text-[13px] text-ink">
               {notice}
             </p>
           )}
@@ -170,7 +170,7 @@ export function AuthForm({ initialError }: { initialError?: string }) {
           <button
             type="submit"
             disabled={busy !== null}
-            className="mt-1 cursor-pointer rounded-[9px] bg-accent px-5 py-[13px] text-[14.5px] font-semibold text-[#FCFAF3] transition-colors hover:bg-accent-strong disabled:cursor-default disabled:opacity-60"
+            className="mt-1 cursor-pointer rounded-sm bg-accent px-5 py-[13px] text-[14.5px] font-semibold text-[#FCFAF3] transition-colors motion-reduce:transition-none hover:bg-accent-strong disabled:cursor-default disabled:opacity-60"
           >
             {busy === "email" ? "One moment…" : copy.cta}
           </button>

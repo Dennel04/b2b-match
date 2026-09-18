@@ -56,3 +56,17 @@ body {
   background: var(--bg);
   color: var(--ink);
 }
+
+/* Visible keyboard focus everywhere (design brief §5, accessibility floor). */
+:where(a, button, [role="tab"], summary):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
