@@ -9,11 +9,17 @@ export async function GET(request: Request) {
   // Only same-site paths, so the link can't bounce users to another domain.
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
 
+  // Supabase or Google refused before issuing a code (bad client secret, user cancelled, ...).
+  let reason = searchParams.get("error_description") ?? searchParams.get("error");
+
   if (code) {
     const supabase = await serverClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) return NextResponse.redirect(`${origin}${safeNext}`);
+    reason = error.message;
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth`);
+  reason ??= "No sign-in code was returned.";
+  console.error("[auth/callback]", reason);
+  return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(reason)}`);
 }

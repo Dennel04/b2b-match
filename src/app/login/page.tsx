@@ -11,7 +11,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <div className="flex min-h-dvh flex-col items-center bg-bg text-ink">
       <SiteHeader />
       <main className="flex w-full flex-1 flex-col items-center justify-center gap-[26px] px-4 py-6">
-        <AuthForm initialError={error ? "Sign-in failed. Please try again." : undefined} />
+        <AuthForm initialError={typeof error === "string" ? `Sign-in failed: ${error}` : undefined} />
         <Link href="/" className="text-[13px] text-ink-faint hover:text-ink-soft">
           ← Back to homepage
         </Link>
