@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export interface NavItem {
   href: string;
@@ -67,6 +68,7 @@ export function AppShell({
           {bar}
           <div className="ml-auto flex items-center gap-4">
             {barRight}
+            <ThemeToggle />
             <span className="hidden items-center gap-1.5 text-[12.5px] text-ink-soft sm:flex">
               <Icon name="lock" size={13} />
               Private to you
