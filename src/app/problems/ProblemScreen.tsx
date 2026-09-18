@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { AppShell } from "@/components/AppShell";
-import { Icon } from "@/components/Icon";
+import { AppShell } from "@/components/layout";
+import { Icon } from "@/components/ui";
 
 interface Party {
   id: string;

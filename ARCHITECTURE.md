@@ -14,12 +14,13 @@ src/
     layout.tsx            root shell: fonts, theme, <body>
     globals.css           Tailwind import, token bridge, quality floor
     fonts.ts              the one typeface
-    (auth)/               route group: login, signup — no app chrome
-    (app)/                route group: signed-in screens — AppShell with sidebar
+    login/ signup/        signed-out screens — no app chrome
+    dashboard/ problems/   signed-in screens — wrapped in <AppShell>
+    onboarding/           company setup
     auth/                 route handlers (OAuth callback, sign-out)
   components/
-    ui/                   design system primitives — Card, Button, Chip, Field...
-    layout/               AppShell, Sidebar, TopBar, SiteFooter
+    ui/                   design system primitives — Card, Button, Chip, Field, Icon
+    layout/               AppShell: sidebar, top bar, footer
     <Feature>.tsx         shared across routes but not a primitive
   actions/                Server Actions — the only place the database is written
   lib/                    clients and pure logic: claude, supabase, overlap, leak
@@ -30,9 +31,10 @@ supabase/migrations/      forward-only SQL
 drafts/design/            the reference screen, not code to import
 ```
 
-**Route groups.** `(auth)` and `(app)` are folders in parentheses: they do not appear in the
-URL, they exist so the two halves of the product can have different layouts. Signed-out screens
-are bare; signed-in screens get the sidebar. Put a new screen in the group whose chrome it needs.
+**Chrome.** Signed-in screens wrap their content in `<AppShell>`; signed-out screens do not.
+When that becomes repetitive, move the signed-in routes into a `(app)` route group — a folder in
+parentheses does not appear in the URL and exists only so a set of routes can share a layout.
+Do it as one commit when nobody else is editing those files, not gradually.
 
 **Colocation.** Anything used by exactly one route lives next to that route
 (`app/(app)/onboarding/Wizard.tsx`), not in `components/`. A component moves into `components/`

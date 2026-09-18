@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getMatchView } from "@/actions/match";
-import { AppShell, initialsOf } from "@/components/AppShell";
+import { AppShell, initialsOf } from "@/components/layout";
 import { serverClient } from "@/lib/supabase";
 import type { BuyerTerms, MatchView } from "@/types";
 import { FORMATS } from "../onboarding/fields";

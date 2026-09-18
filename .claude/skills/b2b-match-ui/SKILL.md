@@ -5,9 +5,13 @@ description: The settled UI for B2B Match — layout, tokens, group vocabulary, 
 
 # B2B Match — UI
 
-The direction is settled. The reference screen is `drafts/design/problem-page.html` — open it over
-http (`cd drafts/design && python3 -m http.server 8080`), not `file://`. Build every new screen
-from it. Do not invent a second visual language, and do not go looking for a direction.
+The direction is settled and already built. Compose screens from `@/components/ui` and wrap them
+in `<AppShell>` from `@/components/layout` — `src/app/problems/ProblemScreen.tsx` is the worked
+example. The original is `drafts/design/problem-page.html` (serve it over http, not `file://`).
+
+Do not invent a second visual language, do not go looking for a direction, and do not write a
+raw hex in a component: every value is a token in `src/styles/tokens.css`. Where code goes is
+`ARCHITECTURE.md`.
 
 Read `PLAN.md` (sections 1, 3) and `CLAUDE.md` first. This skill adds only what is specific to
 the interface.

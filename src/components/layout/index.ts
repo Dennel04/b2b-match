@@ -1,4 +1,1 @@
-export { AppShell } from "./AppShell";
-export { Sidebar } from "./Sidebar";
-export { TopBar } from "./TopBar";
-export { SiteFooter } from "./SiteFooter";
+export { AppShell, initialsOf, type NavItem } from "./AppShell";
