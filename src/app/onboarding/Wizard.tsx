@@ -62,8 +62,9 @@ export function Wizard({ autoSite }: { autoSite: string | null }) {
     // One attempt at reading the site. Whatever happens, the company is already saved.
     setReading(base.website);
     try {
-      const draft = await draftCompanyProfile(base.website);
-      if (left.current) return;
+      const result = await draftCompanyProfile(base.website);
+      if (left.current || !result.ok) return;
+      const draft = result.data;
       await saveCompany({
         ...base,
         website: draft.website,

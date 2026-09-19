@@ -146,10 +146,14 @@ export function CompanyForm({
       return setFill({ state: "error", message: "Add your website first." });
     setFill({ state: "running", source: from, started: Date.now() });
     try {
-      const draft: CompanyDraft =
+      // Expected failures come back as data: a Server Action's thrown message is stripped in
+      // production, so an unreadable site would otherwise surface as a React error code.
+      const result =
         from === "site"
           ? await draftCompanyProfile(site)
           : await draftCompanyProfileFromText(pasted);
+      if (!result.ok) return setFill({ state: "error", message: result.message });
+      const draft: CompanyDraft = result.data;
       // The name the person typed stays theirs; the draft fills everything else.
       setD((prev) => ({
         ...applyAutofill(prev, draft),

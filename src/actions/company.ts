@@ -4,29 +4,34 @@ import { ask } from '@/lib/claude';
 import { domainFromEmail, normaliseWebsite, readWebsiteTraced, type ScrapeTrace, type SitePage } from '@/lib/scrape';
 import { serverClient } from '@/lib/supabase';
 import { ProfileDraftSchema, profileDraftPrompt } from '@/prompts/profile';
-import type { CompanyDraft, CompanyProfile, SellerTerms } from '@/types';
+import type { ActionResult, CompanyDraft, CompanyProfile, SellerTerms } from '@/types';
 
 /**
  * Zero-typing onboarding. Pass a website, or nothing to use the signed-in user's email domain.
- * ~10-20 s. Throws with a plain message when the site cannot be read — the screen then falls
- * back to the manual form. The result is a draft: show it, let them edit, then saveCompany().
+ * ~10-20 s. A site that cannot be read comes back as `{ ok: false, message }` — the screen
+ * shows the message and falls back to the manual form. On success the draft is a starting
+ * point: show it, let them edit, then saveCompany().
  */
-export async function draftCompanyProfile(website?: string): Promise<CompanyDraft> {
+export async function draftCompanyProfile(website?: string): Promise<ActionResult<CompanyDraft>> {
   let site = website?.trim();
   if (!site) {
     const db = await serverClient();
     const { data: { user } } = await db.auth.getUser();
     const domain = user?.email ? domainFromEmail(user.email) : null;
-    if (!domain) throw new Error('No company website to read — enter it, or fill the profile by hand');
+    if (!domain) {
+      return { ok: false, message: 'No company website to read — enter it, or fill the profile by hand' };
+    }
     site = domain;
   }
   site = normaliseWebsite(site);
 
   const trace = await readWebsiteTraced(site);
   logScrape(site, trace);
-  if (!trace.pages.length) throw new Error(`Could not read ${site} — fill the profile by hand`);
+  if (!trace.pages.length) {
+    return { ok: false, message: `Could not read ${site} — paste a description instead, or write it yourself` };
+  }
 
-  return draftFrom(site, trace.pages, trace.logo);
+  return { ok: true, data: await draftFrom(site, trace.pages, trace.logo) };
 }
 
 /** One line per step in the server log (terminal locally, Vercel → Logs in production). */
@@ -63,10 +68,12 @@ export async function debugScrape(website: string) {
  * The same draft from text the person pastes: an "about us", a pitch deck copied out of a PDF, a
  * LinkedIn page. For companies whose site cannot be read or says too little. ~10 s.
  */
-export async function draftCompanyProfileFromText(text: string): Promise<CompanyDraft> {
+export async function draftCompanyProfileFromText(text: string): Promise<ActionResult<CompanyDraft>> {
   const body = text.trim().slice(0, 14000);
-  if (body.length < 80) throw new Error('Paste a few sentences about the company — a paragraph at least');
-  return draftFrom('', [{ url: 'pasted text', text: body }]);
+  if (body.length < 80) {
+    return { ok: false, message: 'Paste a few sentences about the company — a paragraph at least' };
+  }
+  return { ok: true, data: await draftFrom('', [{ url: 'pasted text', text: body }]) };
 }
 
 async function draftFrom(site: string, pages: SitePage[], logo: string | null = null): Promise<CompanyDraft> {

@@ -15,6 +15,7 @@ import {
   sellerTurnPrompt,
 } from '@/prompts/negotiate';
 import type {
+  ActionResult,
   AgentDialogueLine,
   BuyerTerms,
   Compatibility,
@@ -161,7 +162,7 @@ export async function findMatches(problemId: string): Promise<Match[]> {
  *
  * The result is cached, so a demo match is generated once and replayed instantly on stage.
  */
-export async function negotiate(matchId: string): Promise<Negotiation> {
+export async function negotiate(matchId: string): Promise<ActionResult<Negotiation>> {
   const admin = adminClient();
   const { data: m } = await admin
     .from('matches')
@@ -170,13 +171,13 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
     )
     .eq('id', matchId)
     .single();
-  if (!m) throw new Error('Match not found');
+  if (!m) return { ok: false, message: 'Match not found' };
 
   if (m.agent_dialogue_json && m.deal_envelope_json) {
-    return { lines: m.agent_dialogue_json, envelope: m.deal_envelope_json };
+    return { ok: true, data: { lines: m.agent_dialogue_json, envelope: m.deal_envelope_json } };
   }
   if (isRunning(m.negotiation_started_at, m.deal_envelope_json)) {
-    throw new Error('The negotiation is already running — poll getMatchView() for progress');
+    return { ok: false, message: 'The negotiation is already running — watch it below' };
   }
 
   const problemText = m.problems.text as string;
@@ -246,7 +247,11 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
       .from('matches')
       .update({ agent_dialogue_json: null, negotiation_started_at: null })
       .eq('id', matchId);
-    throw new Error(`Negotiation discarded — the problem text leaked at ${describeLeaks(leaks)}`);
+    console.error(`[leak] match ${matchId} discarded at ${describeLeaks(leaks)}`);
+    return {
+      ok: false,
+      message: 'The agents’ transcript failed the privacy check and was discarded. Run it again.',
+    };
   }
 
   const decided = await ask(
@@ -281,7 +286,7 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
     })
     .eq('id', matchId);
 
-  return { lines, envelope };
+  return { ok: true, data: { lines, envelope } };
 }
 
 /**
@@ -289,10 +294,13 @@ export async function negotiate(matchId: string): Promise<Negotiation> {
  * and only then can the seller accept. Clients cannot write `matches` directly (see migration
  * 0002), so this is the only door.
  */
-export async function setMatchStatus(matchId: string, action: MatchAction): Promise<Match> {
+export async function setMatchStatus(
+  matchId: string,
+  action: MatchAction,
+): Promise<ActionResult<Match>> {
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  if (!user) return { ok: false, message: 'Sign in again to continue' };
 
   const admin = adminClient();
   const { data: m } = await admin
@@ -304,7 +312,7 @@ export async function setMatchStatus(matchId: string, action: MatchAction): Prom
     )
     .eq('id', matchId)
     .single();
-  if (!m) throw new Error('Match not found');
+  if (!m) return { ok: false, message: 'Match not found' };
 
   // A `!fkey` embed on a many-to-one is a single object at runtime; the untyped client guesses array.
   const row = m as unknown as {
@@ -315,14 +323,16 @@ export async function setMatchStatus(matchId: string, action: MatchAction): Prom
 
   const isBuyer = row.buyer.owner_id === user.id;
   const isSeller = row.seller.owner_id === user.id;
-  if (!isBuyer && !isSeller) throw new Error('Not a party to this match');
+  if (!isBuyer && !isSeller) return { ok: false, message: 'This match is not yours' };
 
-  const status = nextStatus(row.status, action, isBuyer, isSeller);
+  const next = nextStatus(row.status, action, isBuyer, isSeller);
+  if (!next.ok) return next;
+  const status = next.status;
 
   const { data, error } = await admin
     .from('matches').update({ status }).eq('id', matchId).select().single();
   if (error) throw error;
-  return data as Match;
+  return { ok: true, data: data as Match };
 }
 
 /**
@@ -386,28 +396,31 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
   };
 }
 
+/** The opt-in order itself. Every refusal here is a message the person is meant to read. */
 function nextStatus(
   current: MatchStatus,
   action: MatchAction,
   isBuyer: boolean,
   isSeller: boolean,
-): MatchStatus {
-  if (action === 'decline') return 'declined';
+): { ok: true; status: MatchStatus } | { ok: false; message: string } {
+  if (action === 'decline') return { ok: true, status: 'declined' };
 
   if (action === 'interested') {
-    if (!isBuyer) throw new Error('Only the buyer can express interest');
-    if (current !== 'proposed') throw new Error(`Cannot express interest from "${current}"`);
-    return 'buyer_interested';
+    if (!isBuyer) return { ok: false, message: 'Only the buyer can express interest' };
+    if (current !== 'proposed') {
+      return { ok: false, message: `Interest cannot be expressed from “${current}”` };
+    }
+    return { ok: true, status: 'buyer_interested' };
   }
 
-  if (!isSeller) throw new Error('Only the seller can accept');
+  if (!isSeller) return { ok: false, message: 'Only the vendor can accept the meeting' };
   if (current !== 'buyer_interested') {
-    throw new Error('The buyer has not expressed interest yet — this is the double opt-in');
+    return { ok: false, message: 'The buyer has not expressed interest yet — this is the double opt-in' };
   }
-  return 'accepted';
+  return { ok: true, status: 'accepted' };
 }
 
-export async function generateBrief(matchId: string): Promise<string> {
+export async function generateBrief(matchId: string): Promise<ActionResult<string>> {
   const admin = adminClient();
   const { data: m } = await admin
     .from('matches')
@@ -416,9 +429,11 @@ export async function generateBrief(matchId: string): Promise<string> {
              seller:companies!matches_seller_company_id_fkey(name, profile_json)`)
     .eq('id', matchId)
     .single();
-  if (!m) throw new Error('Match not found');
-  if (m.brief_md) return m.brief_md;
-  if (m.status !== 'accepted') throw new Error('Briefing requires both sides to have accepted');
+  if (!m) return { ok: false, message: 'Match not found' };
+  if (m.brief_md) return { ok: true, data: m.brief_md };
+  if (m.status !== 'accepted') {
+    return { ok: false, message: 'The briefing appears once both sides have accepted the meeting' };
+  }
 
   const seller = m.seller.profile_json as CompanyProfile;
   const envelope = m.deal_envelope_json as DealEnvelope | null;
@@ -436,5 +451,5 @@ export async function generateBrief(matchId: string): Promise<string> {
   );
 
   await admin.from('matches').update({ brief_md: brief }).eq('id', matchId);
-  return brief;
+  return { ok: true, data: brief };
 }

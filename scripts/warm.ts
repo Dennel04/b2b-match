@@ -51,11 +51,16 @@ async function main() {
       }
       const t = Date.now();
       try {
-        const n = await negotiate(m.id);
-        const withheld = n.lines.filter((l) => l.withheld).length;
+        const result = await negotiate(m.id);
+        if (!result.ok) {
+          console.log(`  · ${m.id.slice(0, 8)} REFUSED: ${result.message}`);
+          continue;
+        }
+        const { lines, envelope } = result.data;
+        const withheld = lines.filter((l) => l.withheld).length;
         console.log(
-          `  · ${m.id.slice(0, 8)} score ${m.score} → ${n.envelope.verdict} ` +
-            `(${n.envelope.agreed_format ?? 'no format'}, confidence ${n.envelope.confidence}, ` +
+          `  · ${m.id.slice(0, 8)} score ${m.score} → ${envelope.verdict} ` +
+            `(${envelope.agreed_format ?? 'no format'}, confidence ${envelope.confidence}, ` +
             `${withheld} withheld) in ${((Date.now() - t) / 1000).toFixed(1)}s`,
         );
       } catch (e) {

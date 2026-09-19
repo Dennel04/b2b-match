@@ -182,6 +182,16 @@ export interface AnonymousMatchView {
 
 export type MatchAction = 'interested' | 'accept' | 'decline';
 
+/**
+ * How a Server Action reports a failure the user is meant to read.
+ *
+ * Next.js strips the message off anything a Server Action throws in production (the client
+ * gets React error #441 instead), so an expected failure — a site that cannot be read, an
+ * opt-in step taken out of order — has to come back as data. Throwing is still right for a
+ * bug: nobody should read those.
+ */
+export type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string };
+
 /** One mechanical reason a vendor lost matches, counted across problems. Never names a buyer. */
 export interface BlockedReason {
   reason: string;

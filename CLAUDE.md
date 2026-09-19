@@ -40,6 +40,9 @@ any prompt sent on behalf of the other side.
   `scripts/`. Never in a component.
 - Parse model output only through `ask()` in `src/lib/claude.ts` — it validates against the
   zod schema and retries once. No hand-rolled `JSON.parse` on a model response anywhere else.
+- A Server Action **returns** `ActionResult<T>` for anything the user is meant to read, and
+  throws only on a bug. Next.js strips thrown messages in production, so a thrown explanation
+  reaches the browser as "Minified React error #441" and the screen shows that instead.
 - The model provider is configured in `.env.local`, not in code: `ANTHROPIC_BASE_URL` routes the
   Anthropic SDK to DeepSeek's Anthropic-compatible endpoint (see `.env.example`). Use only
   features both providers support — no structured outputs, no prefill, no beta headers.

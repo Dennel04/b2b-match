@@ -142,12 +142,19 @@ per-week series fine enough to let a vendor work out who is currently shopping i
   seconds to a minute; a page that awaits them hangs with a blank screen. Call them from a form
   action on a button, show a pending state (`useFormStatus` / `useTransition`), then
   `revalidatePath` or `redirect`. `getMatchView` is the only match call safe to await in render.
-- Every action throws a plain `Error` with a readable message (model refused, output cut off,
-  illegal status move, not a party to this match). Catch it in the action wrapper and surface the
-  message; an uncaught throw is the Next.js error overlay in front of the judges.
+- **Expected failures come back as data, not as exceptions.** `draftCompanyProfile`,
+  `draftCompanyProfileFromText`, `negotiate`, `setMatchStatus` and `generateBrief` return
+  `ActionResult<T>` = `{ ok: true, data } | { ok: false, message }`. Check `ok`, show `message`.
+  This is not a style choice: **Next.js strips the message off anything a Server Action throws in
+  production**, so a thrown "Could not read your site" reaches the browser as *Minified React
+  error #441*. That bug was live on the deployed onboarding screen. Anything you add to these
+  actions that a person is meant to read must be returned, never thrown.
+- A genuine crash still throws (a bug, a dead database). Keep the `try/catch` for those, but the
+  readable path is the `ok` check — an uncaught throw is the Next.js error overlay in front of
+  the judges.
 - A negotiation that leaks the problem text is **discarded on purpose** (`findLeaks` in
-  `src/lib/leak.ts`) and `negotiate` throws. Rare after the per-line regeneration, but handle it:
-  "The agents' transcript failed the privacy check — run it again."
+  `src/lib/leak.ts`); `negotiate` returns `{ ok: false }` with that message ready to show. Rare
+  after the per-line regeneration, but it is a real branch.
 - For the demo, `npm run warm` has already generated the negotiations for the seeded problems, so
   those open instantly. A problem entered live on stage runs for real — plan ~1 minute of visible
   progress for it, not a spinner.
