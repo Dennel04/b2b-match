@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell, initialsOf } from "@/components/layout";
+import { RemoteLogo } from "@/components/RemoteLogo";
 import { Card, Icon } from "@/components/ui";
 import { serverClient } from "@/lib/supabase";
 
@@ -141,12 +142,7 @@ function Company({ c }: { c: Listed }) {
     <Card className="flex h-full flex-col gap-4 p-5">
       <div className="flex items-start gap-3">
         <span className="grid h-11 w-11 flex-none place-items-center overflow-hidden rounded-[10px] border border-line bg-surface">
-          {c.logo_url ? (
-            // eslint-disable-next-line @next/next/no-img-element -- a remote logo from the company's own site
-            <img src={c.logo_url} alt="" loading="lazy" className="h-full w-full object-contain p-1.5" />
-          ) : (
-            <span className="text-[13px] font-semibold text-ink-soft">{initialsOf(c.name)}</span>
-          )}
+          <RemoteLogo url={c.logo_url} name={c.name} className="p-1.5" />
         </span>
         <div className="min-w-0">
           <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">{c.name}</p>
