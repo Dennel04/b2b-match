@@ -373,6 +373,7 @@ function Gate({
           value={draft.area ? [draft.area] : []}
           onChange={(v) => set("area", v.find((x) => x !== draft.area) ?? "")}
           more="Another part of the business"
+          openWhenEmpty
         />
       )}
 

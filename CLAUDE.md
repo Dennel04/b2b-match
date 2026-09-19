@@ -25,7 +25,12 @@ money, so they are not in `check`:
 ```bash
 npx tsx --env-file=.env.local scripts/bench.ts          # the buying side
 npx tsx --env-file=.env.local scripts/bench-service.ts  # the selling side
+npx tsx --env-file=.env.local scripts/interviews.ts     # what real interviews actually asked
 ```
+
+`interviews.ts` reads `problems.interview_json` back — every question in the order it was asked,
+scripted ones included. A bench says what the prompt does on input you wrote; this says what it
+did to someone. Output is private problems: never paste it anywhere public.
 
 ## Invariants
 

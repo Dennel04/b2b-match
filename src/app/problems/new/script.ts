@@ -55,4 +55,4 @@ export const TIMINGS = [
  * asks with a chip. Without it, the model opens on the budget question every time.
  */
 export const SCRIPTED_NOTE =
-  "Asked by the form right after you, with buttons — do not ask about these: the part of the business, the deadline, budget ceiling and whether it is one-off or monthly, contract formats, hard requirements, dealbreakers. Spend your questions on what hurts, what it costs per month, and what they already tried. Still fill `department` with your best guess from the list.";
+  "Reminder, in case the rules above were not enough: the form asks about the part of the business, the deadline, the budget ceiling, contract formats and hard requirements — with buttons, straight after you. Asking any of them yourself means the person answers twice. Still fill `department` and the suggestion fields with your best guess.";

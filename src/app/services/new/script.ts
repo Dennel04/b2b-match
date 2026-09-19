@@ -53,4 +53,4 @@ export const TIMINGS = [
  * a chip.
  */
 export const SCRIPTED_NOTE =
-  "Asked by the form right after you, with buttons — do not ask about these: the part of the buyer's business this fixes, when they can start, the smallest deal worth taking and whether it is one-off or monthly, contract formats, what they can satisfy. Spend your question on what the service actually includes and who it is for. Still fill `department` with your best guess from the list.";
+  "Reminder, in case the rules above were not enough: the form asks about the part of the buyer's business this fixes, when they can start, the smallest deal worth taking, contract formats and what they can satisfy — with buttons, straight after you. Asking any of them yourself means the person answers twice. Still fill `area` and the suggestion fields with your best guess.";

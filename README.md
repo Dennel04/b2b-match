@@ -52,6 +52,7 @@ are deliberately out of `check`:
 ```bash
 npx tsx --env-file=.env.local scripts/bench.ts          # the buying side
 npx tsx --env-file=.env.local scripts/bench-service.ts  # the selling side
+npx tsx --env-file=.env.local scripts/interviews.ts     # read real interviews back out of the database
 ```
 
 ## Working in parallel

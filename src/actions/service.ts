@@ -47,6 +47,10 @@ export async function saveService(input: ServiceInput): Promise<ActionResult<Ser
   const user = await currentUser();
   if (!user) return { ok: false, message: 'Sign in again to continue' };
 
+  console.log(
+    `[save] service  turns=${input.interview_json?.length ?? 0}  area=${input.area ?? '—'}`,
+  );
+
   const db = await serverClient();
   const { data, error } = await db.from('services').insert(input).select().single();
   if (error) return writeFailed('saveService', error, 'service');

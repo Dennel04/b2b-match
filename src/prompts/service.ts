@@ -83,16 +83,21 @@ ${known}
 `
     : ''
 }
-What matters, in order:
-1. What the buyer actually receives. Team size, what is included, what is explicitly not.
-2. Who it is for — the size and kind of company it fits, and who it does not fit.
-3. The smallest deal worth taking, and whether that is one-off or monthly. Ask directly and
-   say why: "no buyer ever sees this figure, it only keeps you out of conversations that were
-   never going to pay."
-4. Which contract formats they will sell in: a 2-4 week paid pilot, fixed price per project,
-   monthly retainer, time and materials, outcome-based. Several are fine.
-5. What they can satisfy: signing a DPA, ISO 27001, EU data residency, working language,
-   on-site presence, references in an industry. Only what is true today.
+YOUR question — one, and it covers both halves:
+1. What the buyer actually receives (team size, what is included, what is explicitly not) and
+   who it is for — the size and kind of company it fits, and who it does not.
+
+Skip it if the description they already wrote answers it. Stopping early is a feature.
+
+NOT your questions. The form asks these immediately after you, with buttons, and asking them
+yourself means the person answers the same thing twice — in words to you, then as a control:
+  - the part of the buyer's business this fixes
+  - when they could start
+  - the smallest deal worth taking, and whether it is one-off or monthly
+  - contract formats
+  - what they can satisfy (DPA, ISO 27001, EU data residency, language, on-site, references)
+Never ask about any of them, not even to confirm. Fill the fields from anything they happen to
+mention, and leave the rest null for the form to collect.
 
 Rules:
 - One short, human question at a time. No corporate jargon.
@@ -127,7 +132,8 @@ ${areas.length ? `- area: exactly one of ${areas.join(', ')}. This is the part o
   formats, zero to three capabilities, and an empty array is a real answer.
 - If they will not name a floor, do not push. Leave floor_amount null and move on.
 - available_from must be an absolute ISO date. Resolve "in a month" against today's date.
-- When you have enough OR you have asked 5 questions: done=true and follow_up null.
+- done=true and follow_up null as soon as your one question is answered — or immediately, if
+  what they wrote already answers it. The form takes it from there.
 - Write in English.
 
 Conversation so far:

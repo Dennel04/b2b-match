@@ -68,8 +68,13 @@ export function Pills<T extends string>({
  * which two or three of them are plausible. So the question shows those, and the full list is
  * one click away — a click that stays rare precisely because the suggestions are informed.
  *
- * With nothing suggested (the model was not sure) it opens fully: a narrowed list of zero would
- * be a dead end, not a shortcut.
+ * `openWhenEmpty` decides what nothing-suggested means, and the two questions differ:
+ *
+ *   A question that MUST be answered (which part of the business?) opens fully — a narrowed list
+ *   of zero is a dead end, not a shortcut.
+ *   A question whose honest answer is often "none" (what must a vendor satisfy?) does not. An
+ *   empty suggestion there is the model saying this deal needs nothing special, and showing all
+ *   seven anyway is how a €500 job ends up ticking EU data residency.
  */
 export function PillsNarrowed<T extends string>({
   options,
@@ -77,6 +82,7 @@ export function PillsNarrowed<T extends string>({
   value,
   onChange,
   more = "Something else",
+  openWhenEmpty = false,
 }: {
   options: { value: T; label: string }[];
   /** Best guess first. Kept in the list's own order on screen, so the eye reads one column. */
@@ -84,9 +90,11 @@ export function PillsNarrowed<T extends string>({
   value: T[];
   onChange: (next: T[]) => void;
   more?: string;
+  /** Show everything when nothing was suggested. True for a question that must be answered. */
+  openWhenEmpty?: boolean;
 }) {
   const [all, setAll] = useState(false);
-  const open = all || suggested.length === 0;
+  const open = all || (openWhenEmpty && suggested.length === 0);
   // Whatever is already chosen stays visible, or picking then re-reading the question loses it.
   const shown = open
     ? options
@@ -101,7 +109,7 @@ export function PillsNarrowed<T extends string>({
           onClick={() => setAll(true)}
           className="cursor-pointer px-1 text-[12.5px] text-ink-soft underline-offset-4 transition-colors hover:text-ink hover:underline"
         >
-          {more} ({options.length - shown.length} more)
+          {shown.length === 0 ? more : `${more} (${options.length - shown.length} more)`}
         </button>
       )}
     </div>

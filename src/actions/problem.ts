@@ -38,6 +38,13 @@ export async function saveProblem(input: ProblemInput): Promise<ActionResult<Pro
   const user = await currentUser();
   if (!user) return { ok: false, message: 'Sign in again to continue' };
 
+  // The transcript is the only record of what was actually asked. It came back empty from the
+  // first real runs and there was no way to tell a chat that stored nothing from a form filled
+  // in by hand, so the count is logged: `scripts/interviews.ts` reads the rest back.
+  console.log(
+    `[save] problem  turns=${input.interview_json?.length ?? 0}  dept=${input.department ?? '—'}`,
+  );
+
   const db = await serverClient();
   const { data, error } = await db.from('problems').insert(input).select().single();
   if (error) return writeFailed('saveProblem', error, 'problem');
