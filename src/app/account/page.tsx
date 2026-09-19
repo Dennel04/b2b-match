@@ -12,7 +12,7 @@ export const metadata = { title: "Your company — Crossdesk" };
 /**
  * The company's own profile, opened from the brand in the sidebar: who you are, how matching is
  * going, and the details that are quick to change. Deals themselves live in Offers.
- * `?tab=profile` opens the editor.
+ * `?tab=settings` opens the settings: the quick details of the profile.
  */
 export default async function AccountPage({ searchParams }: PageProps<"/account">) {
   const { tab } = await searchParams;
@@ -30,7 +30,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
   if (!company) redirect("/onboarding");
 
   const p: Partial<CompanyProfile> = company.profile_json ?? {};
-  const editing = tab === "profile";
+  const editing = tab === "settings";
   const stats = editing ? null : await getCompanyStats();
 
   return (
@@ -40,7 +40,7 @@ export default async function AccountPage({ searchParams }: PageProps<"/account"
 
         <nav aria-label="Profile sections" className="-mt-2 flex gap-1 border-b border-line">
           <Tab href="/account" on={!editing}>Overview</Tab>
-          <Tab href="/account?tab=profile" on={editing}>Edit profile</Tab>
+          <Tab href="/account?tab=settings" on={editing}>Settings</Tab>
         </nav>
 
         {editing ? (
@@ -179,9 +179,9 @@ function Overview({ stats, role, p }: { stats: CompanyStats; role: CompanyRole; 
           </Card>
         </Section>
 
-        <Section title="About" fact={<Link href="/account?tab=profile" className="underline-offset-4 hover:text-ink hover:underline">Edit</Link>}>
+        <Section title="About" fact={<Link href="/account?tab=settings" className="underline-offset-4 hover:text-ink hover:underline">Edit</Link>}>
           <Card className="flex flex-col gap-4 p-5">
-            {p.summary ? <p className="text-[14px] leading-relaxed">{p.summary}</p> : <p className="text-[14px] text-ink-soft">No description yet. Autofill from your website on the Edit profile tab.</p>}
+            {p.summary ? <p className="text-[14px] leading-relaxed">{p.summary}</p> : <p className="text-[14px] text-ink-soft">No description yet. Autofill from your website in Settings.</p>}
             <Tags label="Services" items={p.services} />
             <Tags label="Industries served" items={p.industries_served} />
             <Tags label="Certifications" items={p.certifications} />

@@ -1,5 +1,5 @@
 /**
- * Fills the `directory` table (migration 0004) with public profiles read off companies' own
+ * Fills the `directory` table (migration 0005) with public profiles read off companies' own
  * websites — the same scraper and prompt as onboarding autofill.
  *
  *   npm run directory                 # every site below

@@ -6,7 +6,7 @@ import { serverClient } from "@/lib/supabase";
 
 export const metadata = { title: "Directory — Crossdesk" };
 
-/** A row of `directory` (migration 0004): public facts read off the company's own website. */
+/** A row of `directory` (migration 0005): public facts read off the company's own website. */
 interface Listed {
   domain: string;
   website: string;
@@ -109,7 +109,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
 
         {error ? (
           <Empty title="The directory is not set up yet">
-            Run migration <code>0004_directory.sql</code> in the Supabase SQL Editor, then <code>npm run directory</code>.
+            Run migration <code>0005_directory.sql</code> in the Supabase SQL Editor, then <code>npm run directory</code>.
           </Empty>
         ) : !all.length ? (
           <Empty title="No companies yet">

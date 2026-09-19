@@ -1,4 +1,4 @@
--- Forward-only. Run after 0003.
+-- Forward-only. Run after 0004.
 -- The directory: public profiles of companies read off their own public websites by
 -- `npm run directory`, so a new user finds real companies to browse and contact directly,
 -- before anyone else has joined. These are NOT platform members: they have no owner, no terms,

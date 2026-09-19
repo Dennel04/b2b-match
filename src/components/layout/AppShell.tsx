@@ -44,7 +44,8 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh bg-bg text-ink">
-      <aside className="hidden w-[224px] flex-none flex-col border-r border-line bg-surface md:flex">
+      {/* Pinned to the viewport: the sidebar is as tall as the screen, not as the page, so Settings and Log out stay in reach. */}
+      <aside className="sticky top-0 hidden h-dvh w-[224px] flex-none flex-col self-start overflow-y-auto border-r border-line bg-surface md:flex">
         {/* The brand opens the company profile: info, activity, a few settings. */}
         <Link href="/account" aria-current={active === "account" ? "page" : undefined} className="flex h-16 items-center gap-2 border-b border-line px-4 transition-colors hover:bg-surface-alt/60">
           {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
@@ -57,7 +58,7 @@ export function AppShell({
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-1 border-t border-line px-3 py-4">
-          <NavLink item={{ href: "/account?tab=profile", label: "Settings", icon: "settings" }} />
+          <NavLink item={{ href: "/account?tab=settings", label: "Settings", icon: "settings" }} />
           <form action="/auth/signout" method="post">
             <button
               type="submit"
