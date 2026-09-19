@@ -4,6 +4,7 @@ import { initialsOf } from "@/components/layout";
 import { currentUser, serverClient } from "@/lib/supabase";
 import type { MatchStatus, MatchView, SellerTerms, Service } from "@/types";
 import { FORMATS } from "../onboarding/fields";
+import { anonymousName } from "../problems/load";
 
 import { DEMO_SERVICE, DEMO_SERVICES } from "./demo";
 import { ServiceScreen, type ServiceScreenData } from "./ServiceScreen";
@@ -107,7 +108,7 @@ export async function renderServiceScreen({ serviceId, demo }: { serviceId: stri
     // Anonymous until both sides accept: getMatchView() leaves the name null before that.
     const party = {
       id: m.id,
-      name: m.buyer.name ?? `A ${m.buyer.industry} company${m.buyer.size_hint ? `, ${m.buyer.size_hint}` : ""}`,
+      name: m.buyer.name ?? anonymousName(m.buyer),
       place: m.reasoning_public,
     };
     if (m.status === "declined" || m.negotiation?.envelope?.verdict === "reject") {

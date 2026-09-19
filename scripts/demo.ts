@@ -14,13 +14,6 @@ import type { AgentDialogueLine, BuyerTerms, DealEnvelope, SellerTerms } from '.
 const EMAIL = 'admin@super.com';
 const PASSWORD = 'password123';
 
-/**
- * The buyers that come to the demo account must be owned by someone else, or getMatchView()
- * reads the pair as one owner holding both sides and shows it from the buying side — which is
- * the free side, and never the blurred one.
- */
-const INCOMING_OWNER = 'incoming@demo.crossdesk.ee';
-
 /** What the demo account starts with, so an unlock can be shown twice and still have change. */
 const START_CREDITS = 30;
 
@@ -169,37 +162,33 @@ const PROBLEMS = [
  * They are invented, like every buyer in this project (scripts/seed.ts says why), and they carry
  * no logo for the same reason: there is no real site to read one off.
  */
+/**
+ * Buyers who came to Nordwell through its own services — the selling side, the one that costs
+ * credits to open.
+ *
+ * These are real companies out of the seeded catalogue, picked because they are manufacturers
+ * and operators a Baltic logistics firm would actually serve, and because their own sites give
+ * them a logo: the credit buys a name and a face, and an invented company has neither. The
+ * problems under them are written here, like every other problem in the demo, and are as
+ * ordinary as an operations problem gets — capacity on a route, stock in rented halls. Nothing
+ * in them is claimed about how these companies actually run.
+ *
+ * They must belong to another account, or getMatchView() reads the pair as one owner holding
+ * both sides and shows it from the buying side — the free one, never the blurred one. The seed
+ * owner already holds them.
+ */
 const INCOMING = [
   {
+    buyer: 'Cleveron',
     service: 'Last-mile delivery across the Baltics',
     score: 88,
-    company: {
-      name: 'Baltic Basket',
-      website: 'https://balticbasket.ee',
-      profile: {
-        name: 'Baltic Basket',
-        industry: 'Online grocery',
-        size_hint: '~120 people',
-        services: ['Online grocery', 'Same-day delivery', 'Subscription boxes'],
-        keywords: ['e-commerce', 'grocery', 'chilled delivery', 'Baltics'],
-        summary:
-          'An online grocer delivering chilled weekly orders to households in Tallinn, Tartu and ' +
-          'Riga, with its own picking centre and a subscription box for regular customers.',
-        city: 'Tallinn',
-        country: 'Estonia',
-        languages: ['Estonian', 'English', 'Russian'],
-        industries_served: ['Households', 'Small offices'],
-        employees: 120,
-        founded: 2017,
-      },
-    },
     problem: {
       department: 'Logistics & supply chain',
       text:
-        'Our own vans cannot cover the Latvian routes\n' +
-        'Riga orders are served by two vans that are already full, and a late round means chilled ' +
-        'goods go back to the depot. Hiring a third crew for one city costs more than the route ' +
-        'earns today.',
+        'Spare parts reach Latvian sites too slowly\n' +
+        'Replacement modules for installed machines go out from one store in Viljandi, and a ' +
+        'Latvian site waits two days for a part that takes an hour to fit. Our own van runs that ' +
+        'route twice a week and is already full.',
       urgency: 'high' as const,
       terms: {
         budget_ceiling: { amount: 7_000, currency: 'EUR', period: 'monthly' },
@@ -210,39 +199,20 @@ const INCOMING = [
       } satisfies BuyerTerms,
     },
     reasoning_public:
-      'Delivers chilled grocery orders daily in three Baltic cities and is short of capacity on ' +
-      'the Riga routes. Your fleet already runs those roads, with returns handled at the warehouse.',
+      'Ships spare parts to installed machines across the Baltics and needs next-day delivery on ' +
+      'the Latvian routes. Your fleet already runs them, with returns handled at the warehouse.',
   },
   {
+    buyer: 'Skeleton Technologies',
     service: 'Contract warehousing in Tallinn and Riga',
     score: 84,
-    company: {
-      name: 'Tamme Furniture',
-      website: 'https://tammefurniture.ee',
-      profile: {
-        name: 'Tamme Furniture',
-        industry: 'Furniture manufacturing',
-        size_hint: '~140 people',
-        services: ['Oak and birch furniture', 'Private-label production', 'Export to the Nordics'],
-        keywords: ['furniture', 'manufacturing', 'private label', 'export'],
-        summary:
-          'A family-owned Estonian furniture maker producing oak and birch pieces for Nordic retail ' +
-          'chains under their own labels, from a single plant outside Viljandi.',
-        city: 'Viljandi',
-        country: 'Estonia',
-        languages: ['Estonian', 'English', 'Finnish'],
-        industries_served: ['Retail', 'Hospitality'],
-        employees: 140,
-        founded: 1998,
-      },
-    },
     problem: {
       department: 'Operations',
       text:
-        'Export stock is spread across three rented halls\n' +
-        'Finished pieces waiting for the Finland run sit in three rented halls on three different ' +
-        'contracts, and nobody can say in one place what is where. Twice this year we shipped a ' +
-        'batch that was already promised to another chain.',
+        'Finished stock sits in three rented halls\n' +
+        'Modules waiting for shipment are stored in three rented halls on three contracts, and ' +
+        'nobody can say in one place what is where. Twice this quarter a batch was promised to ' +
+        'two customers at once.',
       urgency: 'medium' as const,
       terms: {
         budget_ceiling: { amount: 5_000, currency: 'EUR', period: 'monthly' },
@@ -253,8 +223,8 @@ const INCOMING = [
       } satisfies BuyerTerms,
     },
     reasoning_public:
-      'Makes private-label furniture for Nordic retail and wants one bonded warehouse instead of ' +
-      'three rented halls. Your Tallinn and Riga space and the stock portal answer what they asked.',
+      'Manufactures in Estonia and wants one bonded warehouse instead of three rented halls. Your ' +
+      'Tallinn and Riga space, with stock visible in your own portal, answers what they asked.',
   },
 ];
 
@@ -456,38 +426,19 @@ async function main() {
   }
 
   // 5. The selling side: buyers who came to Nordwell's own services, none of them opened yet.
-  //    Their owner is a second account, so the demo account reads these as a seller and every
-  //    row is blurred behind its credit. Deleting the companies takes their matches, and with
-  //    them any unlock already paid for — a regenerated demo is always locked again.
-  const { data: others } = await db.auth.admin.listUsers({ perPage: 1000 });
-  let incomingOwner = others.users.find((u) => u.email === INCOMING_OWNER)?.id;
-  if (!incomingOwner) {
-    const { data, error } = await db.auth.admin.createUser({ email: INCOMING_OWNER, email_confirm: true });
-    if (error) throw error;
-    incomingOwner = data.user.id;
-  }
-  await db.from('companies').delete().eq('owner_id', incomingOwner);
-
+  //    The companies are real and stay where they are; only the demo problem under each one and
+  //    the match itself are ours to write, and to remove before writing them again.
   const { data: own } = await db.from('services').select('id, title, terms').eq('company_id', company.id);
 
   for (const inc of INCOMING) {
     const service = (own ?? []).find((s) => s.title === inc.service);
     if (!service) throw new Error(`Demo service missing: ${inc.service}`);
 
-    const { data: buyer, error: bErr } = await db
-      .from('companies')
-      .insert({
-        owner_id: incomingOwner,
-        name: inc.company.name,
-        website: inc.company.website,
-        role: 'buyer',
-        profile_json: inc.company.profile,
-        seller_terms: null,
-      })
-      .select('id')
-      .single();
-    if (bErr) throw bErr;
+    const { data: buyer } = await db.from('companies').select('id').eq('name', inc.buyer).limit(1).maybeSingle();
+    if (!buyer) throw new Error(`${inc.buyer} is not on the platform — run \`npm run seed\` first.`);
 
+    // The problem is keyed by its own text: a second run replaces it rather than adding another.
+    await db.from('problems').delete().eq('company_id', buyer.id).eq('text', inc.problem.text);
     const { data: problem, error: bpErr } = await db
       .from('problems')
       .insert({
@@ -517,7 +468,7 @@ async function main() {
       negotiation_started_at: new Date().toISOString(),
     });
     if (mErr) throw mErr;
-    console.log(`  + incoming ${inc.score} ${inc.company.name} (locked)`);
+    console.log(`  + incoming ${inc.score} ${inc.buyer} (locked)`);
   }
 
   const { error: crErr } = await db.from('companies').update({ credits: START_CREDITS }).eq('id', company.id);
