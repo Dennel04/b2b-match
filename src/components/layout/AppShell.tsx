@@ -101,7 +101,11 @@ export function AppShell({
           </header>
         )}
 
-        {children}
+        {/*
+          * The body enters, the frame does not. A skeleton and the screen that replaces it both
+          * mount through here, so the swap is two short fades rather than one hard cut.
+          */}
+        <div className="flex flex-1 flex-col screen-in">{children}</div>
 
         <footer className="mt-auto border-t border-line bg-surface">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-5 px-4 py-[18px] text-[12px] md:px-9">

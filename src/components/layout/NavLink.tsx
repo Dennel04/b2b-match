@@ -15,9 +15,9 @@ export function NavLink({ item }: { item: NavItem }) {
     <Link
       href={item.href}
       aria-current={item.active ? "page" : undefined}
-      className={`relative isolate flex items-center gap-2.5 rounded-[9px] px-3 py-2 text-[13.5px] transition-colors ${
+      className={`relative isolate flex items-center gap-2.5 rounded-[9px] px-3 py-2 text-[13.5px] transition-colors duration-200 ease-out ${
         item.active
-          ? "bg-surface-alt font-semibold text-ink before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:rounded-r before:bg-accent"
+          ? "nav-mark bg-surface-alt font-semibold text-ink before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:rounded-r before:bg-accent"
           : "text-ink-soft hover:bg-surface-alt/60 hover:text-ink"
       }`}
     >
@@ -32,7 +32,7 @@ export function NavLink({ item }: { item: NavItem }) {
 }
 
 /**
- * The pressed state, behind the label. It fades in over 150ms after a 100ms delay, so a
+ * The pressed state, behind the label. It fades in over 200ms after a 100ms delay, so a
  * navigation that resolves immediately never flashes a state the eye can catch.
  */
 function Pending() {
@@ -40,7 +40,7 @@ function Pending() {
   return (
     <span
       aria-hidden
-      className={`pointer-events-none absolute inset-0 -z-10 rounded-[9px] bg-surface-alt transition-opacity delay-100 duration-150 motion-reduce:transition-none ${
+      className={`pointer-events-none absolute inset-0 -z-10 rounded-[9px] bg-surface-alt transition-opacity delay-100 duration-200 ease-out ${
         pending ? "opacity-100" : "opacity-0"
       }`}
     />

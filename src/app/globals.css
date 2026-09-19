@@ -69,6 +69,43 @@ body {
   animation-delay: calc(var(--i, 0) * 80ms);
 }
 
+/* ── Working screens: the swap between a skeleton and its page ─────────────────
+   Both sides of a navigation enter the same way, so the skeleton does not snap in and the real
+   content does not snap over it. 180ms is under the 300ms ceiling and short enough that a fast
+   navigation reads as one movement rather than two. Working screens are seen tens of times a
+   day, so the offset is 3px, not the login screen's 24px. */
+.screen-in {
+  animation: screen-in 0.18s var(--ease-out) both;
+}
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* A placeholder bar while a screen loads. Tailwind's `animate-pulse` falls to 50% opacity, which
+   on a page of them reads as a strobe; this breathes between two barely different inks instead.
+   Set --i to offset a row's phase, so the rows are not all bright at the same moment. */
+.skeleton-bar {
+  background: color-mix(in oklab, var(--ink) 7%, transparent);
+  animation: skeleton-breathe 2.4s var(--ease-in-out) infinite;
+  animation-delay: calc(var(--i, 0) * -400ms);
+}
+@keyframes skeleton-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+/* The accent mark on the active sidebar item. The sidebar is re-rendered on every navigation,
+   so the mark cannot slide from the previous item; it grows out of its own centre instead —
+   280ms on the drawer curve, the same one the segmented controls slide on. */
+.nav-mark::before {
+  animation: nav-mark 0.28s var(--ease-drawer) both;
+}
+@keyframes nav-mark {
+  from { opacity: 0; transform: scaleY(0.25); }
+  to { opacity: 1; transform: none; }
+}
+
 /* ── Login: the promise, told once ─────────────────────────────────────────────
    A first-visit screen, so it may spend a little time (the "delight budget"). Everything runs
    once and rests in its final state, except the "what's broken" rewrite below. Under reduced motion the global rule above
