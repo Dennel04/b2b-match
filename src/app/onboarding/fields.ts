@@ -116,32 +116,3 @@ export function sellerTermsFromDraft(d: Draft): SellerTerms {
   };
 }
 
-/** Where on the onboarding screen an answer is given: the profile, or the working terms. */
-export type FieldStep = "company" | "terms";
-
-export interface ReadinessItem {
-  label: string;
-  done: boolean;
-  why: string;
-  /** `/onboarding?step=terms` opens the working terms. */
-  step: FieldStep;
-}
-
-/**
- * What the matcher needs from this company. Only server-saved fields count. Money and formats
- * are not here: empty means "don't filter", so a vendor without them still takes part.
- */
-export function readiness(d: Draft): ReadinessItem[] {
-  const items: ReadinessItem[] = [
-    { step: "company", label: "Company name", done: !!d.name.trim(), why: "Nothing can be saved without it." },
-    { step: "company", label: "Buyer, seller or both", done: !!d.role, why: "Decides which side of the match you are on." },
-    { step: "company", label: "Industry and size", done: !!d.industry && !!d.size, why: "Shown to the other side instead of your name." },
-  ];
-  if (sells(d.role)) {
-    items.push(
-      { step: "company", label: "What you offer, in 2–3 sentences", done: d.summary.trim().length >= 40, why: "The matcher reads this against buyers' problems." },
-      { step: "company", label: "At least one service", done: d.services.length > 0, why: "Used to find you in the first pass." },
-    );
-  }
-  return items;
-}

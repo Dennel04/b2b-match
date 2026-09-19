@@ -1,10 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { getMatchView } from "@/actions/match";
-import { AppShell, initialsOf } from "@/components/layout";
+import { initialsOf } from "@/components/layout";
 import { serverClient } from "@/lib/supabase";
 import type { BuyerTerms, MatchView } from "@/types";
-import { FORMATS, draftFromCompany, readiness } from "../onboarding/fields";
-import { SetupCard } from "./SetupCard";
+import { FORMATS } from "../onboarding/fields";
 import { DEMO, DEMO_LIST } from "./demo";
 import { ProblemScreen, type ProblemScreenData } from "./ProblemScreen";
 import { ProblemsScreen, type ProblemRow, type ProblemsFilter } from "./ProblemsScreen";
@@ -22,21 +21,13 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
 
   const { data: company } = await db.from("companies").select("id, name, website, role, profile_json, seller_terms").eq("owner_id", user.id).limit(1).maybeSingle();
   if (!company) redirect("/onboarding");
-  const setup = <SetupCard items={readiness(draftFromCompany(company))} />;
 
   // RLS limits problems to their owner, so another company's id simply finds nothing.
   let query = db.from("problems").select("id, text, buyer_terms").eq("company_id", company.id);
   query = problemId ? query.eq("id", problemId) : query.order("created_at", { ascending: false }).limit(1);
   const { data: problem } = await query.maybeSingle();
 
-  if (!problem) {
-    if (problemId) notFound();
-    return (
-      <AppShell active="problems" initials={initialsOf(company.name)} bar={<span className="text-[14px] font-semibold">Problems</span>}>
-        <main>{setup}</main>
-      </AppShell>
-    );
-  }
+  if (!problem) notFound();
 
   const { data: ids } = await db.from("matches").select("id").eq("problem_id", problem.id);
   const views = await Promise.all((ids ?? []).map((r) => getMatchView(r.id)));
@@ -65,7 +56,7 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
   }
   d.matched.sort((a, b) => b.score - a.score);
 
-  return <ProblemScreen d={d} setup={setup} />;
+  return <ProblemScreen d={d} />;
 }
 
 const STATE: Record<MatchView["status"], string> = {
@@ -127,7 +118,6 @@ export async function renderProblemsList(f: ProblemsFilter) {
 
   const { data: company } = await db.from("companies").select("id, name, website, role, profile_json, seller_terms").eq("owner_id", user.id).limit(1).maybeSingle();
   if (!company) redirect("/onboarding");
-  const setup = <SetupCard items={readiness(draftFromCompany(company))} />;
 
   const { data: problems } = await db
     .from("problems")
@@ -156,5 +146,5 @@ export async function renderProblemsList(f: ProblemsFilter) {
   }
 
   const open = rows.reduce((n, r) => n + r.matched + r.awaiting, 0);
-  return <ProblemsScreen d={{ initials: initialsOf(company.name), matches: open, rows }} f={f} setup={setup} />;
+  return <ProblemsScreen d={{ initials: initialsOf(company.name), matches: open, rows }} f={f} />;
 }

@@ -37,7 +37,7 @@ export interface ProblemsFilter {
  * controls, not a filter rail: how it is cut (deadline or part of the business), and whether
  * closed ones are in. State needs no filter: every row already says it.
  */
-export function ProblemsScreen({ d, f, setup }: { d: ProblemsScreenData; f: ProblemsFilter; setup?: React.ReactNode }) {
+export function ProblemsScreen({ d, f }: { d: ProblemsScreenData; f: ProblemsFilter}) {
   const byPart = f.by === "part" && d.rows.some((r) => r.area);
   const withClosed = f.closed !== undefined;
 
@@ -56,7 +56,6 @@ export function ProblemsScreen({ d, f, setup }: { d: ProblemsScreenData; f: Prob
   return (
     <AppShell active="problems" demo={f.demo} matches={d.matches} initials={d.initials}>
       <main className="flex flex-col">
-        {setup}
 
         <section className="mx-auto w-full max-w-[1200px] px-4 pt-6 md:px-9 md:pt-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
