@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { claimCheckout, myCredits } from "@/actions/credits";
 import { openMatchCount } from "@/actions/match";
-import { AppShell, initialsOf } from "@/components/layout";
+import { AppShell, SyncBalance, initialsOf } from "@/components/layout";
 import { Coin, Icon } from "@/components/ui";
 import { PACKS, UNLOCK_COST, euros } from "@/lib/credits";
 import { currentUser, serverClient } from "@/lib/supabase";
@@ -31,11 +31,12 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
 
   return (
     <AppShell matches={await openMatchCount()} initials={initialsOf(company.name)}>
+      {/* This screen has just read the balance — a top-up must not wait for a reload to show. */}
+      <SyncBalance credits={credits} />
       <main className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-9 md:pt-8">
         <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Credits</h1>
-        <p className="mt-2 max-w-[62ch] text-[14px] text-ink-soft">
-          Listing, matching and negotiating are free. A credit is spent only to open a counterparty
-          who already came to you — {UNLOCK_COST} for one.
+        <p className="mt-2 text-[14px] text-ink-soft">
+          Matching is free. {UNLOCK_COST} credits open one counterparty.
         </p>
 
         {claim && !claim.ok && (
@@ -51,8 +52,8 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
             <p className="text-[32px] font-semibold leading-none tabular-nums tracking-[-0.03em]">{credits}</p>
             <p className="mt-1.5 text-[13px] text-ink-soft">
               {credits >= UNLOCK_COST
-                ? `Enough to open ${Math.floor(credits / UNLOCK_COST)} ${Math.floor(credits / UNLOCK_COST) === 1 ? "counterparty" : "counterparties"}`
-                : "Not enough to open a counterparty yet"}
+                ? `Opens ${Math.floor(credits / UNLOCK_COST)} ${Math.floor(credits / UNLOCK_COST) === 1 ? "counterparty" : "counterparties"}`
+                : "Not enough for a counterparty"}
             </p>
           </div>
           {claim?.ok && (
@@ -76,7 +77,6 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
               <div className="flex items-center gap-2.5">
                 <Coin size={22} />
                 <span className="text-[22px] font-semibold tabular-nums tracking-[-0.02em]">{pack.credits}</span>
-                <span className="text-[13px] text-ink-soft">credits</span>
               </div>
               <div>
                 <p className="text-[19px] font-semibold tabular-nums tracking-[-0.02em]">{euros(pack.cents)}</p>
@@ -88,15 +88,12 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
                 type="submit"
                 className="mt-auto cursor-pointer rounded-[8px] bg-brand px-4 py-2 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong"
               >
-                Buy {pack.credits}
+                Buy
               </button>
             </form>
           ))}
         </div>
 
-        <p className="mt-4 text-[12.5px] text-ink-faint">
-          Stripe test mode — card 4242 4242 4242 4242, any future date, any CVC.
-        </p>
       </main>
     </AppShell>
   );

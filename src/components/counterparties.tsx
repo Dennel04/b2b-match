@@ -57,7 +57,7 @@ export function Group({
 
 /** One counterparty row: mark, what they are, where. Everything else the row says goes in `children`. */
 export function PartyRow({ p, children }: { p: Party; children: React.ReactNode }) {
-  const blur = p.blurred ? "select-none blur-[5px] [user-select:none]" : "";
+  const blur = p.blurred ? "select-none blur-[5px]" : "";
   return (
     <div className="flex items-center gap-4 border-b border-surface-alt px-4 py-[18px] last:border-0 md:px-5">
       {/* Blurred, not replaced: what is behind the credit is this row, and it stays this row. */}

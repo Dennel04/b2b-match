@@ -58,9 +58,6 @@ export default function PricingPage() {
           >
             Pay an introduction fee
           </button>
-          <p className="mt-3 text-[13px] text-ink-faint">
-            Stripe test mode — card 4242 4242 4242 4242, any future date, any CVC.
-          </p>
         </form>
       </Card>
 

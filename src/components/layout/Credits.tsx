@@ -1,44 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { myCredits } from "@/actions/credits";
+import { createContext, useContext, useEffect, useState } from "react";
 import { Coin } from "@/components/ui";
 
 /**
  * The balance, in the frame rather than on a screen — it is spent from the match list and
  * refilled on /credits, so it has to be true on both.
  *
- * It reads itself instead of being handed down: AppShell is rendered by two client screens
- * (the two interviews) and cannot be async, and threading a number through every screen to
- * show it in one place is plumbing nobody would maintain.
+ * Read once on the server, in the root layout, and held here. Fetching it from the component
+ * instead meant every navigation remounted the pill, found nothing, and drew the number a
+ * moment later: a balance that blinks looks like a balance that is unsure of itself. A layout
+ * above the changing segment is not re-run by a client navigation, so this state simply stays.
  */
-export function Credits({ className = "" }: { className?: string }) {
-  const [credits, setCredits] = useState<number | null>(null);
+
+const Balance = createContext<number | null>(null);
+
+export function CreditsProvider({ initial, children }: { initial: number | null; children: React.ReactNode }) {
+  const [credits, setCredits] = useState(initial);
+  const [fromServer, setFromServer] = useState(initial);
+
+  // A hard load or a router.refresh() re-runs the layout with a new number: take it as the
+  // truth. Adjusted during render rather than in an effect — React re-renders before painting,
+  // so the pill never shows the old balance for a frame.
+  if (fromServer !== initial) {
+    setFromServer(initial);
+    setCredits(initial);
+  }
 
   useEffect(() => {
-    let live = true;
-    myCredits().then((n) => live && setCredits(n));
-    // Spending publishes the new balance rather than making this read again.
     const onSpend = (e: Event) => setCredits((e as CustomEvent<number>).detail);
     window.addEventListener(BALANCE_EVENT, onSpend);
-    return () => {
-      live = false;
-      window.removeEventListener(BALANCE_EVENT, onSpend);
-    };
+    return () => window.removeEventListener(BALANCE_EVENT, onSpend);
   }, []);
 
+  return <Balance.Provider value={credits}>{children}</Balance.Provider>;
+}
+
+/** Null means nobody is signed in, and the coin is not drawn at all. */
+export function Credits({ className = "" }: { className?: string }) {
+  const credits = useContext(Balance);
   if (credits === null) return null;
 
   return (
     <Link
       href="/credits"
       title="Your credits"
-      className={`group inline-flex items-center gap-2 rounded-[9px] border border-line px-2.5 py-1.5 text-[13px] font-semibold tabular-nums transition-colors hover:bg-surface-alt ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full bg-surface-alt px-2 py-1 text-[12.5px] font-semibold tabular-nums text-ink-soft transition-colors hover:text-ink ${className}`}
     >
-      <Coin size={17} />
+      <Coin size={14} />
       {credits}
-      <span className="text-ink-faint transition-colors group-hover:text-ink">+</span>
     </Link>
   );
 }
@@ -48,3 +59,11 @@ export const BALANCE_EVENT = "crossdesk:credits";
 /** Tell the pill what the balance is now, without a round trip of its own. */
 export const publishBalance = (credits: number) =>
   window.dispatchEvent(new CustomEvent(BALANCE_EVENT, { detail: credits }));
+
+/** A screen that has just read the balance itself, handing it to the pill. */
+export function SyncBalance({ credits }: { credits: number }) {
+  useEffect(() => {
+    publishBalance(credits);
+  }, [credits]);
+  return null;
+}

@@ -1,10 +1,10 @@
 /**
- * One credit, drawn. The only coin in the product: gold, because gold in this interface means
- * withheld or negotiable, and a coin is what moves a counterparty from the first to neither.
+ * One credit, drawn. In the brand blue rather than gold: gold in this interface means withheld,
+ * and a credit is not withheld from anyone — it is simply the currency.
  */
 export function Coin({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden className={`flex-none text-gold ${className}`}>
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden className={`flex-none text-brand ${className}`}>
       {/* Rim, face, then the C struck into it — the same letter as the mark in the sidebar. */}
       <circle cx="12" cy="12" r="10.5" fill="currentColor" opacity="0.22" />
       <circle cx="12" cy="12" r="8.75" fill="currentColor" />
