@@ -4,7 +4,7 @@ import type { ProblemsScreenData } from "./ProblemsScreen";
 /** The reference screen's content (drafts/design/problem-page.html), word for word. */
 export const DEMO: ProblemScreenData = {
   caseRef: "PRB-4f21",
-  status: "Matching",
+  status: "matching",
   initials: "KM",
   matches: 2,
   title: "Customs paperwork by hand across three warehouses",

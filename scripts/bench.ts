@@ -43,7 +43,8 @@ async function run() {
     for (let i = 0; i <= c.answers.length; i++) {
       out = await ask(InterviewSchema, interviewPrompt(turns, today, null, DEPARTMENTS, known), {
         effort: "low",
-        maxTokens: 1500,
+        maxTokens: 6000,
+        label: "interview",
       });
       if (i < c.answers.length) turns.push({ question: out.follow_up ?? "", answer: c.answers[i] });
       known = `${SCRIPTED_NOTE}\nProblem: ${out.summary ?? c.first}`;

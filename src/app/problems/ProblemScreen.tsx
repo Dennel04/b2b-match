@@ -3,9 +3,12 @@ import { AppShell } from "@/components/layout";
 import { Icon } from "@/components/ui";
 import { DeclinedRow, Group, PartyRow, RowButton, type Party } from "@/components/counterparties";
 
+/** What the screen says it is doing, read off the matches themselves — never a fixed label. */
+export type ProblemState = "searching" | "potential" | "matching" | "stopped";
+
 export interface ProblemScreenData {
   caseRef: string;
-  status: string;
+  status: ProblemState;
   initials: string;
   matches: number;
   title: string;
@@ -34,10 +37,7 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
             <h1 className="max-w-[24ch] text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">{d.title}</h1>
             <div className="flex flex-none items-center gap-1 md:pt-1.5">
-              <span className="flex items-center gap-1.5 rounded-[7px] bg-accent-soft px-2.5 py-1 text-[12px] font-semibold text-accent-strong">
-                <Icon name="circle-dot" size={13} />
-                {d.status}
-              </span>
+              <StatusChip state={d.status} />
               <span aria-hidden className="mx-1.5 h-4 w-px bg-line" />
               <TitleButton icon="pencil">Edit</TitleButton>
               <TitleButton icon="circle-stop">Stop</TitleButton>
@@ -89,6 +89,27 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
         </Group>
       </main>
     </AppShell>
+  );
+}
+
+/**
+ * One chip, four states: nothing found yet, someone found but a term apart, someone cleared,
+ * or the owner stopped it. A problem with no match must not claim to be matching.
+ */
+const STATUS = {
+  searching: { label: "Searching", icon: "search", tone: "bg-surface-alt text-ink-soft" },
+  potential: { label: "Potential", icon: "circle-dot", tone: "bg-gold-soft text-gold" },
+  matching: { label: "Matching", icon: "circle-dot", tone: "bg-accent-soft text-accent-strong" },
+  stopped: { label: "Stopped", icon: "circle-stop", tone: "bg-surface-alt text-ink-faint" },
+} as const;
+
+function StatusChip({ state }: { state: ProblemState }) {
+  const s = STATUS[state];
+  return (
+    <span className={`flex items-center gap-1.5 rounded-[7px] px-2.5 py-1 text-[12px] font-semibold ${s.tone}`}>
+      <Icon name={s.icon} size={13} />
+      {s.label}
+    </span>
   );
 }
 

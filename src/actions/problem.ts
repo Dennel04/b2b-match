@@ -22,7 +22,12 @@ export async function runInterview(
   const context = company
     ? { industry: company.industry, size_hint: company.size_hint, summary: company.summary }
     : null;
-  return ask(InterviewSchema, interviewPrompt(turns, today, context, departments, known), { effort: 'low', maxTokens: 1500 });
+  // 6000, not the 1500 this started at: on DeepSeek the thinking shares the output budget, so
+  // 1500 overflowed on nearly every turn, and an overflow is not a trim — complete() doubles the
+  // budget and generates the whole reply again. The logs were unambiguous: 1 call 4.6-7.4s,
+  // 2 calls 15-19s, 3 calls 29-41s, with finished replies landing around 4k tokens. Paying for
+  // headroom once beats paying for the same answer three times.
+  return ask(InterviewSchema, interviewPrompt(turns, today, context, departments, known), { effort: 'low', maxTokens: 6000, label: 'interview' });
 }
 
 /**

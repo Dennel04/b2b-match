@@ -34,8 +34,8 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
   const [title, summary] = splitVerbatim(problem.text);
 
   const d: ProblemScreenData = {
+    status: "searching",
     caseRef: `PRB-${problem.id.slice(0, 4)}`,
-    status: "Matching",
     initials: initialsOf(company.name),
     matches: 0,
     title,
@@ -55,6 +55,8 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
     else d.awaiting.push({ ...party, area: openArea(m) });
   }
   d.matched.sort((a, b) => b.score - a.score);
+  // The chip reports what the matches actually say: a cleared one, only a term apart, or none.
+  d.status = d.matched.length > 0 ? "matching" : d.awaiting.length > 0 ? "potential" : "searching";
 
   return <ProblemScreen d={d} />;
 }

@@ -209,7 +209,7 @@ export async function negotiate(matchId: string): Promise<ActionResult<Negotiati
       isFirst: round === 0,
       isLast,
     };
-    let buyer = await ask(BuyerTurnSchema, buyerTurnPrompt(buyerPrompt), { effort: 'medium' });
+    let buyer = await ask(BuyerTurnSchema, buyerTurnPrompt(buyerPrompt), { effort: 'medium', label: 'buyer-turn' });
 
     // Check each buyer line as it is produced: one regeneration is cheaper than discarding
     // the whole negotiation at the end, and the final guard below still fails closed.
@@ -218,7 +218,7 @@ export async function negotiate(matchId: string): Promise<ActionResult<Negotiati
       buyer = await ask(
         BuyerTurnSchema,
         buyerTurnPrompt({ ...buyerPrompt, rephrase: slip[0].fragment }),
-        { effort: 'medium' },
+        { effort: 'medium', label: 'buyer-rephrase' },
       );
     }
     lines.push({ speaker: 'buyer_agent', text: buyer.text, withheld: buyer.withheld });
@@ -234,7 +234,7 @@ export async function negotiate(matchId: string): Promise<ActionResult<Negotiati
         transcript: lines,
         isLast,
       }),
-      { effort: 'medium' },
+      { effort: 'medium', label: 'seller-turn' },
     );
     lines.push({ speaker: 'seller_agent', text: vendor.text });
     await publish();
@@ -261,7 +261,7 @@ export async function negotiate(matchId: string): Promise<ActionResult<Negotiati
       compatibilitySummary,
       allowedFormats: compatibility.contract_formats,
     }),
-    { effort: 'high' },
+    { effort: 'high', label: 'envelope' },
   );
 
   // What the platform already knows for certain is copied, never asked of the model. The one
@@ -449,6 +449,8 @@ export async function generateBrief(matchId: string): Promise<ActionResult<strin
       agreedFormat: envelope?.agreed_format ? FORMAT_LABELS[envelope.agreed_format] : null,
       openQuestions: envelope?.open_questions ?? [],
     }),
+    4000,
+    'brief',
   );
 
   await admin.from('matches').update({ brief_md: brief }).eq('id', matchId);

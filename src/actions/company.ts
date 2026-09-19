@@ -58,7 +58,7 @@ export async function debugScrape(website: string) {
   const prompt = profileDraftPrompt(site, trace.pages);
   const started = Date.now();
   try {
-    const draft = await ask(ProfileDraftSchema, prompt, { effort: 'medium' });
+    const draft = await ask(ProfileDraftSchema, prompt, { effort: 'medium', label: 'profile-draft' });
     return { site, trace, prompt, draft, error: null, modelMs: Date.now() - started };
   } catch (e) {
     return { site, trace, prompt, draft: null, error: e instanceof Error ? e.message : String(e), modelMs: Date.now() - started };
@@ -79,7 +79,7 @@ export async function draftCompanyProfileFromText(text: string): Promise<ActionR
 
 async function draftFrom(site: string, pages: SitePage[], logo: string | null = null): Promise<CompanyDraft> {
   const started = Date.now();
-  const draft = await ask(ProfileDraftSchema, profileDraftPrompt(site || 'not given', pages), { effort: 'medium' });
+  const draft = await ask(ProfileDraftSchema, profileDraftPrompt(site || 'not given', pages), { effort: 'medium', label: 'profile-draft' });
   console.log(`[scrape] ${site || 'pasted text'}: model ${Date.now() - started} ms →`, JSON.stringify({ ...draft.profile, role: draft.role_guess, capabilities: draft.capabilities }));
 
   return {

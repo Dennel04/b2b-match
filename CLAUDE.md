@@ -55,6 +55,11 @@ any prompt sent on behalf of the other side.
   shown — never query `matches` from a component and project the fields yourself.
 - `adminClient()` and `SUPABASE_SERVICE_ROLE_KEY` are allowed only in `src/actions/` and
   `scripts/`. Never in a component.
+- Every model call is labelled — `ask(schema, prompt, { label: 'interview' })` — and prints one
+  line to the server log: how many calls it really took, how long, and the tokens. `calls` above
+  1 is the number to chase: a reply that overflows `maxTokens` is not trimmed, it is regenerated
+  from scratch at double the budget, so a tight limit costs whole multiples of the latency. Read
+  the log before believing anything about why something is slow.
 - Parse model output only through `ask()` in `src/lib/claude.ts` — it validates against the
   zod schema and retries once. No hand-rolled `JSON.parse` on a model response anywhere else.
 - A Server Action **returns** `ActionResult<T>` for anything the user is meant to read, and

@@ -27,6 +27,31 @@ const isTransient = (e: unknown) =>
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
+ * One line per model call, on the server's stdout — `npm run dev` in a terminal, Runtime Logs
+ * on Vercel. This is the only place that knows what a call cost, and without it "the interview
+ * is slow" is a guess: a schema the model gets wrong is retried in full, so one slow turn and
+ * two fast ones look identical from the outside.
+ *
+ * Deliberately not a logging system: one `console.log`, no dependency, no buffer to flush. What
+ * it must always carry is `calls` — anything above 1 is a retry, and a retry is the difference
+ * between 15 seconds and 40.
+ */
+function logCall(x: {
+  label: string;
+  calls: number;
+  ms: number;
+  usage: { input: number; output: number };
+  note?: string;
+}) {
+  const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+  const calls = x.calls === 1 ? '1 call ' : `${x.calls} calls`;
+  console.log(
+    `[model] ${x.label.padEnd(16)} ${calls}  ${(x.ms / 1000).toFixed(1)}s  ` +
+      `in ${k(x.usage.input)} out ${k(x.usage.output)}  ${MODEL}${x.note ? `  ${x.note}` : ''}`,
+  );
+}
+
+/**
  * One model call with a strictly typed JSON result.
  *
  * The schema is sent to the model as JSON Schema and the reply is validated with zod. A reply
@@ -36,18 +61,26 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export async function ask<T extends z.ZodType>(
   schema: T,
   prompt: string,
-  opts: { effort?: 'low' | 'medium' | 'high'; maxTokens?: number } = {},
+  opts: { effort?: 'low' | 'medium' | 'high'; maxTokens?: number; label?: string } = {},
 ): Promise<z.infer<T>> {
+  const started = Date.now();
+  const label = opts.label ?? 'ask';
+  const usage = { input: 0, output: 0 };
+  let calls = 0;
   const contract =
     'Respond with ONE JSON object and nothing else: no prose before or after, no markdown fences. ' +
     `It must validate against this JSON Schema:\n${JSON.stringify(z.toJSONSchema(schema))}`;
 
   let rejection = '';
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
-    const text = await complete(
+    const out = await complete(
       `${prompt}\n\n${contract}${rejection ? `\n\nYour previous reply was rejected: ${rejection}. Reply again, correctly.` : ''}`,
       opts,
     );
+    const text = out.text;
+    calls += out.calls;
+    usage.input += out.usage.input;
+    usage.output += out.usage.output;
 
     let candidate: unknown;
     try {
@@ -57,25 +90,34 @@ export async function ask<T extends z.ZodType>(
       continue;
     }
     const parsed = schema.safeParse(candidate);
-    if (parsed.success) return parsed.data;
+    if (parsed.success) {
+      logCall({ label, calls, ms: Date.now() - started, usage, note: attempt > 1 ? `after ${rejection}` : undefined });
+      return parsed.data;
+    }
     rejection = parsed.error.issues
       .slice(0, 5)
       .map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
       .join('; ');
   }
+  logCall({ label, calls, ms: Date.now() - started, usage, note: `GAVE UP: ${rejection}` });
   throw new Error(`Model returned invalid JSON ${ATTEMPTS} times: ${rejection}`);
 }
 
 /** Plain text response (markdown briefings). */
-export async function askText(prompt: string, maxTokens = 4000): Promise<string> {
-  return complete(prompt, { maxTokens });
+export async function askText(prompt: string, maxTokens = 4000, label = 'askText'): Promise<string> {
+  const started = Date.now();
+  const out = await complete(prompt, { maxTokens });
+  logCall({ label, calls: out.calls, ms: Date.now() - started, usage: out.usage });
+  return out.text;
 }
 
+/** The text, plus what it cost. `calls` counts transient retries and max_token widenings too. */
 async function complete(
   prompt: string,
   opts: { effort?: 'low' | 'medium' | 'high'; maxTokens?: number },
-): Promise<string> {
+): Promise<{ text: string; calls: number; usage: { input: number; output: number } }> {
   let maxTokens = opts.maxTokens ?? 8000;
+  const usage = { input: 0, output: 0 };
 
   for (let attempt = 1; ; attempt++) {
     let res: Anthropic.Message;
@@ -97,6 +139,9 @@ async function complete(
       throw e;
     }
 
+    usage.input += res.usage.input_tokens;
+    usage.output += res.usage.output_tokens;
+
     if (res.stop_reason === 'refusal') throw new Error('Model refused the request');
 
     // Thinking shares the output budget, so a tight limit can cut the answer off before it starts.
@@ -108,10 +153,14 @@ async function complete(
       throw new Error(`Model output was cut off at ${maxTokens} tokens`);
     }
 
-    return res.content
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n');
+    return {
+      text: res.content
+        .filter((b) => b.type === 'text')
+        .map((b) => b.text)
+        .join('\n'),
+      calls: attempt,
+      usage,
+    };
   }
 }
 

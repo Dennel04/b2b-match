@@ -133,6 +133,22 @@ They call the real model and cost money, so they stay out of `npm run check`. A 
 the fields that matter and flags the ones that came back outside their allowed list. Write the
 cases messy on purpose: a bench on clean input tells you nothing.
 
+## Latency comes from retries, not from the model
+
+Every `ask()` prints one line: `[model] interview  1 call  8.8s  in 1.7k out 1.8k`. Watch
+`calls`. Anything above 1 means the work was done more than once, and there are two causes:
+
+- **The reply overflowed `maxTokens`.** `complete()` doubles the budget and regenerates the
+  whole thing — a 1500-token cap on the interview turned 4.6-7.4s turns into 29-41s ones,
+  because thinking shares the output budget on DeepSeek. Size the cap to the finished reply plus
+  headroom; paying for headroom once beats paying for the same answer three times.
+- **The reply failed the schema.** The line then ends `after <the zod error>`. That is a prompt
+  problem: a field the model keeps getting wrong, usually one whose rule is implied rather than
+  stated.
+
+Both are invisible from the outside — one slow turn and two fast ones look the same. Read the
+log before changing the prompt to "make it faster".
+
 ## Dates
 
 Any prompt that produces a date takes today's date as an argument and must return absolute
