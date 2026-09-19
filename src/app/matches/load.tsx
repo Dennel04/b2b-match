@@ -120,6 +120,7 @@ export async function renderMatchScreen(matchId: string) {
           counterparty,
           problemTitle: m.problem_text ? splitVerbatim(m.problem_text)[0] : null,
           logo: selling ? m.buyer.logo : m.seller.logo,
+          anon: selling ? !m.buyer.name : !m.seller.name,
           // ponytail: only the selling side shows its own figures here; the buyer reads theirs
           // on the problem screen, where the ceiling lives.
           terms: selling ? sellerChips(own?.terms ?? null) : [],

@@ -144,11 +144,14 @@ Awaiting rows carry a chip naming the *area* of the concession (`Start date`, `C
    to its owner, under the line "Your figures. A buyer is told that they fit, never what they are."
 2. Never render a figure that came from the other side. The interface states that terms are
    compatible, never what they are. This includes tooltips, summaries and charts.
-3. Counterparties are anonymous until both sides consent: industry, size, city, score — never
-   name, logo, website or contact. Names appear only at `accepted`.
-4. Reveal follows status exactly: `proposed` → anonymous; `buyer_interested` → seller sees the
-   buyer's company profile, never the problem; `accepted` → identities and brief; `declined` →
-   collapses to a neutral state with no details.
+3. The BUYER is anonymous until both sides consent: industry, size, city, score — never name,
+   logo, website or contact, and never a word of their problem. The buyer's name appears at
+   `accepted`. The SELLER is not anonymous: its services are the storefront and any signed-in
+   user reads them, so its name and logo show from the first row — hiding the name on top of a
+   public listing protected nothing and left every row titled with a category.
+4. Reveal follows status exactly, on the buying side: `proposed` → anonymous;
+   `buyer_interested` → seller sees the buyer's company profile, never the problem; `accepted` →
+   identities and brief; `declined` → collapses to a neutral state with no details.
 5. The word for what the other side cannot see is **withheld** — not "hidden", not "encrypted".
    The platform can read it; the copy must not imply otherwise.
 

@@ -410,8 +410,11 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
       size_hint: row.buyer.profile_json?.size_hint ?? '',
     },
     seller: {
-      name: accepted || isSeller ? row.seller.name : null,
-      logo: accepted || isSeller ? (row.seller.profile_json?.logo_url ?? null) : null,
+      // The selling side is the storefront: its services are readable by any signed-in user, so
+      // withholding the name that sits on them protected nothing and made every row read as a
+      // category. The buyer above stays anonymous — they are the one holding a private problem.
+      name: row.seller.name,
+      logo: row.seller.profile_json?.logo_url ?? null,
       industry: row.seller.profile_json?.industry ?? 'undisclosed industry',
       size_hint: row.seller.profile_json?.size_hint ?? '',
       summary: row.seller.profile_json?.summary ?? '',

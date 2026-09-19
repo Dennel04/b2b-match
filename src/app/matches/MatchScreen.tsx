@@ -13,8 +13,9 @@ export interface MatchScreenData {
   counterparty: string;
   /** The buyer's own problem, shown only to the buyer — the seller never receives it. */
   problemTitle: string | null;
-  /** Null until both sides accepted: a logo names a company as surely as its name does. */
   logo: string | null;
+  /** The buying side stays anonymous until both accepted, so its mark is the neutral one. */
+  anon: boolean;
   terms: string[];
   formats: string[];
 }
@@ -39,7 +40,7 @@ export function MatchScreen({ d }: { d: MatchScreenData }) {
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
             <div className="flex min-w-0 items-start gap-3.5">
               <span className="mt-0.5 grid h-11 w-11 flex-none place-items-center overflow-hidden rounded-[12px] border border-line bg-surface md:mt-1">
-                {m.status === "accepted" ? (
+                {!d.anon ? (
                   <RemoteLogo url={d.logo} name={d.counterparty} className="p-1.5" />
                 ) : (
                   <Icon name="building-2" className="text-ink-faint" />
