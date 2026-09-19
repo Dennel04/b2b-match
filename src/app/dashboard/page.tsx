@@ -62,127 +62,83 @@ export default async function DashboardPage() {
       <Page>
         <Header />
 
-        {/* Every count is zero and neither side has started. Six empty bars say nothing; this does. */}
-        {!selling && !buying ? (
-          buys ? (
-            <Blank
-              title="Nothing has run yet"
-              lead="Describe a problem and every vendor is checked against it, without a word of it leaving you."
-              href="/problems/new"
-              action="Describe a problem"
-            />
-          ) : (
-            <Blank
-              title="Nothing has run yet"
-              lead="List what you sell and buyers' problems are checked against it, on the terms you set."
-              href="/services/new"
-              action="List a service"
-            />
-          )
-        ) : (
-          <>
-            {(sells || selling) && (
-              <Section title="As a vendor" note="Buyers whose problems were checked against what you sell.">
-                {selling ? (
-                  <>
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                      <Stat label="Considered" value={s.considered} note="Problems checked against what you sell" />
-                      <Stat label="Cleared your terms" value={s.cleared_terms} note="Passed the mechanical check" />
-                      <Stat label="Shown to buyers" value={s.shown} note="Scored high enough to become a match" />
-                      <Stat label="Meetings" value={s.accepted} note="Both sides confirmed" />
-                    </div>
+        {/* Always the analysis, zeros included: the funnel and the terms are the point of this screen. */}
+        {(sells || selling) && (
+          <Section title="As a vendor" note="Buyers whose problems were checked against what you sell.">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Stat label="Considered" value={s.considered} note="Problems checked against what you sell" />
+              <Stat label="Cleared your terms" value={s.cleared_terms} note="Passed the mechanical check" />
+              <Stat label="Shown to buyers" value={s.shown} note="Scored high enough to become a match" />
+              <Stat label="Meetings" value={s.accepted} note="Both sides confirmed" />
+            </div>
 
-                    <div className="grid gap-3 lg:grid-cols-2">
-                      <Card className="flex flex-col p-5">
-                        <h3 className="text-[13.5px] font-semibold">From considered to meeting</h3>
-                        <Funnel
-                          steps={[
-                            ["Considered", s.considered],
-                            ["Cleared terms", s.cleared_terms],
-                            ["Shown to buyers", s.shown],
-                            ["Agents said proceed", s.proceed],
-                            ["Buyer interested", s.buyer_interested + s.accepted],
-                            ["Meeting", s.accepted],
-                          ]}
-                          done={s.accepted > 0}
-                        />
-                        {(s.avg_score !== null || s.declined > 0) && (
-                          <p className="mt-auto pt-5 text-[12px] leading-relaxed text-ink-faint">
-                            {s.avg_score !== null && <>Average fit {s.avg_score} of 100 across everything the model scored. </>}
-                            {s.declined > 0 && <>{s.declined} closed as declined.</>}
-                          </p>
-                        )}
-                      </Card>
-                      <Blocked reasons={s.blocked_by} considered={s.considered} cleared={s.cleared_terms} terms={company.seller_terms as SellerTerms | null} />
-                    </div>
-                  </>
-                ) : (
-                  <Blank
-                    compact
-                    title="No problem has been checked against you yet"
-                    lead="A service is what a buyer's problem is read against, and its terms are what the check compares."
-                    href="/services/new"
-                    action="List a service"
-                  />
+            <div className="grid gap-3 lg:grid-cols-2">
+              <Card className="flex flex-col p-5">
+                <h3 className="text-[13.5px] font-semibold">From considered to meeting</h3>
+                <Funnel
+                  steps={[
+                    ["Considered", s.considered],
+                    ["Cleared terms", s.cleared_terms],
+                    ["Shown to buyers", s.shown],
+                    ["Agents said proceed", s.proceed],
+                    ["Buyer interested", s.buyer_interested + s.accepted],
+                    ["Meeting", s.accepted],
+                  ]}
+                  done={s.accepted > 0}
+                />
+                {(s.avg_score !== null || s.declined > 0) && (
+                  <p className="mt-auto pt-5 text-[12px] leading-relaxed text-ink-faint">
+                    {s.avg_score !== null && <>Average fit {s.avg_score} of 100 across everything the model scored. </>}
+                    {s.declined > 0 && <>{s.declined} closed as declined.</>}
+                  </p>
                 )}
-              </Section>
-            )}
+              </Card>
+              <Blocked reasons={s.blocked_by} considered={s.considered} cleared={s.cleared_terms} terms={company.seller_terms as SellerTerms | null} />
+            </div>
+          </Section>
+        )}
 
-            {(buys || buying) && (
-              <Section title="As a buyer" note="Vendors checked against the problems you wrote down.">
-                {buying ? (
-                  <>
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                      <Stat label="Problems described" value={b.problems} note="Private to your company" />
-                      <Stat label="Vendors checked" value={b.candidates_evaluated} note="Compared on terms before anything was read" />
-                      <Stat label="Matches" value={b.matches} note="Scored high enough to show you" />
-                      <Stat label="Meetings" value={b.accepted} note="Both sides confirmed" />
-                    </div>
+        {(buys || buying) && (
+          <Section title="As a buyer" note="Vendors checked against the problems you wrote down.">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Stat label="Problems described" value={b.problems} note="Private to your company" />
+              <Stat label="Vendors checked" value={b.candidates_evaluated} note="Compared on terms before anything was read" />
+              <Stat label="Matches" value={b.matches} note="Scored high enough to show you" />
+              <Stat label="Meetings" value={b.accepted} note="Both sides confirmed" />
+            </div>
 
-                    <div className="grid gap-3 lg:grid-cols-2">
-                      <Card className="flex flex-col p-5">
-                        <h3 className="text-[13.5px] font-semibold">From vendor to meeting</h3>
-                        <Funnel
-                          steps={[
-                            ["Vendors checked", b.candidates_evaluated],
-                            ["Cleared your terms", b.cleared_terms],
-                            ["Matched", b.matches],
-                            ["Meeting", b.accepted],
-                          ]}
-                          done={b.accepted > 0}
-                        />
-                      </Card>
-                      <Card className="flex flex-col p-5">
-                        <h3 className="text-[13.5px] font-semibold">What your terms filtered out</h3>
-                        <p className="mt-0.5 text-[12.5px] text-ink-soft">
-                          {b.candidates_evaluated > b.cleared_terms
-                            ? `${b.candidates_evaluated - b.cleared_terms} of ${b.candidates_evaluated} never reached the model`
-                            : "Every vendor checked cleared your terms"}
-                        </p>
-                        <p className="mt-5 text-[13px] leading-relaxed text-ink-soft">
-                          Budget ceiling, start date, contract format and hard requirements are
-                          compared mechanically, before a single line is read. None of those vendors
-                          was told anything — not why, not that your problem exists.
-                        </p>
-                        <Link href="/problems" className="mt-auto flex items-center gap-1.5 pt-5 text-[12.5px] font-semibold text-ink underline-offset-4 hover:underline">
-                          Review the terms on a problem
-                          <Icon name="chevron-right" size={14} />
-                        </Link>
-                      </Card>
-                    </div>
-                  </>
-                ) : (
-                  <Blank
-                    compact
-                    title="You haven't described a problem yet"
-                    lead="Describe one and every vendor is checked against it; a vendor is only ever told why it might fit."
-                    href="/problems/new"
-                    action="Describe a problem"
-                  />
-                )}
-              </Section>
-            )}
-          </>
+            <div className="grid gap-3 lg:grid-cols-2">
+              <Card className="flex flex-col p-5">
+                <h3 className="text-[13.5px] font-semibold">From vendor to meeting</h3>
+                <Funnel
+                  steps={[
+                    ["Vendors checked", b.candidates_evaluated],
+                    ["Cleared your terms", b.cleared_terms],
+                    ["Matched", b.matches],
+                    ["Meeting", b.accepted],
+                  ]}
+                  done={b.accepted > 0}
+                />
+              </Card>
+              <Card className="flex flex-col p-5">
+                <h3 className="text-[13.5px] font-semibold">What your terms filtered out</h3>
+                <p className="mt-0.5 text-[12.5px] text-ink-soft">
+                  {b.candidates_evaluated > b.cleared_terms
+                    ? `${b.candidates_evaluated - b.cleared_terms} of ${b.candidates_evaluated} never reached the model`
+                    : "Every vendor checked cleared your terms"}
+                </p>
+                <p className="mt-5 text-[13px] leading-relaxed text-ink-soft">
+                  Budget ceiling, start date, contract format and hard requirements are
+                  compared mechanically, before a single line is read. None of those vendors
+                  was told anything — not why, not that your problem exists.
+                </p>
+                <Link href="/problems" className="mt-auto flex items-center gap-1.5 pt-5 text-[12.5px] font-semibold text-ink underline-offset-4 hover:underline">
+                  Review the terms on a problem
+                  <Icon name="chevron-right" size={14} />
+                </Link>
+              </Card>
+            </div>
+          </Section>
         )}
       </Page>
     </AppShell>
@@ -380,41 +336,3 @@ function Terms({ terms }: { terms: SellerTerms | null }) {
   );
 }
 
-/**
- * Nothing has happened on this side yet. The same invitation the problems and services lists
- * use — one line that says what would change it, and the one button that does it. Never two:
- * a screen makes one invitation at a time, so this appears for one half or for the page, not both.
- */
-function Blank({
-  title,
-  lead,
-  href,
-  action,
-  compact = false,
-}: {
-  title: string;
-  lead: string;
-  href: string;
-  action: string;
-  compact?: boolean;
-}) {
-  return (
-    <div
-      className={`flex flex-col items-start gap-5 rounded-[10px] border border-line bg-surface px-6 md:items-center md:px-8 md:text-center ${
-        compact ? "py-10 md:py-12" : "mt-2 py-12 md:py-16"
-      }`}
-    >
-      <div className="flex flex-col gap-2 md:items-center">
-        <h2 className={`font-semibold tracking-[-0.02em] ${compact ? "text-[18px]" : "text-[22px]"}`}>{title}</h2>
-        <p className="max-w-[52ch] text-[14.5px] leading-relaxed text-ink-soft">{lead}</p>
-      </div>
-      <Link
-        href={href}
-        className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong"
-      >
-        <Icon name="plus" size={15} />
-        {action}
-      </Link>
-    </div>
-  );
-}
