@@ -1,19 +1,17 @@
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
+import { domainFromEmail } from "@/lib/scrape";
 import { serverClient } from "@/lib/supabase";
 import { premiumFont } from "../fonts";
 import { draftFromCompany } from "./fields";
-import { Wizard, type StepId } from "./Wizard";
-
-const STEP_IDS: StepId[] = ["company", "offer", "terms", "buying", "ready"];
+import { Wizard } from "./Wizard";
 
 export const metadata = { title: "Set up your company — Crossdesk" };
 
-/** Company setup. Every step is optional and skippable; answers prefill from a saved company. */
+/** Company setup on one screen. Answers prefill from a saved company; a work email autofills. */
 export default async function OnboardingPage({ searchParams }: PageProps<"/onboarding">) {
-  // ?step=terms opens that step directly: the dashboard links each missing answer to its step.
+  // ?step=terms opens the working terms: the dashboard links a missing answer to it.
   const { step } = await searchParams;
-  const initialStep = STEP_IDS.find((s) => s === step);
   const supabase = await serverClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -29,7 +27,11 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
   return (
     <div className={`${premiumFont} flex min-h-dvh flex-col bg-bg text-ink`}>
       <SiteHeader />
-      <Wizard initial={draftFromCompany(company)} email={user.email ?? ""} initialStep={initialStep} />
+      <Wizard
+        initial={draftFromCompany(company)}
+        autoSite={user.email ? domainFromEmail(user.email) : null}
+        openTerms={step === "terms"}
+      />
     </div>
   );
 }

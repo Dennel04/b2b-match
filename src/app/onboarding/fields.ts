@@ -1,19 +1,10 @@
-import type { Company, CompanyRole, ContractFormat, Requirement, SellerTerms } from "@/types";
+import type { Company, CompanyDraft, CompanyRole, ContractFormat, Requirement, SellerTerms } from "@/types";
 
 /**
- * Onboarding fields: the PROPOSAL under discussion. Every field is optional; the readiness
- * checklist says which ones the matcher needs before it can work for this company.
- *
- * Fields marked EXTRA have no column in src/types.ts yet. They are kept in the browser
- * (localStorage) until the backend adds a place for them. Nothing private is lost: extras
- * never leave the user's browser today.
+ * Onboarding fields. Only what the server stores and the matcher reads. Money, formats and
+ * dates are optional here: the matcher treats empty as "unknown, don't filter", and a match
+ * asks for them when it needs them (docs/FRONTEND.md §2a).
  */
-
-export const INDUSTRIES = [
-  "Logistics & freight", "Manufacturing", "Retail & e-commerce", "Software & IT",
-  "Finance & accounting", "Construction & real estate", "Healthcare", "Food & hospitality",
-  "Energy & utilities", "Marketing & media", "Professional services", "Other",
-];
 
 export const SIZES = ["1–10", "11–50", "51–200", "201–1000", "1000+"].map((s) => ({ value: s, label: s }));
 
@@ -49,37 +40,22 @@ export const PERIODS = [
 export type Period = (typeof PERIODS)[number]["value"];
 
 export interface Draft {
-  // Step 1: company (public once matched)
+  // Profile: shown to the other side once matched, the name only after both agree
   name: string;
   website: string;
   role: CompanyRole | null;
   industry: string;
   size: string;
-  location: string; // EXTRA
-  // Step 2: what you offer (public once matched)
   summary: string;
   services: string[];
   keywords: string[];
-  industriesServed: string[]; // EXTRA
   capabilities: Requirement[];
-  // Step 3: seller terms (private, compared by the platform only)
+  // Working terms: private, compared by the platform only
   floorAmount: string;
   floorPeriod: Period;
   sellerFormats: ContractFormat[];
   availableFrom: string;
-  // Step 4: buyer defaults (private). All EXTRA: buyer terms live on each problem today.
-  ceilingAmount: string;
-  ceilingPeriod: Period;
-  buyerFormats: ContractFormat[];
-  mustHaves: Requirement[];
-  dealbreakers: string[];
 }
-
-export const EXTRA_KEYS = [
-  "location", "industriesServed", "ceilingAmount", "ceilingPeriod", "buyerFormats", "mustHaves", "dealbreakers",
-] as const satisfies readonly (keyof Draft)[];
-
-export const EXTRAS_STORAGE_KEY = "b2b-onboarding-extras";
 
 export function draftFromCompany(c: Pick<Company, "name" | "website" | "role" | "profile_json" | "seller_terms"> | null): Draft {
   const p = c?.profile_json;
@@ -90,26 +66,45 @@ export function draftFromCompany(c: Pick<Company, "name" | "website" | "role" | 
     role: c?.role ?? null,
     industry: p?.industry ?? "",
     size: p?.size_hint ?? "",
-    location: "",
     summary: p?.summary ?? "",
     services: p?.services ?? [],
     keywords: p?.keywords ?? [],
-    industriesServed: [],
     capabilities: t?.capabilities ?? [],
     floorAmount: t?.budget_floor ? String(t.budget_floor.amount) : "",
     floorPeriod: t?.budget_floor?.period ?? "one_off",
     sellerFormats: t?.contract_formats ?? [],
     availableFrom: t?.available_from ?? "",
-    ceilingAmount: "",
-    ceilingPeriod: "one_off",
-    buyerFormats: [],
-    mustHaves: [],
-    dealbreakers: [],
   };
 }
 
+/** Lays an autofill result over the form. Terms the person already set are kept. */
+export function applyAutofill(d: Draft, a: CompanyDraft): Draft {
+  return {
+    ...d,
+    name: a.profile.name || d.name,
+    website: a.website || d.website,
+    role: d.role ?? a.role,
+    industry: a.profile.industry || d.industry,
+    size: sizeBucket(a.profile.size_hint) ?? d.size,
+    summary: a.profile.summary || d.summary,
+    services: a.profile.services.length ? a.profile.services : d.services,
+    keywords: a.profile.keywords.length ? a.profile.keywords : d.keywords,
+    capabilities: a.seller_terms.capabilities.length ? a.seller_terms.capabilities : d.capabilities,
+  };
+}
+
+/** "~40 people" → "11–50". Null when the hint carries no number. */
+function sizeBucket(hint: string): string | null {
+  const n = Number(hint.replace(/[\s,]/g, "").match(/\d+/)?.[0]);
+  if (!n) return null;
+  if (n <= 10) return "1–10";
+  if (n <= 50) return "11–50";
+  if (n <= 200) return "51–200";
+  if (n <= 1000) return "201–1000";
+  return "1000+";
+}
+
 export const sells = (role: CompanyRole | null) => role !== "buyer";
-export const buys = (role: CompanyRole | null) => role !== "seller";
 
 export function sellerTermsFromDraft(d: Draft): SellerTerms {
   const amount = Number(d.floorAmount);
@@ -121,21 +116,20 @@ export function sellerTermsFromDraft(d: Draft): SellerTerms {
   };
 }
 
-/** The wizard steps that hold fields. "ready" is the summary step and holds none. */
-export type FieldStep = "company" | "offer" | "terms" | "buying";
+/** Where on the onboarding screen an answer is given: the profile, or the working terms. */
+export type FieldStep = "company" | "terms";
 
 export interface ReadinessItem {
   label: string;
   done: boolean;
   why: string;
-  /** The wizard step where this answer is given. */
+  /** `/onboarding?step=terms` opens the working terms. */
   step: FieldStep;
 }
 
 /**
- * What the matcher needs from this company, each tied to the step that asks for it. Only
- * server-saved fields count. The buyer's first problem is not here: it is written per problem,
- * not in company setup.
+ * What the matcher needs from this company. Only server-saved fields count. Money and formats
+ * are not here: empty means "don't filter", so a vendor without them still takes part.
  */
 export function readiness(d: Draft): ReadinessItem[] {
   const items: ReadinessItem[] = [
@@ -145,10 +139,8 @@ export function readiness(d: Draft): ReadinessItem[] {
   ];
   if (sells(d.role)) {
     items.push(
-      { step: "offer", label: "What you offer, in 2–3 sentences", done: d.summary.trim().length >= 40, why: "The matcher reads this against buyers' problems." },
-      { step: "offer", label: "At least one service", done: d.services.length > 0, why: "Used to find you in the first pass." },
-      { step: "terms", label: "Smallest deal you take", done: !!Number(d.floorAmount), why: "Checked against budgets without showing either figure." },
-      { step: "terms", label: "Contract formats you accept", done: d.sellerFormats.length > 0, why: "Deals with no shared format are filtered out." },
+      { step: "company", label: "What you offer, in 2–3 sentences", done: d.summary.trim().length >= 40, why: "The matcher reads this against buyers' problems." },
+      { step: "company", label: "At least one service", done: d.services.length > 0, why: "Used to find you in the first pass." },
     );
   }
   return items;

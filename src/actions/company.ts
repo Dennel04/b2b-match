@@ -1,7 +1,7 @@
 'use server';
 
 import { ask } from '@/lib/claude';
-import { domainFromEmail, normaliseWebsite, readWebsite } from '@/lib/scrape';
+import { domainFromEmail, normaliseWebsite, readWebsite, type SitePage } from '@/lib/scrape';
 import { serverClient } from '@/lib/supabase';
 import { ProfileDraftSchema, profileDraftPrompt } from '@/prompts/profile';
 import type { CompanyDraft, CompanyProfile, SellerTerms } from '@/types';
@@ -25,7 +25,21 @@ export async function draftCompanyProfile(website?: string): Promise<CompanyDraf
   const pages = await readWebsite(site);
   if (!pages.length) throw new Error(`Could not read ${site} — fill the profile by hand`);
 
-  const draft = await ask(ProfileDraftSchema, profileDraftPrompt(site, pages), { effort: 'medium' });
+  return draftFrom(site, pages);
+}
+
+/**
+ * The same draft from text the person pastes: an "about us", a pitch deck copied out of a PDF, a
+ * LinkedIn page. For companies whose site cannot be read or says too little. ~10 s.
+ */
+export async function draftCompanyProfileFromText(text: string): Promise<CompanyDraft> {
+  const body = text.trim().slice(0, 14000);
+  if (body.length < 80) throw new Error('Paste a few sentences about the company — a paragraph at least');
+  return draftFrom('', [{ url: 'pasted text', text: body }]);
+}
+
+async function draftFrom(site: string, pages: SitePage[]): Promise<CompanyDraft> {
+  const draft = await ask(ProfileDraftSchema, profileDraftPrompt(site || 'not given', pages), { effort: 'medium' });
 
   return {
     website: site,

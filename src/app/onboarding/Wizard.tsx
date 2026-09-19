@@ -1,37 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveCompany } from "@/actions/company";
-import { Bezel, Chips, Eyebrow, Field, FieldGroup, PillButton, Segmented, Select, TagInput, inputClass } from "@/components/premium";
-import {
-  EXTRAS_STORAGE_KEY, EXTRA_KEYS, FORMATS, INDUSTRIES, PERIODS, REQUIREMENTS, ROLES, SIZES,
-  buys, readiness, sellerTermsFromDraft, sells, type Draft, type Period,
-} from "./fields";
+import { draftCompanyProfile, draftCompanyProfileFromText, saveCompany } from "@/actions/company";
+import { Bezel, Chips, Field, FieldGroup, PillButton, Segmented, TagInput, inputClass } from "@/components/premium";
+import type { CompanyDraft, Requirement } from "@/types";
+import { FORMATS, PERIODS, REQUIREMENTS, ROLES, SIZES, applyAutofill, sellerTermsFromDraft, sells, type Draft, type Period } from "./fields";
 
-export type StepId = "company" | "offer" | "terms" | "buying" | "ready";
+type Source = "site" | "text";
+type Autofill =
+  | { state: "idle" }
+  | { state: "running"; source: Source; started: number }
+  | { state: "done"; from: string }
+  | { state: "error"; message: string };
 
-const STEPS: { id: StepId; title: string; visibility: "public" | "private" | null; lead: string }[] = [
-  { id: "company", title: "Your company", visibility: "public", lead: "The basics. Buyers and sellers see your industry and size first; your name only after both agree to meet." },
-  { id: "offer", title: "What you offer", visibility: "public", lead: "The matcher reads this against buyers' problems. Plain words work better than marketing." },
-  { id: "terms", title: "Your working terms", visibility: "private", lead: "Never shown to anyone. The platform compares these with a buyer's terms and reports only whether they fit." },
-  { id: "buying", title: "When you buy", visibility: "private", lead: "Defaults for your problems. You can change them per problem in the AI interview." },
-  { id: "ready", title: "Ready check", visibility: null, lead: "What the matcher still needs from you. Everything else can wait." },
-];
+const SOURCES = [
+  { value: "site", label: "From website" },
+  { value: "text", label: "Paste text" },
+] as const;
 
-function Visibility({ kind }: { kind: "public" | "private" }) {
-  return kind === "public" ? (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-[12px] font-medium text-accent">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
-      Shown to companies you match with
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-gold-soft px-3 py-1 text-[12px] font-medium text-gold">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
-      Private. Compared by the platform, never shown
-    </span>
-  );
-}
+/** Named steps instead of a spinner; each shows once its time has passed. */
+const RUN_STEPS: Record<Source, { at: number; label: string }[]> = {
+  site: [
+    { at: 0, label: "Opening the site" },
+    { at: 3, label: "Reading about and services pages" },
+    { at: 8, label: "Drafting your profile" },
+  ],
+  text: [
+    { at: 0, label: "Reading your text" },
+    { at: 3, label: "Drafting your profile" },
+  ],
+};
 
 function Money({
   amount, period, onAmount, onPeriod, placeholder, label,
@@ -57,7 +56,7 @@ function Money({
 
 /** Quick picks next to a date: most answers are "now" or "in a few weeks". */
 function DatePick({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  // Dates are fixed at first render, so the picks do not shift while the step is open.
+  // Dates are fixed at first render, so the picks do not shift while the form is open.
   const [picks] = useState(() => {
     const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
     return [
@@ -105,7 +104,7 @@ function LengthMeter({ length, min }: { length: number; min: number }) {
   );
 }
 
-/** Exactly what saveCompany() receives. Compared as JSON to know whether anything changed. */
+/** Exactly what saveCompany() receives. */
 function payload(d: Draft) {
   return {
     name: d.name.trim(),
@@ -113,7 +112,7 @@ function payload(d: Draft) {
     role: d.role ?? ("both" as const),
     profile_json: {
       name: d.name.trim(),
-      industry: d.industry,
+      industry: d.industry.trim(),
       size_hint: d.size,
       services: d.services,
       keywords: d.keywords,
@@ -123,302 +122,267 @@ function payload(d: Draft) {
   };
 }
 
-export function Wizard({ initial, email, initialStep = "company" }: { initial: Draft; email: string; initialStep?: StepId }) {
+/**
+ * Company setup on one screen: autofill from the website or pasted text, check the draft, go.
+ * `autoSite` is the domain behind a work email; with no saved company it is read on arrival.
+ */
+export function Wizard({ initial, autoSite, openTerms = false }: { initial: Draft; autoSite: string | null; openTerms?: boolean }) {
   const router = useRouter();
-  const [d, setD] = useState<Draft>(initial);
-  const [step, setStep] = useState<StepId>(initialStep);
-  const [visited, setVisited] = useState<Set<StepId>>(() => new Set([initialStep]));
-  const [saved, setSaved] = useState(() => JSON.stringify(payload(initial)));
+  const [d, setD] = useState<Draft>(() => ({ ...initial, website: initial.website || autoSite || "" }));
+  const [source, setSource] = useState<Source>("site");
+  const [pasted, setPasted] = useState("");
+  const [fill, setFill] = useState<Autofill>({ state: "idle" });
+  const [evidence, setEvidence] = useState<Partial<Record<Requirement, string>>>({});
+  const [termsOpen, setTermsOpen] = useState(openTerms);
   const [saving, setSaving] = useState(false);
   const [saveNote, setSaveNote] = useState<string | null>(null);
+  const [now, setNow] = useState(0);
+  const termsRef = useRef<HTMLDivElement>(null);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((prev) => ({ ...prev, [k]: v }));
+  const running = fill.state === "running";
 
-  // Extras have no server column yet: restore and keep them in this browser.
-  useEffect(() => {
+  async function autofill(from: Source) {
+    if (running) return;
+    const site = d.website.trim();
+    if (from === "site" && !site) return setFill({ state: "error", message: "Enter your website first." });
+    setFill({ state: "running", source: from, started: Date.now() });
     try {
-      const raw = localStorage.getItem(EXTRAS_STORAGE_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from browser storage
-      if (raw) setD((prev) => ({ ...prev, ...JSON.parse(raw) }));
-    } catch {}
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem(EXTRAS_STORAGE_KEY, JSON.stringify(Object.fromEntries(EXTRA_KEYS.map((k) => [k, d[k]]))));
-    } catch {}
-  }, [d]);
-
-  const steps = useMemo(
-    () => STEPS.filter((s) => (s.id === "offer" || s.id === "terms" ? sells(d.role) : s.id === "buying" ? buys(d.role) : true)),
-    [d.role],
-  );
-  // A role change can remove the open step; fall back to the first one rather than index -1.
-  const current = steps.find((s) => s.id === step) ?? steps[0];
-  const index = steps.indexOf(current);
-  const checklist = readiness(d);
-  const missing = checklist.filter((i) => !i.done);
-
-  /**
-   * A step's mark in the rail comes from its answers, not its position: done when every required
-   * answer in it is given, "left" when the user has been there and something is still missing.
-   * Steps with only optional fields count as done once seen.
-   */
-  function stepState(id: StepId): "done" | "left" | "open" {
-    if (id === "ready") return missing.length ? "open" : "done";
-    const items = checklist.filter((c) => c.step === id);
-    const left = items.filter((c) => !c.done).length;
-    if (items.length ? left === 0 : visited.has(id)) return "done";
-    return visited.has(id) && left ? "left" : "open";
+      const draft: CompanyDraft = from === "site" ? await draftCompanyProfile(site) : await draftCompanyProfileFromText(pasted);
+      setD((prev) => applyAutofill(prev, draft));
+      setEvidence(Object.fromEntries(draft.seller_terms.capabilities.map((c, i) => [c, draft.evidence[i] ?? ""])));
+      setFill({ state: "done", from: from === "site" ? `${draft.pages_read.length} pages of ${site}` : "your text" });
+    } catch (e) {
+      setFill({ state: "error", message: e instanceof Error ? e.message : "Autofill failed." });
+    }
   }
-  const leftIn = (id: StepId) => checklist.filter((c) => c.step === id && !c.done).length;
-  const stepsDone = steps.filter((s) => stepState(s.id) === "done").length;
 
-  /** Saves only when something changed, so moving between steps costs nothing otherwise. */
-  async function persist() {
+  // A work email with nothing saved yet: start reading the site right away, no click needed.
+  const started = useRef(false);
+  useEffect(() => {
+    if (started.current || !autoSite || initial.name) return;
+    started.current = true;
+    void autofill("site");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once on arrival
+  }, []);
+
+  // Ticks the named steps while autofill runs.
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(t);
+  }, [running]);
+
+  useEffect(() => {
+    if (openTerms) termsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [openTerms]);
+
+  async function finish() {
     const next = payload(d);
-    const key = JSON.stringify(next);
-    if (key === saved) return;
     if (!next.name) {
-      setSaveNote("Add a company name to save to your account. Until then, answers stay in this browser.");
+      setSaveNote("Add a company name, or use autofill above.");
       return;
     }
     setSaving(true);
     setSaveNote(null);
     try {
       await saveCompany(next);
-      setSaved(key);
+      router.push("/dashboard");
+      router.refresh();
     } catch (e) {
-      setSaveNote(`Could not save to your account: ${e instanceof Error ? e.message : "unknown error"}. Your answers are kept here.`);
-    } finally {
+      setSaveNote(`Could not save: ${e instanceof Error ? e.message : "unknown error"}. Your answers are still here.`);
       setSaving(false);
     }
   }
 
-  /** Every way of leaving a step (rail, Back, Skip, Continue) saves first and marks it seen. */
-  async function goTo(id: StepId) {
-    if (saving) return;
-    await persist();
-    setVisited((v) => new Set(v).add(current.id).add(id));
-    setStep(id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  const go = (delta: 1 | -1) => goTo(steps[Math.min(Math.max(index + delta, 0), steps.length - 1)].id);
-
-  async function leave() {
-    await persist();
-    router.push("/dashboard");
-    router.refresh();
-  }
+  const elapsed = fill.state === "running" ? Math.max(0, (now - fill.started) / 1000) : 0;
 
   return (
-    <div className="mx-auto grid w-full max-w-[1120px] gap-10 px-4 pb-24 pt-4 md:px-8 lg:grid-cols-[280px_1fr]">
-      {/* Rail: steps and readiness */}
-      <aside className="soft-in lg:sticky lg:top-8 lg:h-max">
-        <Eyebrow>Company setup</Eyebrow>
-        <p className="mt-4 text-[13.5px] text-ink-soft">Signed in as {email}</p>
-        <ol className="mt-6 flex gap-2 overflow-x-auto lg:flex-col lg:gap-1">
-          {steps.map((s, i) => {
-            const state = stepState(s.id);
-            const here = s.id === current.id;
-            return (
-            <li key={s.id}>
-              <button
-                type="button"
-                onClick={() => goTo(s.id)}
-                aria-current={s.id === current.id ? "step" : undefined}
-                className={`flex w-full cursor-pointer items-center gap-3 whitespace-nowrap rounded-full py-2 pl-2 pr-4 text-left text-[14px] transition-colors duration-200 ${
-                  s.id === current.id ? "bg-surface font-semibold shadow-[0_1px_3px_rgba(22,50,58,0.1)]" : "text-ink-soft hover:text-ink"
-                }`}
-              >
-                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[12px] font-semibold ${
-                  here ? "bg-ink text-surface" : state === "done" ? "bg-accent text-surface" : state === "left" ? "bg-gold-soft text-gold" : "bg-ink/[0.06]"
-                }`}>
-                  {state === "done" && !here ? "✓" : i + 1}
-                </span>
-                {s.title}
-                {state === "left" && !here && <span className="ml-auto pl-2 text-[12px] font-medium text-gold">{leftIn(s.id)} left</span>}
-              </button>
-            </li>
-            );
-          })}
-        </ol>
-        <div className="mt-8 hidden rounded-3xl bg-surface/70 p-5 ring-1 ring-ink/[0.05] lg:block">
-          <p className="text-[13px] font-semibold">Setup progress</p>
-          <p className="mt-1 text-[28px] font-extrabold tracking-[-0.04em]">{stepsDone}<span className="text-[16px] font-semibold text-ink-faint"> / {steps.length} steps</span></p>
-          <div className="mt-2 flex gap-1" aria-hidden>
-            {steps.map((st) => {
-              const state = stepState(st.id);
-              return <span key={st.id} className={`h-1.5 flex-1 rounded-full ${state === "done" ? "bg-accent" : state === "left" ? "bg-gold" : "bg-ink/10"}`} />;
+    <div className="mx-auto flex w-full max-w-[860px] flex-col gap-6 px-4 pb-32 pt-4 md:px-8">
+      <header className="soft-in">
+        <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[1.02] tracking-[-0.04em]">Set up your company</h1>
+        <p className="mt-4 max-w-[60ch] text-[16px] leading-relaxed text-ink-soft">
+          Point us at your website or paste a description. We fill in the profile; you check it.
+        </p>
+      </header>
+
+      {/* Autofill */}
+      <Bezel className="soft-in" inner="flex flex-col gap-5 p-6 sm:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-[15px] font-bold">Autofill</p>
+          <Segmented label="Autofill source" value={source} onChange={setSource} options={SOURCES} />
+        </div>
+
+        {source === "site" ? (
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              aria-label="Company website"
+              value={d.website}
+              onChange={(e) => set("website", e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && autofill("site")}
+              placeholder="nordkai.ee"
+              className={`${inputClass} flex-1`}
+            />
+            <PillButton type="button" onClick={() => autofill("site")} disabled={running}>
+              {running ? "Reading…" : "Autofill"}
+            </PillButton>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <textarea
+              aria-label="Text about your company"
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              rows={5}
+              placeholder="Paste an about-us page, a one-pager or pitch deck copied out of a PDF, or your LinkedIn company page."
+              className={`${inputClass} h-auto resize-y py-3 leading-relaxed`}
+            />
+            <PillButton type="button" className="self-end" onClick={() => autofill("text")} disabled={running || pasted.trim().length < 80}>
+              {running ? "Reading…" : "Autofill"}
+            </PillButton>
+          </div>
+        )}
+
+        {fill.state === "running" && (
+          <ol aria-live="polite" className="flex flex-col gap-2 text-[13.5px]">
+            {RUN_STEPS[fill.source].filter((s) => s.at <= elapsed).map((s, i, shown) => {
+              const current = i === shown.length - 1;
+              return (
+                <li key={s.label} className={`flex items-center gap-2.5 ${current ? "font-semibold text-ink" : "text-ink-soft"}`}>
+                  <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${current ? "animate-pulse bg-ink" : "bg-accent"}`} />
+                  {s.label}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+        {fill.state === "done" && (
+          <p role="status" className="text-[13.5px] text-ink-soft">
+            Filled from {fill.from}. Check the profile below and correct anything that is wrong.
+          </p>
+        )}
+        {fill.state === "error" && (
+          <p role="alert" className="rounded-2xl bg-gold-soft px-4 py-3 text-[13.5px] text-ink">
+            {fill.message} You can paste a description instead, or fill the profile by hand.
+          </p>
+        )}
+      </Bezel>
+
+      {/* Profile */}
+      <Bezel className="soft-in" inner="flex flex-col gap-7 p-6 sm:p-8">
+        <FieldGroup label="What brings you here?">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {ROLES.map((r) => {
+              const on = d.role === r.value;
+              return (
+                <button
+                  key={r.value}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => set("role", on ? null : r.value)}
+                  className={`cursor-pointer rounded-3xl p-5 text-left transition-[background-color,box-shadow,transform] duration-300 active:scale-[0.98] ${
+                    on ? "bg-ink text-surface shadow-[0_12px_30px_-16px_rgba(22,50,58,0.6)]" : "bg-surface-alt hover:bg-ink/[0.06]"
+                  }`}
+                >
+                  <p className="text-[15px] font-bold">{r.title}</p>
+                  <p className={`mt-1 text-[13px] leading-relaxed ${on ? "text-surface/70" : "text-ink-soft"}`}>{r.text}</p>
+                </button>
+              );
             })}
           </div>
-          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-soft">
-            {stepsDone === steps.length ? "Everything the matcher needs is in." : "A step turns green when its answers are in. Every step can be skipped for now."}
-          </p>
-        </div>
-      </aside>
+        </FieldGroup>
 
-      {/* Step card */}
-      <section key={current.id} className="soft-in min-w-0">
-        <div className="mb-6 flex flex-wrap items-center gap-3">
-          <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[1.02] tracking-[-0.04em]">{current.title}</h1>
-          {current.visibility && <Visibility kind={current.visibility} />}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Field label="Company name" help="Shown only after both sides agree to meet.">
+            <input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="Nordkai Logistics OÜ" className={inputClass} />
+          </Field>
+          <Field label="Industry">
+            <input value={d.industry} onChange={(e) => set("industry", e.target.value)} placeholder="Road freight logistics" className={inputClass} />
+          </Field>
         </div>
-        <p className="mb-8 max-w-[60ch] text-[16px] leading-relaxed text-ink-soft">{current.lead}</p>
 
-        <Bezel inner="flex flex-col gap-7 p-6 sm:p-9">
-          <div className="flex flex-wrap items-center gap-3 border-b border-line pb-5">
-            {index > 0 && (
-              <PillButton type="button" variant="soft" icon={false} onClick={() => go(-1)}>
-                Back
-              </PillButton>
-            )}
-            <span className="text-[12.5px] font-medium text-ink-faint">Step {index + 1} of {steps.length}</span>
-            <div className="ml-auto flex items-center gap-1">
-              {current.id !== "ready" && (
-                <button type="button" onClick={() => go(1)} className="cursor-pointer px-3 text-[14px] font-medium text-ink-soft underline-offset-4 hover:text-ink hover:underline">
-                  Skip for now
-                </button>
+        <FieldGroup label="Company size" help="People, roughly.">
+          <Chips options={SIZES} value={d.size ? [d.size] : []} onChange={(v) => set("size", v[0] ?? "")} single />
+        </FieldGroup>
+
+        {sells(d.role) && (
+          <>
+            <Field label="What you do, in 2–3 sentences" help={<span className="flex flex-wrap items-center justify-between gap-2"><span>The matcher reads this against buyers&rsquo; problems.</span><LengthMeter length={d.summary.trim().length} min={40} /></span>}>
+              <textarea
+                value={d.summary}
+                onChange={(e) => set("summary", e.target.value)}
+                rows={3}
+                placeholder="We replace paper back-office processes for logistics companies with 50–300 people."
+                className={`${inputClass} h-auto resize-y py-3 leading-relaxed`}
+              />
+            </Field>
+            <Field label="Services" help="Type one and press Enter.">
+              <TagInput value={d.services} onChange={(v) => set("services", v)} placeholder="Customs automation" />
+            </Field>
+            <FieldGroup label="What you can offer" help="Buyers can require these. Tick what you meet.">
+              <Chips options={REQUIREMENTS} value={d.capabilities} onChange={(v) => set("capabilities", v)} />
+              {d.capabilities.some((c) => evidence[c]) && (
+                <ul className="mt-1 flex flex-col gap-1 text-[12.5px] text-ink-soft">
+                  {d.capabilities.filter((c) => evidence[c]).map((c) => (
+                    <li key={c}>
+                      <span className="font-semibold text-ink">{REQUIREMENTS.find((r) => r.value === c)?.label}</span> — from {evidence[c]}
+                    </li>
+                  ))}
+                </ul>
               )}
-              {current.id === "ready" ? (
-                <PillButton type="button" onClick={leave} disabled={saving}>
-                  {saving ? "Saving…" : "Go to dashboard"}
-                </PillButton>
-              ) : (
-                <PillButton type="button" onClick={() => go(1)} disabled={saving}>
-                  {saving ? "Saving…" : "Continue"}
-                </PillButton>
-              )}
-            </div>
-          </div>
-          {saveNote && <p role="status" className="rounded-2xl bg-gold-soft px-4 py-3 text-[13.5px] text-ink">{saveNote}</p>}
-          {current.id === "company" && (
-            <>
-              <FieldGroup label="What brings you here?">
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {ROLES.map((r) => {
-                    const on = d.role === r.value;
-                    return (
-                      <button
-                        key={r.value}
-                        type="button"
-                        aria-pressed={on}
-                        onClick={() => set("role", on ? null : r.value)}
-                        className={`cursor-pointer rounded-3xl p-5 text-left transition-[background-color,box-shadow,transform] duration-300 active:scale-[0.98] ${
-                          on ? "bg-ink text-surface shadow-[0_12px_30px_-16px_rgba(22,50,58,0.6)]" : "bg-surface-alt hover:bg-ink/[0.06]"
-                        }`}
-                      >
-                        <p className="text-[15px] font-bold">{r.title}</p>
-                        <p className={`mt-1 text-[13px] leading-relaxed ${on ? "text-surface/70" : "text-ink-soft"}`}>{r.text}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </FieldGroup>
-              <div className="grid gap-6 sm:grid-cols-2">
-                <Field label="Company name" help="Shown only after both sides agree to meet.">
-                  <input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="Nordkai Logistics OÜ" className={inputClass} />
+            </FieldGroup>
+          </>
+        )}
+      </Bezel>
+
+      {/* Working terms: optional, asked again by a match when it needs them */}
+      {sells(d.role) && (
+        <div ref={termsRef} className="soft-in scroll-mt-6">
+          <Bezel inner="flex flex-col gap-7 p-6 sm:p-8">
+            <button
+              type="button"
+              aria-expanded={termsOpen}
+              onClick={() => setTermsOpen((o) => !o)}
+              className="-m-2 flex cursor-pointer items-center gap-3 rounded-2xl p-2 text-left"
+            >
+              <span className="flex-1">
+                <span className="block text-[15px] font-bold">Working terms <span className="font-normal text-ink-faint">optional</span></span>
+                <span className="mt-1 block text-[13px] text-ink-soft">Never shown. The platform compares them with a buyer&rsquo;s and says only whether they fit.</span>
+              </span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden className={`shrink-0 transition-transform duration-300 ${termsOpen ? "rotate-180" : ""}`}>
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+            {termsOpen && (
+              <>
+                <Field label="Smallest deal you take" help="Buyers below this are filtered out. They never learn the number, and you never learn theirs.">
+                  <Money label="Smallest deal you take" amount={d.floorAmount} period={d.floorPeriod} onAmount={(v) => set("floorAmount", v)} onPeriod={(v) => set("floorPeriod", v)} placeholder="5 000" />
                 </Field>
-                <Field label="Website" optionalTag>
-                  <input value={d.website} onChange={(e) => set("website", e.target.value)} placeholder="nordkai.ee" className={inputClass} />
-                </Field>
-                <FieldGroup label="Industry">
-                  <Select label="Industry" value={d.industry} onChange={(v) => set("industry", v)} options={INDUSTRIES.map((i) => ({ value: i, label: i }))} />
+                <FieldGroup label="Contract formats you accept">
+                  <Chips options={FORMATS} value={d.sellerFormats} onChange={(v) => set("sellerFormats", v)} />
                 </FieldGroup>
-                <Field label="City or region" optionalTag>
-                  <input value={d.location} onChange={(e) => set("location", e.target.value)} placeholder="Tallinn" className={inputClass} />
-                </Field>
-              </div>
-              <FieldGroup label="Company size" help="People, roughly.">
-                <Chips options={SIZES} value={d.size ? [d.size] : []} onChange={(v) => set("size", v[0] ?? "")} single />
-              </FieldGroup>
-            </>
+                <FieldGroup label="Free to start from">
+                  <DatePick value={d.availableFrom} onChange={(v) => set("availableFrom", v)} />
+                </FieldGroup>
+              </>
+            )}
+          </Bezel>
+        </div>
+      )}
+
+      {/* One action, always in reach */}
+      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-bg/90 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[860px] flex-wrap items-center gap-3 px-4 py-3 md:px-8">
+          {saveNote ? (
+            <p role="status" className="min-w-0 flex-1 text-[13.5px] text-ink">{saveNote}</p>
+          ) : (
+            <p className="min-w-0 flex-1 text-[13px] text-ink-faint">Everything can be changed later.</p>
           )}
-
-          {current.id === "offer" && (
-            <>
-              <Field label="What you do, in 2–3 sentences" help={<span className="flex flex-wrap items-center justify-between gap-2"><span>Shown to a buyer after you both agree. Say who you help and with what.</span><LengthMeter length={d.summary.trim().length} min={40} /></span>}>
-                <textarea
-                  value={d.summary}
-                  onChange={(e) => set("summary", e.target.value)}
-                  rows={4}
-                  placeholder="We replace paper back-office processes for logistics companies with 50–300 people. Most projects cut manual handling by 70% in the first quarter."
-                  className={`${inputClass} h-auto resize-y py-3 leading-relaxed`}
-                />
-              </Field>
-              <Field label="Services" help="Type one and press Enter.">
-                <TagInput value={d.services} onChange={(v) => set("services", v)} placeholder="Customs automation" />
-              </Field>
-              <Field label="Keywords" optionalTag help="Words a buyer might use for their problem.">
-                <TagInput value={d.keywords} onChange={(v) => set("keywords", v)} placeholder="paperwork, filings, ERP" />
-              </Field>
-              <Field label="Industries you know best" optionalTag>
-                <TagInput value={d.industriesServed} onChange={(v) => set("industriesServed", v)} placeholder="Logistics" />
-              </Field>
-              <FieldGroup label="What you can offer" help="Buyers can require these. If you meet one, tick it.">
-                <Chips options={REQUIREMENTS} value={d.capabilities} onChange={(v) => set("capabilities", v)} />
-              </FieldGroup>
-            </>
-          )}
-
-          {current.id === "terms" && (
-            <>
-              <Field label="Smallest deal you take" help="Buyers below this are filtered out. They never learn the number, and neither do you learn theirs.">
-                <Money label="Smallest deal you take" amount={d.floorAmount} period={d.floorPeriod} onAmount={(v) => set("floorAmount", v)} onPeriod={(v) => set("floorPeriod", v)} placeholder="5 000" />
-              </Field>
-              <FieldGroup label="Contract formats you accept" help="A deal needs at least one format both sides accept.">
-                <Chips options={FORMATS} value={d.sellerFormats} onChange={(v) => set("sellerFormats", v)} />
-              </FieldGroup>
-              <FieldGroup label="Free to start from">
-                <DatePick value={d.availableFrom} onChange={(v) => set("availableFrom", v)} />
-              </FieldGroup>
-            </>
-          )}
-
-          {current.id === "buying" && (
-            <>
-              <Field label="Typical budget ceiling" optionalTag help="The most you would usually spend on one problem. Sellers never see it.">
-                <Money label="Typical budget ceiling" amount={d.ceilingAmount} period={d.ceilingPeriod} onAmount={(v) => set("ceilingAmount", v)} onPeriod={(v) => set("ceilingPeriod", v)} placeholder="20 000" />
-              </Field>
-              <FieldGroup label="Contract formats you would consider">
-                <Chips options={FORMATS} value={d.buyerFormats} onChange={(v) => set("buyerFormats", v)} />
-              </FieldGroup>
-              <FieldGroup label="Always required from a supplier">
-                <Chips options={REQUIREMENTS} value={d.mustHaves} onChange={(v) => set("mustHaves", v)} />
-              </FieldGroup>
-              <Field label="Dealbreakers" optionalTag help="Anything that rules a supplier out. Your agent checks these in the negotiation.">
-                <TagInput value={d.dealbreakers} onChange={(v) => set("dealbreakers", v)} placeholder="No offshore subcontracting" />
-              </Field>
-            </>
-          )}
-
-          {current.id === "ready" && (
-            <ul className="divide-y divide-line">
-              {checklist.map((c) => (
-                <li key={c.label} className="flex items-start gap-4 py-4 first:pt-0 last:pb-0">
-                  <span className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-[12px] font-bold ${c.done ? "bg-accent text-surface" : "bg-ink/[0.06] text-ink-faint"}`}>
-                    {c.done ? "✓" : ""}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-[15px] font-semibold ${c.done ? "text-ink-soft line-through decoration-ink-faint/60" : ""}`}>{c.label}</p>
-                    <p className="text-[13px] text-ink-soft">{c.why}</p>
-                  </div>
-                  {!c.done && (
-                    <button type="button" onClick={() => goTo(c.step)} className="shrink-0 cursor-pointer rounded-full bg-ink/[0.05] px-3.5 py-1.5 text-[13px] font-semibold transition-colors hover:bg-ink/[0.09]">
-                      Fill in
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-
-        </Bezel>
-
-        <p className="mt-6 text-center text-[13px] text-ink-faint">
-          <button type="button" onClick={leave} disabled={saving} className="cursor-pointer underline-offset-4 hover:text-ink hover:underline">Finish later</button>. Your progress is kept.
-        </p>
-      </section>
+          <PillButton type="button" onClick={finish} disabled={saving || running}>
+            {saving ? "Saving…" : "Go to dashboard"}
+          </PillButton>
+        </div>
+      </div>
     </div>
   );
 }
