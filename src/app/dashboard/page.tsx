@@ -93,7 +93,7 @@ function Header() {
       </div>
       <Link
         href="/company"
-        className="inline-flex flex-none items-center self-start rounded-[9px] border border-line-strong bg-surface px-4 py-2 text-[13px] font-semibold transition-colors hover:bg-surface-alt md:self-auto"
+        className="inline-flex flex-none items-center self-start rounded-[8px] border border-line-strong bg-surface px-4 py-2.5 text-[13px] font-semibold transition-colors hover:bg-surface-alt md:self-auto"
       >
         Company details
       </Link>

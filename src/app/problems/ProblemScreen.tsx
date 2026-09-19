@@ -34,7 +34,7 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
             <h1 className="max-w-[24ch] text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">{d.title}</h1>
             <div className="flex flex-none items-center gap-1 md:pt-1.5">
-              <span className="flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-strong">
+              <span className="flex items-center gap-1.5 rounded-[7px] bg-accent-soft px-2.5 py-1 text-[12px] font-semibold text-accent-strong">
                 <Icon name="circle-dot" size={13} />
                 {d.status}
               </span>
@@ -61,7 +61,7 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
                 {m.ready && <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]" />}
                 {m.state}
               </span>
-              <span className="flex flex-none items-center gap-1.5 rounded-full bg-surface-alt px-2.5 py-1 text-[12px] font-semibold tabular-nums">
+              <span className="flex flex-none items-center gap-1.5 rounded-[7px] bg-surface-alt px-2.5 py-1 text-[12px] font-semibold tabular-nums">
                 <Icon name="gauge" size={14} />
                 {m.score}
               </span>
@@ -78,7 +78,7 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
         >
           {d.awaiting.map((m) => (
             <PartyRow key={m.id} p={m}>
-              <span className="flex-none rounded-full bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold">{m.area}</span>
+              <span className="flex-none rounded-[7px] bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold">{m.area}</span>
               <RowButton href={`/matches/${m.id}`}>Ask</RowButton>
             </PartyRow>
           ))}
@@ -96,7 +96,7 @@ function TitleButton({ icon, children }: { icon: "circle-stop" | "pencil"; child
   return (
     <button
       type="button"
-      className="flex cursor-pointer items-center gap-1.5 rounded-[9px] px-2.5 py-1.5 text-[12.5px] font-semibold text-ink-soft transition-colors hover:bg-surface-alt hover:text-ink"
+      className="flex cursor-pointer items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-[12.5px] font-semibold text-ink-soft transition-colors hover:bg-surface-alt hover:text-ink"
     >
       <Icon name={icon} size={13} />
       {children}

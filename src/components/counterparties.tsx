@@ -44,7 +44,7 @@ export function Group({
         </span>
         <span className="ml-auto text-right text-[12.5px] text-ink-soft">{fact}</span>
       </div>
-      <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-[0_1px_2px_rgb(19_48_58/0.04)]">{children}</div>
+      <div className="overflow-hidden rounded-[10px] border border-line bg-surface">{children}</div>
       {note && <p className="mt-2.5 text-[12px] text-ink-faint">{note}</p>}
     </section>
   );
@@ -53,7 +53,7 @@ export function Group({
 /** One counterparty row: mark, what they are, where. Everything else the row says goes in `children`. */
 export function PartyRow({ p, children }: { p: Party; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-4 border-b border-surface-alt px-4 py-[18px] last:border-0 md:px-[22px]">
+    <div className="flex items-center gap-4 border-b border-surface-alt px-4 py-[18px] last:border-0 md:px-5">
       <span className="grid h-10 w-10 flex-none place-items-center overflow-hidden rounded-[11px] border border-line bg-surface">
         {p.logo ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -64,7 +64,7 @@ export function PartyRow({ p, children }: { p: Party; children: React.ReactNode 
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">{p.name}</p>
-        <p className="mt-0.5 truncate text-[13px] text-ink-soft">{p.place}</p>
+        <p className="mt-1 truncate text-[13px] text-ink-soft">{p.place}</p>
       </div>
       {children}
     </div>
@@ -76,7 +76,7 @@ export function RowButton({ href, primary, children }: { href: string; primary?:
   return (
     <Link
       href={href}
-      className={`flex-none rounded-[9px] px-4 py-2 text-[13px] font-semibold transition-colors ${
+      className={`flex-none rounded-[8px] px-4 py-2 text-[13px] font-semibold transition-colors ${
         primary ? "bg-ink text-surface hover:bg-ink-soft" : "border border-line-strong bg-surface text-ink hover:bg-surface-alt"
       }`}
     >
@@ -88,7 +88,7 @@ export function RowButton({ href, primary, children }: { href: string; primary?:
 /** Declined never names a company: one line, one button, never a list. */
 export function DeclinedRow({ href = "#" }: { href?: string }) {
   return (
-    <div className="flex items-center gap-4 bg-bg/50 px-4 py-[18px] md:px-[22px]">
+    <div className="flex items-center gap-4 bg-bg/50 px-4 py-[18px] md:px-5">
       <span className="grid h-10 w-10 flex-none place-items-center rounded-[11px] bg-surface-alt text-ink-faint">
         <Icon name="circle-x" />
       </span>

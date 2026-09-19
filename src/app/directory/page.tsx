@@ -83,7 +83,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
                 name="q"
                 defaultValue={query}
                 placeholder="Industry, service, certification"
-                className="h-10 w-full rounded-[8px] border border-line-strong bg-surface pl-9 pr-3 text-[14px] outline-none transition-colors placeholder:text-ink-faint focus:border-accent"
+                className="h-10 w-full rounded-[8px] border border-line-strong bg-surface pl-9 pr-3 text-[14px] outline-none transition-[border-color,box-shadow] placeholder:text-ink-faint focus:border-ink-soft focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ink)_9%,transparent)]"
               />
             </label>
           </form>

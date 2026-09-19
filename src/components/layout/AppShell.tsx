@@ -115,9 +115,9 @@ export function AppShell({
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-5 px-4 py-[18px] text-[12px] md:px-9">
             <span className="text-ink-faint">Crossdesk — Tallinn</span>
             <span className="ml-auto flex gap-5 text-ink-soft">
-              <Link href="/privacy" className="hover:text-accent">Privacy</Link>
-              <Link href="/security" className="hover:text-accent">Security</Link>
-              <Link href="/help" className="hover:text-accent">Help</Link>
+              <Link href="/privacy" className="hover:text-ink">Privacy</Link>
+              <Link href="/security" className="hover:text-ink">Security</Link>
+              <Link href="/help" className="hover:text-ink">Help</Link>
             </span>
           </div>
         </footer>

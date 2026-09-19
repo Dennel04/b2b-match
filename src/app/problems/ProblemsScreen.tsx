@@ -94,7 +94,7 @@ export function ProblemsScreen({
             </div>
             <Link
               href="/problems/new"
-              className="inline-flex flex-none items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft md:mt-1.5"
+              className="inline-flex flex-none items-center gap-2 rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft md:mt-1.5"
             >
               <Icon name="plus" size={15} />
               Describe a problem
@@ -143,14 +143,14 @@ export function ProblemsScreen({
                    * a notification: plain figures, no filled badge — nothing here is unread.
                    */}
                   <div className="flex items-baseline gap-2.5 pb-2.5">
-                    <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink-soft">
+                    <h2 className="text-[15px] font-semibold tracking-[-0.01em]">
                       {label}
                     </h2>
                     <span className="text-[12.5px] text-ink-faint">
                       {list.length} {list.length === 1 ? "problem" : "problems"}
                     </span>
                   </div>
-                  <div className="overflow-hidden rounded-xl border border-line bg-surface">
+                  <div className="overflow-hidden rounded-[10px] border border-line bg-surface">
                     {list.map((r) => (
                       <ProblemLine key={r.id} r={r} demo={f.demo} />
                     ))}

@@ -25,7 +25,7 @@ export function NavLink({ item }: { item: NavItem }) {
       <Icon name={item.icon} />
       {item.label}
       {item.count ? (
-        <span className="ml-auto rounded-full bg-ink px-2 py-px text-[11px] font-semibold text-surface">{item.count}</span>
+        <span className="ml-auto rounded-full bg-ink px-2 py-px text-[11.5px] font-semibold text-surface">{item.count}</span>
       ) : null}
     </Link>
   );

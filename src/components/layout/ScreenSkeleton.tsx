@@ -33,7 +33,7 @@ export function ScreenSkeleton({
           <div className="pb-2.5 pt-2">
             <Bar className="h-[13px] w-[120px]" i={3} />
           </div>
-          <div className="overflow-hidden rounded-xl border border-line bg-surface">
+          <div className="overflow-hidden rounded-[10px] border border-line bg-surface">
             {Array.from({ length: rows }, (_, i) => (
               <div key={i} className="flex items-center gap-6 border-b border-line px-4 py-[18px] last:border-b-0 md:px-5">
                 <div className="min-w-0 flex-1">

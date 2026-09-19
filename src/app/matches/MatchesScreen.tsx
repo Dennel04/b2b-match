@@ -68,7 +68,7 @@ export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolea
                       {m.yours && <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]" />}
                       {m.state}
                     </span>
-                    <span className="flex flex-none items-center gap-1.5 rounded-full bg-surface-alt px-2.5 py-1 text-[12px] font-semibold tabular-nums">
+                    <span className="flex flex-none items-center gap-1.5 rounded-[7px] bg-surface-alt px-2.5 py-1 text-[12px] font-semibold tabular-nums">
                       <Icon name="gauge" size={14} />
                       {m.score}
                     </span>
@@ -90,7 +90,7 @@ export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolea
                 {d.awaiting.map((m) => (
                   <PartyRow key={m.id} p={m}>
                     <Context>{m.context}</Context>
-                    <span className="flex-none rounded-full bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold">{m.area}</span>
+                    <span className="flex-none rounded-[7px] bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold">{m.area}</span>
                     <RowButton href={`/matches/${m.id}`}>Ask</RowButton>
                   </PartyRow>
                 ))}
@@ -119,7 +119,7 @@ function Blank({ role }: { role: CompanyRole }) {
   const offers = sells(role);
   return (
     <section className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-9">
-      <div className="rounded-xl border border-line bg-surface px-5 py-8 text-center">
+      <div className="rounded-[10px] border border-line bg-surface p-8 text-center">
         <p className="text-[15px] font-semibold">{offers ? "No one has come to you yet" : "No one to meet yet"}</p>
         <p className="mt-1.5 text-[13.5px] text-ink-soft">
           {offers ? "Buyers find you through your services." : "Describe a problem and matching starts."}
@@ -127,7 +127,7 @@ function Blank({ role }: { role: CompanyRole }) {
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
           <Link
             href={offers ? "/company" : "/problems/new"}
-            className="inline-flex items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+            className="inline-flex items-center gap-2 rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
           >
             <Icon name={offers ? "building-2" : "plus"} size={15} />
             {offers ? "Review your services" : "Describe a problem"}
@@ -149,5 +149,5 @@ function Context({ children }: { children: React.ReactNode }) {
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="px-4 py-[18px] text-[13.5px] text-ink-soft md:px-[22px]">{children}</p>;
+  return <p className="px-4 py-[18px] text-[13.5px] text-ink-soft md:px-5">{children}</p>;
 }

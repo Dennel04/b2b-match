@@ -64,13 +64,13 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
           </span>
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">{c.name}</h1>
-            <p className="mt-1.5 text-[14px] text-ink-soft">{[c.industry, place, size].filter(Boolean).join(" · ")}</p>
+            <p className="mt-2 text-[14px] text-ink-soft">{[c.industry, place, size].filter(Boolean).join(" · ")}</p>
           </div>
           <a
             href={c.website}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex flex-none items-center gap-2 self-start rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft md:self-auto"
+            className="inline-flex flex-none items-center gap-2 self-start rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft md:self-auto"
           >
             Visit {c.domain}
             <Icon name="arrow-up-right" size={15} />
@@ -85,7 +85,7 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
         <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
           <div className="flex flex-col gap-6">
             <Block title="About">
-              {c.summary ? <p className="text-[14.5px] leading-relaxed">{c.summary}</p> : <Faint>The site did not say.</Faint>}
+              {c.summary ? <p className="text-[15px] leading-relaxed">{c.summary}</p> : <Faint>The site did not say.</Faint>}
             </Block>
             <Block title="Services">
               <Tags items={c.services} empty="No services listed on the site." />

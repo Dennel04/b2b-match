@@ -307,7 +307,7 @@ export function CompanyForm({
   );
 
   return (
-    <main className="flex w-full flex-col px-5 pb-24 pt-8 md:px-12 lg:px-16">
+    <main className="mx-auto flex w-full max-w-[1200px] flex-col px-4 pb-16 pt-6 md:px-9 md:pt-8">
       <Swap token={editing === "head" ? "head-edit" : "head-read"}>
         {editing === "head" ? (
           <section className="flex flex-col gap-5 pb-9">
@@ -362,19 +362,19 @@ export function CompanyForm({
           <div className="flex flex-col gap-6 pb-9">
             <section className="flex items-start gap-5">
               {d.logoUrl ? (
-                <span className="grid h-16 w-16 flex-none place-items-center overflow-hidden rounded-[22px] bg-surface ring-1 ring-ink/[0.08]">
+                <span className="grid h-16 w-16 flex-none place-items-center overflow-hidden rounded-[14px] bg-surface ring-1 ring-ink/[0.08]">
                   <RemoteLogo url={d.logoUrl} name={d.name} className="p-2" />
                 </span>
               ) : (
                 <span
                   aria-hidden
-                  className="grid h-16 w-16 flex-none place-items-center rounded-[22px] bg-ink text-[20px] font-semibold text-surface"
+                  className="grid h-16 w-16 flex-none place-items-center rounded-[14px] bg-ink text-[20px] font-semibold text-surface"
                 >
                   {monogram(d.name)}
                 </span>
               )}
               <div className="min-w-0 flex-1">
-                <h1 className="truncate text-[28px] font-bold leading-[1.1] tracking-[-0.03em] md:text-[32px]">
+                <h1 className="truncate text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">
                   {d.name || "Your company"}
                 </h1>
                 {d.industry && (
@@ -496,7 +496,7 @@ export function CompanyForm({
           <div className="flex max-w-[68ch] flex-col gap-4">
             {d.summary ? (
               paragraphs(d.summary).map((para, i) => (
-                <p key={i} className="text-[15.5px] leading-relaxed text-ink">
+                <p key={i} className="text-[15px] leading-relaxed text-ink">
                   {para}
                 </p>
               ))

@@ -267,17 +267,17 @@ export function Compose({
     <AppShell active="problems" initials={initials}>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1440px] px-4 pt-6 md:px-9 md:pt-8">
-          <nav className="text-[12.5px] text-ink-faint">
+          <nav aria-label="Breadcrumb" className="text-[12.5px] text-ink-soft">
             <Link href="/problems" className="hover:text-ink hover:underline">
               Problems
             </Link>
             <span className="px-1.5">›</span>
             New
           </nav>
-          <h1 className="mt-1.5 text-[34px] font-bold leading-[1.1] tracking-[-0.03em] md:text-[40px]">
+          <h1 className="mt-1.5 text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">
             Describe a problem
           </h1>
-          <p className="mt-2 max-w-[52ch] text-[16px] leading-snug text-ink-soft">
+          <p className="mt-2 max-w-[52ch] text-[14px] text-ink-soft">
             Answer a few questions and the form fills itself. Change anything it
             gets wrong.
           </p>
