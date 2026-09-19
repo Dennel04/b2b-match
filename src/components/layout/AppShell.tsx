@@ -21,7 +21,7 @@ export function AppShell({
   barRight,
   children,
 }: {
-  active?: "company" | "problems" | "offers" | "account";
+  active?: "company" | "problems" | "offers" | "directory" | "account";
   offers?: number;
   initials: string;
   /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */
@@ -34,6 +34,7 @@ export function AppShell({
     { href: "/company", label: "Company", icon: "building-2", active: active === "company" },
     { href: "/dashboard", label: "Problems", icon: "file-text", active: active === "problems" },
     { href: "/offers", label: "Offers", icon: "handshake", count: offers, active: active === "offers" },
+    { href: "/directory", label: "Directory", icon: "globe", active: active === "directory" },
   ];
 
   return (
