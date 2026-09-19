@@ -9,9 +9,9 @@ import type { Company, CompanyDraft, CompanyRole, ContractFormat, Requirement, S
 export const SIZES = ["1–10", "11–50", "51–200", "201–1000", "1000+"].map((s) => ({ value: s, label: s }));
 
 export const ROLES: { value: CompanyRole; title: string; text: string }[] = [
-  { value: "buyer", title: "Find suppliers", text: "You have a problem and want the company that can solve it." },
-  { value: "seller", title: "Find clients", text: "You sell a service and want buyers who actually need it." },
-  { value: "both", title: "Both", text: "You buy some services and sell others." },
+  { value: "buyer", title: "Bring a problem", text: "Something is stuck" },
+  { value: "seller", title: "Offer a service", text: "Buyers come to you" },
+  { value: "both", title: "Both", text: "You do each" },
 ];
 
 export const FORMATS: { value: ContractFormat; label: string }[] = [
