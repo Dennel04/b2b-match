@@ -31,7 +31,7 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const nav: NavItem[] = [
-    { href: "/onboarding", label: "Company", icon: "building-2", active: active === "company" },
+    { href: "/company", label: "Company", icon: "building-2", active: active === "company" },
     { href: "/dashboard", label: "Problems", icon: "file-text", active: active === "problems" },
     { href: "/offers", label: "Offers", icon: "handshake", count: offers, active: active === "offers" },
   ];

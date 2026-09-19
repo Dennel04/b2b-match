@@ -32,7 +32,7 @@ export function SetupCard({ items }: { items: ReadinessItem[] }) {
               <p className="mt-0.5 truncate text-[13px] text-ink-soft">{i.why}</p>
             </div>
             <Link
-              href={`/onboarding?step=${i.step}`}
+              href={`/company?step=${i.step}`}
               className="flex-none rounded-[9px] border border-line-strong bg-surface px-4 py-2 text-[13px] font-semibold transition-colors hover:bg-surface-alt"
             >
               Fill in
