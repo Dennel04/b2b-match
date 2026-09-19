@@ -122,7 +122,7 @@ export function ProblemForm({
                   onClick={() => set("ceilingPeriod", p.value as Period)}
                   className={`inline-flex h-9 cursor-pointer items-center justify-center whitespace-nowrap rounded-full px-4 text-center text-[13px] font-medium transition-colors ${
                     draft.ceilingPeriod === p.value
-                      ? "bg-ink text-surface"
+                      ? "bg-selected text-surface"
                       : "text-ink-soft ring-1 ring-ink/10 hover:text-ink"
                   }`}
                 >

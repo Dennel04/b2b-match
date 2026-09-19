@@ -181,7 +181,7 @@ export function Chips<T extends string>({
             }
             className={`cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-medium transition-[background-color,color,transform] duration-200 active:scale-[0.97] ${
               on
-                ? "bg-ink text-surface"
+                ? "bg-selected text-surface"
                 : "bg-surface-alt text-ink-soft hover:text-ink"
             }`}
           >

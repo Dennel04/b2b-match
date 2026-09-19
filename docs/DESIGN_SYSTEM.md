@@ -32,6 +32,7 @@ Every colour is a token in `src/styles/tokens.css`, exposed to Tailwind in `src/
 | `--ink` | `#16323A` | text and primary buttons — slate-teal, never a tinted black |
 | `--ink-soft` | `#5C6E75` | secondary text |
 | `--ink-faint` | `#8E9897` | metadata, placeholders |
+| `--ink-selected` | `#56777F` | a **picked** chip, pill, date, role card or toggle (Tailwind `bg-selected`) — two steps lighter than ink, so a choice never looks like a button. Buttons stay ink. |
 | `--border` / `--border-strong` | `#E4E9ED` / `#DDE3E7` | hairlines, input borders |
 | `--accent` (+ `-strong`, `-soft`) | `#2F6D52` | **state only**: ready, compatible, done, focus |
 | `--seal` (+ `-soft`) | `#8F6A35` / `#F3ECDC` | **withheld or negotiable only** |

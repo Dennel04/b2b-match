@@ -469,7 +469,7 @@ function Gate({
                 onClick={() => set("ceilingPeriod", p.value as Period)}
                 className={`inline-flex h-8 cursor-pointer items-center rounded-full px-3 text-[12.5px] font-medium transition-colors ${
                   draft.ceilingPeriod === p.value
-                    ? "bg-ink text-surface"
+                    ? "bg-selected text-surface"
                     : "text-ink-soft ring-1 ring-ink/10 hover:text-ink"
                 }`}
               >

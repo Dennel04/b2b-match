@@ -195,7 +195,7 @@ export function DateField({
                   }}
                   className={`h-11 rounded-2xl text-[13.5px] transition-colors ${
                     on
-                      ? "bg-ink font-semibold text-surface"
+                      ? "bg-selected font-semibold text-surface"
                       : "text-ink hover:bg-surface-alt"
                   }`}
                 >
@@ -233,7 +233,7 @@ export function DateField({
                     onClick={() => pick(d)}
                     className={`h-9 rounded-full text-[13.5px] tabular-nums transition-colors ${
                       on
-                        ? "bg-ink font-semibold text-surface"
+                        ? "bg-selected font-semibold text-surface"
                         : `${outside ? "text-ink-faint/60" : "text-ink"} hover:bg-surface-alt ${day === today ? "font-semibold ring-1 ring-ink/15" : ""}`
                     }`}
                   >

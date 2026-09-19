@@ -15,6 +15,9 @@
   --ink: #16323a;
   --ink-soft: #5c6e75;
   --ink-faint: #8e9897;
+  /* A picked chip, pill, date or toggle: two steps lighter than ink (≈300 on a ramp where ink is
+     500), so a choice reads as chosen without looking like a button. White text still passes AA. */
+  --ink-selected: #56777f;
 
   /* Rules */
   --border: #e4e9ed;

@@ -92,7 +92,7 @@ export function Chips<T extends string>({
             }
             className={`cursor-pointer rounded-[7px] border px-3.5 py-2 text-[13px] font-medium transition-colors ${
               on
-                ? "border-ink bg-ink text-bg"
+                ? "border-selected bg-selected text-bg"
                 : "border-line-strong bg-surface text-ink-soft hover:text-ink"
             }`}
           >

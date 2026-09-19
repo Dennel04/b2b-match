@@ -193,7 +193,7 @@ function Toggle({ href, on, children }: { href: string; on: boolean; children: R
       href={href}
       aria-current={on ? "true" : undefined}
       className={`whitespace-nowrap rounded-[8px] px-2.5 py-1.5 text-[12.5px] font-medium transition-colors ${
-        on ? "bg-ink text-surface" : "text-ink-soft hover:bg-surface-alt hover:text-ink"
+        on ? "bg-selected text-surface" : "text-ink-soft hover:bg-surface-alt hover:text-ink"
       }`}
     >
       {children}

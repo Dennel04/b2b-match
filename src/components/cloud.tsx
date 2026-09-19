@@ -48,7 +48,7 @@ export function Pills<T extends string>({
             }
             className={`${pill} cursor-pointer ${
               on
-                ? "bg-ink text-surface shadow-[0_18px_36px_-22px_rgba(22,50,58,0.6)]"
+                ? "bg-selected text-surface shadow-[0_18px_36px_-22px_rgba(22,50,58,0.6)]"
                 : `${plate} text-ink hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_24px_50px_-28px_rgba(22,50,58,0.42)]`
             }`}
           >

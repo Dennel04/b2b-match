@@ -128,7 +128,7 @@ export function Wizard({ autoSite }: { autoSite: string | null }) {
                   aria-pressed={on}
                   onClick={() => setRole(on ? null : r.value)}
                   className={`flex h-full cursor-pointer flex-col justify-start rounded-3xl px-5 py-4 text-left transition-[background-color,box-shadow,transform] duration-300 active:scale-[0.98] ${
-                    on ? "bg-ink text-surface shadow-[0_12px_30px_-16px_rgba(22,50,58,0.6)]" : "bg-surface-alt hover:bg-ink/[0.06]"
+                    on ? "bg-selected text-surface shadow-[0_12px_30px_-16px_rgba(22,50,58,0.6)]" : "bg-surface-alt hover:bg-ink/[0.06]"
                   }`}
                 >
                   <p className="text-[15px] font-semibold tracking-[-0.01em]">{r.title}</p>
