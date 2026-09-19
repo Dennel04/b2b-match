@@ -2,11 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCompanyStats } from "@/actions/stats";
 import { AppShell, initialsOf } from "@/components/layout";
-import { Card, Icon } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { openMatchCount } from "@/actions/match";
 import { serverClient } from "@/lib/supabase";
-import type { BlockedReason, SellerTerms } from "@/types";
-import { FORMATS, REQUIREMENTS } from "../onboarding/fields";
+import type { BlockedReason } from "@/types";
 
 export const metadata = { title: "Dashboard — Crossdesk" };
 
@@ -28,7 +27,7 @@ export default async function DashboardPage() {
   // way, so both halves of this screen describe the same company.
   const { data: company } = await db
     .from("companies")
-    .select("name, role, seller_terms")
+    .select("name, role")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true })
     .limit(1)
@@ -96,7 +95,7 @@ export default async function DashboardPage() {
                   </p>
                 )}
               </Card>
-              <Blocked reasons={s.blocked_by} considered={s.considered} cleared={s.cleared_terms} terms={company.seller_terms as SellerTerms | null} />
+              <Blocked reasons={s.blocked_by} considered={s.considered} cleared={s.cleared_terms} />
             </div>
           </Section>
         )}
@@ -125,20 +124,17 @@ export default async function DashboardPage() {
               </Card>
               <Card className="flex flex-col p-5">
                 <h3 className="text-[13.5px] font-semibold">What your terms filtered out</h3>
-                <p className="mt-0.5 text-[12.5px] text-ink-soft">
-                  {b.candidates_evaluated > b.cleared_terms
-                    ? `${b.candidates_evaluated - b.cleared_terms} of ${b.candidates_evaluated} never reached the model`
-                    : "Every vendor checked cleared your terms"}
+                <Ratio
+                  part={b.candidates_evaluated - b.cleared_terms}
+                  whole={b.candidates_evaluated}
+                  of="never reached the model"
+                  none="Every vendor checked cleared your terms"
+                />
+                <p className="mt-auto pt-5 text-[12px] leading-relaxed text-ink-faint">
+                  Budget ceiling, start date, contract format and hard requirements are compared
+                  mechanically, before a single line is read. None of those vendors was told
+                  anything — not why, not that your problem exists.
                 </p>
-                <p className="mt-5 text-[13px] leading-relaxed text-ink-soft">
-                  Budget ceiling, start date, contract format and hard requirements are
-                  compared mechanically, before a single line is read. None of those vendors
-                  was told anything — not why, not that your problem exists.
-                </p>
-                <Link href="/problems" className="mt-auto flex items-center gap-1.5 pt-5 text-[12.5px] font-semibold text-ink underline-offset-4 hover:underline">
-                  Review the terms on a problem
-                  <Icon name="chevron-right" size={14} />
-                </Link>
               </Card>
             </div>
           </Section>
@@ -190,15 +186,36 @@ function Stat({ label, value, note }: { label: string; value: number; note?: str
   return (
     <Card className="p-4 md:p-5">
       <p className="text-[12.5px] font-medium text-ink-soft">{label}</p>
-      <p className="mt-1.5 text-[30px] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</p>
+      <p className="mt-1.5 text-[30px] font-semibold leading-none tracking-[-0.03em]">{value}</p>
       {note && <p className="mt-2 text-[12px] leading-snug text-ink-faint">{note}</p>}
     </Card>
   );
 }
 
 /**
- * One series in ink, scaled to the largest step, its count at the end of the row. The last step
- * turns green only when it happened: a confirmed meeting is a state, not a decoration.
+ * The one ratio a card leads with. A single proportion is a figure, not a chart: a ring or a
+ * two-slice pie encodes one number in an angle nobody can read back, and the dataviz reference
+ * names both as anti-patterns ("the number is the chart"). Proportional figures, not tabular —
+ * this is a standalone value, not a column.
+ */
+function Ratio({ part, whole, of, none }: { part: number; whole: number; of: string; none: string }) {
+  if (part <= 0) return <p className="mt-0.5 text-[12.5px] text-ink-soft">{none}</p>;
+  return (
+    <p className="mt-2 flex items-baseline gap-1.5">
+      <span className="text-[26px] font-semibold leading-none tracking-[-0.03em]">{part}</span>
+      <span className="text-[12.5px] text-ink-soft">
+        of {whole} {of}
+      </span>
+    </p>
+  );
+}
+
+/**
+ * Attrition down an ordered funnel, so bars rather than a ring: the reader's job is to compare
+ * magnitudes in sequence and see where the drop happens, which is what a length scale is for.
+ * One series in ink, every step scaled to the first so the bars read as one shape narrowing
+ * rather than six unrelated meters, with the share of the top where it has fallen away. The
+ * last step turns green only when it happened: a confirmed meeting is a state, not a decoration.
  */
 function Funnel({ steps, done }: { steps: [string, number][]; done: boolean }) {
   const top = Math.max(1, ...steps.map(([, n]) => n));
@@ -206,11 +223,15 @@ function Funnel({ steps, done }: { steps: [string, number][]; done: boolean }) {
     <ol className="mt-5 flex flex-col gap-3">
       {steps.map(([label, n], i) => {
         const last = i === steps.length - 1;
+        const share = Math.round((n / top) * 100);
         return (
           <li key={label} className="text-[12.5px]">
-            <div className="mb-1 flex justify-between gap-4">
+            <div className="mb-1 flex items-baseline justify-between gap-4">
               <span className={last && done ? "font-semibold text-accent-strong" : "text-ink-soft"}>{label}</span>
-              <span className="font-semibold tabular-nums">{n}</span>
+              <span className="flex items-baseline gap-1.5">
+                <span className="font-semibold tabular-nums">{n}</span>
+                {i > 0 && <span className="text-[11.5px] tabular-nums text-ink-faint">{share}%</span>}
+              </span>
             </div>
             <span className="block h-1.5 overflow-hidden rounded-full bg-surface-alt">
               <span
@@ -234,12 +255,10 @@ function Blocked({
   reasons,
   considered,
   cleared,
-  terms,
 }: {
   reasons: BlockedReason[];
   considered: number;
   cleared: number;
-  terms: SellerTerms | null;
 }) {
   const blocked = considered - cleared;
   const top = Math.max(1, ...reasons.map((r) => r.count));
@@ -250,11 +269,7 @@ function Blocked({
   return (
     <Card className="flex flex-col p-5">
       <h3 className="text-[13.5px] font-semibold">What kept you out</h3>
-      <p className="mt-0.5 text-[12.5px] text-ink-soft">
-        {blocked > 0
-          ? `${blocked} of ${considered} stopped at the terms check`
-          : "Nobody was stopped at the terms check"}
-      </p>
+      <Ratio part={blocked} whole={considered} of="stopped at the terms check" none="Nobody was stopped at the terms check" />
 
       {reasons.length > 0 && (
         <>
@@ -277,65 +292,6 @@ function Blocked({
         </>
       )}
 
-      <Terms terms={terms} />
-
-      <Link href="/services" className="mt-auto flex items-center gap-1.5 pt-5 text-[12.5px] font-semibold text-ink underline-offset-4 hover:underline">
-        Review your terms
-        <Icon name="chevron-right" size={14} />
-      </Link>
     </Card>
   );
 }
-
-/**
- * The vendor's own working terms, the four the mechanical check compares. They are its own
- * figures, so they are its to see — and a reason above is only actionable beside them: "your
- * minimum deal size was above their ceiling" means nothing without the minimum next to it.
- *
- * These are `companies.seller_terms`, which is what `findMatches()` compares today and the
- * fallback for a company that has listed no service (docs/FRONTEND.md §1a). A listed service
- * carries its own, which is why the link out of this card goes to Services.
- */
-function Terms({ terms }: { terms: SellerTerms | null }) {
-  const money = terms?.budget_floor;
-  const rows: [string, string | null][] = [
-    [
-      "Smallest deal",
-      money ? `€${money.amount.toLocaleString("en-US")} ${money.period === "monthly" ? "per month" : "per project"}` : null,
-    ],
-    [
-      "Contract formats",
-      terms?.contract_formats.length
-        ? terms.contract_formats.map((f) => FORMATS.find((x) => x.value === f)?.label ?? f).join(", ")
-        : null,
-    ],
-    [
-      "Free from",
-      terms?.available_from
-        ? new Date(terms.available_from).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-        : null,
-    ],
-    [
-      "You can offer",
-      terms?.capabilities.length
-        ? terms.capabilities.map((c) => REQUIREMENTS.find((x) => x.value === c)?.label ?? c).join(", ")
-        : null,
-    ],
-  ];
-
-  return (
-    <div className="mt-5 border-t border-line pt-4 text-[12.5px]">
-      <p className="font-semibold">Your terms</p>
-      <dl className="mt-2 flex flex-col gap-2">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4">
-            <dt className="flex-none text-ink-soft">{label}</dt>
-            <dd className={`text-right ${value ? "text-ink" : "text-ink-faint"}`}>{value ?? "Not set"}</dd>
-          </div>
-        ))}
-      </dl>
-      <p className="mt-3 text-[12px] text-ink-faint">Your figures. A buyer is told that they fit, never what they are.</p>
-    </div>
-  );
-}
-
