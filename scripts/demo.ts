@@ -167,8 +167,9 @@ const PROBLEMS = [
  * credits to open.
  *
  * These are real companies out of the seeded catalogue, picked because they are manufacturers
- * and operators a Baltic logistics firm would actually serve, and because their own sites give
- * them a logo: the credit buys a name and a face, and an invented company has neither. The
+ * a Baltic logistics firm would actually serve, and because their own sites give them a logo
+ * that is visible on white — Skeleton Technologies publishes a white wordmark, which on this
+ * ground is an empty square: the credit buys a name and a face, and an invented company has neither. The
  * problems under them are written here, like every other problem in the demo, and are as
  * ordinary as an operations problem gets — capacity on a route, stock in rented halls. Nothing
  * in them is claimed about how these companies actually run.
@@ -203,14 +204,14 @@ const INCOMING = [
       'the Latvian routes. Your fleet already runs them, with returns handled at the warehouse.',
   },
   {
-    buyer: 'Skeleton Technologies',
+    buyer: 'Milrem Robotics',
     service: 'Contract warehousing in Tallinn and Riga',
     score: 84,
     problem: {
       department: 'Operations',
       text:
         'Finished stock sits in three rented halls\n' +
-        'Modules waiting for shipment are stored in three rented halls on three contracts, and ' +
+        'Units waiting for shipment are stored in three rented halls on three contracts, and ' +
         'nobody can say in one place what is where. Twice this quarter a batch was promised to ' +
         'two customers at once.',
       urgency: 'medium' as const,

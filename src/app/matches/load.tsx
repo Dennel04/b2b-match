@@ -52,8 +52,14 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     const locked = selling && !unlocked.has(m.id);
     const party = {
       id: m.id,
-      // Anonymous until both sides accept: getMatchView() leaves the name null before that.
-      name: selling ? (m.buyer.name ?? anonymousName(m.buyer)) : (m.seller.name ?? anonymousName(m.seller)),
+      // Anonymous until the credit is spent: getMatchView() leaves the name null before that.
+      // A locked row is blurred, and a blurred sentence is a grey smear the width of the column
+      // — so it carries the shortest true label instead, and reads as a name would.
+      name: locked
+        ? shortIndustry(m.buyer.industry)
+        : selling
+          ? (m.buyer.name ?? anonymousName(m.buyer))
+          : (m.seller.name ?? anonymousName(m.seller)),
       // The reason, not the reasoning: a row is read in a glance, the match screen is read.
       place: firstSentence(m.reasoning_public),
       logo: selling ? m.buyer.logo : m.seller.logo,
@@ -78,6 +84,13 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
       <MarkSeen ids={views.map((m) => m.id)} />
     </>
   );
+}
+
+/** Two words at most: "defence robotics and autonomous systems" is a paragraph once blurred. */
+function shortIndustry(industry: string) {
+  const words = industry.split(/\s+/).filter(Boolean).slice(0, 2);
+  const short = words.join(" ").replace(/\band$/, "").trim() || "Company";
+  return short[0].toUpperCase() + short.slice(1);
 }
 
 /** One name per state, read from the viewer's own side: [buyer, seller]. */
