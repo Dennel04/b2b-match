@@ -32,7 +32,9 @@ assert.equal(metaSummary('<head></head><body>nothing</body>'), '');
 
 // Each failure the person can act on reads differently.
 const reason = (outcomes: string[]) => failureReason('https://example.ee', outcomes.map((outcome) => ({ url: 'u', outcome })));
-assert.match(reason(['HTTP 403']), /blocking automated readers/);
+assert.match(reason(['HTTP 403']), /blocking automated readers, so we could not open it/);
+// When the fallback ran too, say so: there is nothing left for the person to retry.
+assert.match(reason(['HTTP 403', 'Tavily could not read it either']), /fallback reader could not either/);
 assert.match(reason(['HTTP 429']), /blocking automated readers/);
 assert.match(reason(['timeout after 12s']), /did not answer in time/);
 assert.match(reason(['failed: fetch failed']), /could not reach/i);

@@ -80,8 +80,11 @@ export function failureReason(site: string, steps: ScrapeStep[]): string {
   const outcomes = steps.map((s) => s.outcome);
   const any = (re: RegExp) => outcomes.some((o) => re.test(o));
 
+  // Said last because it is the end of the road: both readers tried and neither got in.
+  const exhausted = any(/Tavily could not read it either/) ? ', and our fallback reader could not either' : '';
+
   if (any(/HTTP (401|403|429)/)) {
-    return `${host} is blocking automated readers, so we could not open it`;
+    return `${host} is blocking automated readers${exhausted || ', so we could not open it'}`;
   }
   if (any(/timeout/)) return `${host} did not answer in time`;
   if (any(/failed: /) && !any(/^fetched/)) return `We could not reach ${host} — check the address`;
@@ -179,13 +182,19 @@ export async function readWebsiteTraced(website: string): Promise<ScrapeTrace> {
   }
 
   // Last resort: a site that renders in the browser, or one whose bot protection refuses us.
-  if (!pages.length && tavilyConfigured()) {
-    const viaTavily = await readWithTavily([base, ...permitted]);
-    for (const p of viaTavily) {
-      steps.push({ url: p.url, outcome: 'read by Tavily after our own fetch found nothing', chars: p.text.length });
-      pages.push({ url: p.url, text: p.text.slice(0, PER_PAGE_CHARS) });
+  if (!pages.length) {
+    if (!tavilyConfigured()) {
+      // Worth shouting about: the deploy behaves worse than a laptop and nothing says why.
+      console.warn('[scrape] no TAVILY_API_KEY in this environment — the fallback reader is off');
+      steps.push({ url: base, outcome: 'fallback reader not configured (TAVILY_API_KEY missing)' });
+    } else {
+      const viaTavily = await readWithTavily([base, ...permitted]);
+      for (const p of viaTavily) {
+        steps.push({ url: p.url, outcome: 'read by Tavily after our own fetch found nothing', chars: p.text.length });
+        pages.push({ url: p.url, text: p.text.slice(0, PER_PAGE_CHARS) });
+      }
+      if (!viaTavily.length) steps.push({ url: base, outcome: 'Tavily could not read it either' });
     }
-    if (!viaTavily.length) steps.push({ url: base, outcome: 'Tavily could not read it either' });
   }
 
   const logo = home ? findLogo(home.html, home.url) : null;
