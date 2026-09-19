@@ -122,7 +122,7 @@ function Blank({ role }: { role: CompanyRole }) {
       <div className="rounded-xl border border-line bg-surface px-5 py-8 text-center">
         <p className="text-[15px] font-semibold">{offers ? "No one has come to you yet" : "No one to meet yet"}</p>
         <p className="mt-1.5 text-[13.5px] text-ink-soft">
-          {offers ? "Buyers find you through what you offer." : "Write a problem down and matching starts."}
+          {offers ? "Buyers find you through your services." : "Describe a problem and matching starts."}
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
           <Link
@@ -130,7 +130,7 @@ function Blank({ role }: { role: CompanyRole }) {
             className="inline-flex items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
           >
             <Icon name={offers ? "building-2" : "plus"} size={15} />
-            {offers ? "Review what you offer" : "Describe a problem"}
+            {offers ? "Review your services" : "Describe a problem"}
           </Link>
           {role === "both" && (
             <Link href="/problems/new" className="text-[13px] text-ink-soft underline-offset-4 hover:text-ink hover:underline">

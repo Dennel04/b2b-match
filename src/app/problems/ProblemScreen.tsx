@@ -23,7 +23,7 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-6 md:px-9 md:pt-8">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1 pb-3 text-[12.5px] text-ink-soft">
-            <Link href={`/dashboard${demo ? "?demo" : ""}`} className="rounded-md px-1.5 py-1 -ml-1.5 transition-colors hover:bg-surface-alt hover:text-ink">
+            <Link href={`/problems${demo ? "?demo" : ""}`} className="rounded-md px-1.5 py-1 -ml-1.5 transition-colors hover:bg-surface-alt hover:text-ink">
               Problems
             </Link>
             <Icon name="chevron-right" size={13} className="text-ink-faint" />

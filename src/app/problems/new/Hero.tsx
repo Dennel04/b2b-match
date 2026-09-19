@@ -46,7 +46,7 @@ export function Hero({
       <div className="relative flex min-h-dvh flex-col">
         <header className="relative z-10 flex items-center gap-2 px-5 py-5 md:px-9">
           <Link
-            href="/dashboard"
+            href="/problems"
             className="inline-flex items-center gap-1.5 text-[13px] text-ink-soft transition-colors hover:text-ink"
           >
             <Icon name="chevron-left" size={15} />
@@ -64,7 +64,7 @@ export function Hero({
             className="soft-in mt-5 text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[64px]"
             style={{ "--i": 1 } as React.CSSProperties}
           >
-            Describe your problem
+            Describe a problem
           </h1>
           <p
             className="soft-in mt-3 max-w-[54ch] text-[15px] leading-relaxed text-ink-soft md:text-[16.5px]"

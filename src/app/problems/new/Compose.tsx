@@ -268,7 +268,7 @@ export function Compose({
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1440px] px-4 pt-6 md:px-9 md:pt-8">
           <nav className="text-[12.5px] text-ink-faint">
-            <Link href="/dashboard" className="hover:text-ink hover:underline">
+            <Link href="/problems" className="hover:text-ink hover:underline">
               Problems
             </Link>
             <span className="px-1.5">›</span>

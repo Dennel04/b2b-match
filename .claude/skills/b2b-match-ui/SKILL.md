@@ -105,7 +105,7 @@ count chip, and a short right-aligned fact.
 Declined never names a company. It is one line — "Could help if you moved a term" — and a button.
 Showing rejections is deliberate: a product that only shows successes reads as a salesman.
 
-Awaiting rows carry a chip naming the *area* of the concession (`Deadline`, `Contract format`,
+Awaiting rows carry a chip naming the *area* of the concession (`Start date`, `Contract format`,
 `Price`) in the gold tone, never the vendor's figures.
 
 ## Privacy rules (hard, they mirror CLAUDE.md)

@@ -79,7 +79,7 @@ export function ProblemForm({
 
       <Section
         title="Terms"
-        note="What you can live with. Your figures stay on your side."
+        note="What you can live with. Your figures stay on your side. Miss a requirement or hit a dealbreaker, and a company never reaches you."
       >
         <Cloud
           group
@@ -133,9 +133,9 @@ export function ProblemForm({
           </div>
         </Cloud>
 
-        <Cloud group label="Must start by" flash={filled.includes("startBy")}>
+        <Cloud group label="Start by" flash={filled.includes("startBy")}>
           <DateField
-            label="Must start by"
+            label="Start by"
             value={draft.startBy}
             onChange={(v) => set("startBy", v)}
           />
@@ -145,7 +145,7 @@ export function ProblemForm({
           group
           span
           plain
-          label="Contract formats"
+          label="Contract format"
           flash={filled.includes("formats")}
         >
           <Pills
@@ -154,14 +154,11 @@ export function ProblemForm({
             onChange={(v) => set("formats", v)}
           />
         </Cloud>
-      </Section>
-
-      <Section title="Filters" note="Fail one and a company never reaches you.">
         <Cloud
           group
           span
           plain
-          label="Hard requirements"
+          label="Requirements"
           flash={filled.includes("requirements")}
         >
           <Pills

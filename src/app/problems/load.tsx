@@ -69,7 +69,7 @@ const STATE: Record<MatchView["status"], string> = {
 /** The area still open, never a figure. */
 export function openArea(m: MatchView) {
   if (m.compatibility?.budget !== "ok") return "Price";
-  if (m.compatibility?.timeline !== "ok") return "Deadline";
+  if (m.compatibility?.timeline !== "ok") return "Start date";
   return "Contract format";
 }
 
@@ -79,7 +79,7 @@ function termChips(t: BuyerTerms | null) {
   const chips: string[] = [];
   if (t.budget_ceiling) {
     const per = t.budget_ceiling.period === "monthly" ? " / month" : " / project";
-    chips.push(`Ceiling €${t.budget_ceiling.amount.toLocaleString("en-US")}${per}`);
+    chips.push(`Up to €${t.budget_ceiling.amount.toLocaleString("en-US")}${per}`);
   }
   if (t.start_by) {
     chips.push(`Start by ${new Date(t.start_by).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`);

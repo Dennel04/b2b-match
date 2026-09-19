@@ -55,7 +55,7 @@ export const DEMO_MATCHES: MatchesScreenData = {
       place: "Could start, but not by the date you set",
       logo: "/logos/finest.png",
       context: "Customs paperwork by hand",
-      area: "Deadline",
+      area: "Start date",
     },
     {
       id: "m-4",

@@ -89,9 +89,9 @@ export function knownLines(d: ProblemDraft, labels: { formats: string[]; require
   if (d.department) out.push(`Part of the business: ${d.department}`);
   if (Number(d.ceilingAmount) > 0)
     out.push(`Budget ceiling: EUR ${d.ceilingAmount} ${d.ceilingPeriod === "monthly" ? "per month" : "one-off"}`);
-  if (d.startBy) out.push(`Must start by: ${d.startBy}`);
-  if (labels.formats.length) out.push(`Contract formats: ${labels.formats.join(", ")}`);
-  if (labels.requirements.length) out.push(`Hard requirements: ${labels.requirements.join(", ")}`);
+  if (d.startBy) out.push(`Start by: ${d.startBy}`);
+  if (labels.formats.length) out.push(`Contract format: ${labels.formats.join(", ")}`);
+  if (labels.requirements.length) out.push(`Requirements: ${labels.requirements.join(", ")}`);
   if (d.dealbreakers.length) out.push(`Dealbreakers: ${d.dealbreakers.join(", ")}`);
   return out.join("\n");
 }

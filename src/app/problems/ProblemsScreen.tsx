@@ -50,7 +50,7 @@ export function ProblemsScreen({ d, f }: { d: ProblemsScreenData; f: ProblemsFil
     const by = "by" in next ? next.by : byPart ? "part" : undefined;
     const withC = "closed" in next ? next.closed !== undefined : withClosed;
     const parts = [f.demo && "demo", by === "part" && "by=part", withC && "closed"].filter(Boolean);
-    return parts.length ? `/dashboard?${parts.join("&")}` : "/dashboard";
+    return parts.length ? `/problems?${parts.join("&")}` : "/problems";
   };
 
   return (
@@ -87,7 +87,7 @@ export function ProblemsScreen({ d, f }: { d: ProblemsScreenData; f: ProblemsFil
             <span className="text-[12.5px] text-ink-faint">Grouped by</span>
             <div className="flex items-center gap-1">
               <Toggle href={href({ by: undefined })} on={!byPart}>
-                Deadline
+                Start date
               </Toggle>
               {d.rows.some((r) => r.area) && (
                 <Toggle href={href({ by: "part" })} on={byPart}>
@@ -109,7 +109,7 @@ export function ProblemsScreen({ d, f }: { d: ProblemsScreenData; f: ProblemsFil
         {/* Sections breathe, the list keeps one edge: air above each heading, never a box per group. */}
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-4 md:px-9">
           {rows.length === 0 ? (
-            <p className="text-[14px] text-ink-soft">No problems written down yet.</p>
+            <p className="text-[14px] text-ink-soft">No problems described yet.</p>
           ) : (
             (byPart ? byArea(rows) : byDeadline(rows)).map(([label, list], i) => (
               <div key={label} className={i > 0 ? "mt-8" : "mt-2"}>
@@ -150,7 +150,7 @@ function byDeadline(rows: ProblemRow[]): Section[] {
     [
       ["Starting soon", at(0)],
       ["Planned", at(1)],
-      ["No date set", at(2)],
+      ["No fixed date", at(2)],
     ] as Section[]
   ).filter(([, list]) => list.length > 0);
 }

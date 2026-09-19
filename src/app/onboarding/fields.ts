@@ -9,7 +9,7 @@ import type { ClientSize, Company, CompanyDraft, CompanyProfile, CompanyRole, Co
 export const SIZES = ["1–10", "11–50", "51–200", "201–1000", "1000+"].map((s) => ({ value: s, label: s }));
 
 export const ROLES: { value: CompanyRole; title: string; text: string }[] = [
-  { value: "buyer", title: "Bring a problem", text: "Something is stuck" },
+  { value: "buyer", title: "Describe a problem", text: "Something is stuck" },
   { value: "seller", title: "Offer a service", text: "Buyers come to you" },
   { value: "both", title: "Both", text: "You do each" },
 ];
@@ -165,17 +165,17 @@ export function profileFromDraft(d: Draft): CompanyProfile {
  */
 export function missing(d: Draft): { label: string; block: "facts" | "clients" | "terms" | "help" | "contact" }[] {
   const out: { label: string; block: "facts" | "clients" | "terms" | "help" | "contact" }[] = [];
-  if (!d.city && !d.country) out.push({ label: "Where you are based", block: "facts" });
-  if (!d.employees && !d.size) out.push({ label: "How many people you are", block: "facts" });
-  if (!d.languages.length) out.push({ label: "Languages you work in", block: "facts" });
+  if (!d.city && !d.country) out.push({ label: "Based in", block: "facts" });
+  if (!d.employees && !d.size) out.push({ label: "Company size", block: "facts" });
+  if (!d.languages.length) out.push({ label: "Languages", block: "facts" });
   if (sells(d.role)) {
     if (!d.industriesServed.length) out.push({ label: "Industries you serve", block: "clients" });
-    if (!d.clientSizes.length) out.push({ label: "Who your clients usually are", block: "clients" });
-    if (!d.regions.length) out.push({ label: "Where you deliver", block: "clients" });
-    if (!d.sellerFormats.length) out.push({ label: "How you like to be paid", block: "terms" });
+    if (!d.clientSizes.length) out.push({ label: "Clients", block: "clients" });
+    if (!d.regions.length) out.push({ label: "Delivers to", block: "clients" });
+    if (!d.sellerFormats.length) out.push({ label: "Contract format", block: "terms" });
     if (!d.availableFrom) out.push({ label: "When you are free to start", block: "terms" });
   }
-  if (d.role !== "seller" && !d.lookingFor.length) out.push({ label: "Where you need help", block: "help" });
+  if (d.role !== "seller" && !d.lookingFor.length) out.push({ label: "Part of the business", block: "help" });
   if (!d.contactName) out.push({ label: "Who meets a match", block: "contact" });
   return out;
 }

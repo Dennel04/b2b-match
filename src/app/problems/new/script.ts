@@ -25,7 +25,7 @@ export const GATES: { key: GateKey; question: (guess: string) => string }[] = [
   },
   {
     key: "timing",
-    question: () => "When does it need to be fixed?",
+    question: () => "By when does the work need to start?",
   },
   {
     key: "budget",
@@ -34,7 +34,7 @@ export const GATES: { key: GateKey; question: (guess: string) => string }[] = [
   },
   {
     key: "formats",
-    question: () => "How would you want to buy it? Pick as many as you would consider.",
+    question: () => "Which contract format works for you? Pick as many as you would consider.",
   },
   {
     key: "requirements",

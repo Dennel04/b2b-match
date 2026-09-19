@@ -57,7 +57,7 @@ export function AuthScreen({ mode, error }: { mode: "login" | "signup"; error?: 
         </section>
 
         <div className="soft-in order-first flex justify-center lg:order-none lg:justify-end" style={{ ["--i" as string]: 1 }}>
-          <AuthForm initialMode={mode} initialError={error ? `Sign-in failed: ${error}` : undefined} />
+          <AuthForm initialMode={mode} initialError={error ? `Login failed: ${error}` : undefined} />
         </div>
       </main>
     </div>

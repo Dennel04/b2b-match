@@ -9,13 +9,13 @@ export const DEMO: ProblemScreenData = {
   matches: 2,
   title: "Customs paperwork by hand across three warehouses",
   summary: "Two people, about 60 hours a month, two filing fines this year. A freelancer did not stick.",
-  terms: ["Ceiling €4,000 / month", "Start by 15 Nov 2026", "Pilot first or retainer", "DPA, Estonian"],
+  terms: ["Up to €4,000 / month", "Start by 15 Nov 2026", "Pilot first or retainer", "DPA, Estonian"],
   matched: [
     { id: "m-1", name: "Mooncascade", place: "Tartu", logo: "/logos/mooncascade.png", state: "Ready to meet", ready: true, score: 91 },
     { id: "m-2", name: "Katrium", place: "Tallinn", logo: "/logos/katrium.png", state: "Still talking", ready: false, score: 74 },
   ],
   awaiting: [
-    { id: "m-3", name: "Finest", place: "Tallinn", logo: "/logos/finest.png", area: "Deadline" },
+    { id: "m-3", name: "Finest", place: "Tallinn", logo: "/logos/finest.png", area: "Start date" },
     { id: "m-4", name: "Proekspert", place: "Tallinn", logo: "/logos/proekspert.png", area: "Contract format" },
   ],
   declined: 7,
@@ -34,7 +34,7 @@ export const DEMO_LIST: ProblemsScreenData = {
       matched: 2,
       awaiting: 2,
       startBy: "2026-11-15",
-      terms: "Ceiling €4,000 / month",
+      terms: "Up to €4,000 / month",
     },
     {
       id: "p-2",
@@ -44,7 +44,7 @@ export const DEMO_LIST: ProblemsScreenData = {
       matched: 3,
       awaiting: 1,
       startBy: "2026-10-20",
-      terms: "Ceiling €25,000 / project",
+      terms: "Up to €25,000 / project",
     },
     {
       id: "p-3",
@@ -54,7 +54,7 @@ export const DEMO_LIST: ProblemsScreenData = {
       matched: 1,
       awaiting: 4,
       startBy: "2027-02-01",
-      terms: "Ceiling €60,000 / project",
+      terms: "Up to €60,000 / project",
     },
     {
       id: "p-4",
@@ -64,7 +64,7 @@ export const DEMO_LIST: ProblemsScreenData = {
       matched: 0,
       awaiting: 0,
       startBy: null,
-      terms: "Ceiling €2,000 / month",
+      terms: "Up to €2,000 / month",
     },
     {
       id: "p-5",
@@ -74,7 +74,7 @@ export const DEMO_LIST: ProblemsScreenData = {
       matched: 2,
       awaiting: 0,
       startBy: "2026-12-01",
-      terms: "Ceiling €1,500 / month",
+      terms: "Up to €1,500 / month",
     },
     {
       id: "p-6",
@@ -84,7 +84,7 @@ export const DEMO_LIST: ProblemsScreenData = {
       matched: 0,
       awaiting: 0,
       startBy: null,
-      terms: "No ceiling set",
+      terms: "No budget ceiling",
     },
     {
       id: "p-7",
@@ -94,7 +94,7 @@ export const DEMO_LIST: ProblemsScreenData = {
       matched: 1,
       awaiting: 0,
       startBy: "2026-06-01",
-      terms: "Ceiling €800 / month",
+      terms: "Up to €800 / month",
     },
   ],
 };

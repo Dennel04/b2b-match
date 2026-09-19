@@ -87,7 +87,7 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
             <Block title="About">
               {c.summary ? <p className="text-[14.5px] leading-relaxed">{c.summary}</p> : <Faint>The site did not say.</Faint>}
             </Block>
-            <Block title="What they offer">
+            <Block title="Services">
               <Tags items={c.services} empty="No services listed on the site." />
             </Block>
             <Block title="Industries they serve">
@@ -104,9 +104,9 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
             <Block title="Facts">
               <dl className="flex flex-col divide-y divide-line">
                 <Fact k="Based in" v={place} />
-                <Fact k="People" v={c.employees ? c.employees.toLocaleString("en-US") : p.size_hint && p.size_hint !== "unknown" ? p.size_hint : null} />
+                <Fact k="Company size" v={c.employees ? c.employees.toLocaleString("en-US") : p.size_hint && p.size_hint !== "unknown" ? p.size_hint : null} />
                 <Fact k="Founded" v={c.founded ? String(c.founded) : null} />
-                <Fact k="Works in" v={c.languages.join(", ")} />
+                <Fact k="Languages" v={c.languages.join(", ")} />
                 <Fact k="Website" v={c.domain} />
               </dl>
             </Block>

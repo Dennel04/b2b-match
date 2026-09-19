@@ -23,7 +23,7 @@ export function AppShell({
   barRight,
   children,
 }: {
-  active?: "company" | "problems" | "services" | "matches" | "directory" | "account";
+  active?: "company" | "problems" | "services" | "matches" | "directory" | "dashboard";
   /** Signed-out demo browsing: the nav keeps `?demo`, or every link lands on the login screen. */
   demo?: boolean;
   matches?: number;
@@ -35,10 +35,10 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   // Only the signed-in screens have fake data, so only their links carry the flag onwards.
-  const keep = (href: string) => (demo && /^\/(dashboard|problems|services|matches)/.test(href) ? `${href}?demo` : href);
+  const keep = (href: string) => (demo && /^\/(problems|services|matches)/.test(href) ? `${href}?demo` : href);
   const nav: NavItem[] = [
     { href: "/company", label: "Company", icon: "building-2", active: active === "company" },
-    { href: keep("/dashboard"), label: "Problems", icon: "file-text", active: active === "problems" },
+    { href: keep("/problems"), label: "Problems", icon: "file-text", active: active === "problems" },
     { href: keep("/services"), label: "Services", icon: "package", active: active === "services" },
     { href: keep("/matches"), label: "Matches", icon: "handshake", count: matches, active: active === "matches" },
     { href: "/directory", label: "Directory", icon: "globe", active: active === "directory" },
@@ -53,7 +53,7 @@ export function AppShell({
         */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-[224px] flex-col overflow-y-auto overscroll-contain border-r border-line bg-surface md:flex">
         {/* The brand opens the company dashboard: how matching is going. Company details live in Company. */}
-        <Link href="/account" aria-current={active === "account" ? "page" : undefined} className="flex h-16 items-center gap-2 border-b border-line px-4 transition-colors hover:bg-surface-alt/60">
+        <Link href="/dashboard" aria-current={active === "dashboard" ? "page" : undefined} className="flex h-16 items-center gap-2 border-b border-line px-4 transition-colors hover:bg-surface-alt/60">
           {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
           <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
           <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
@@ -93,7 +93,7 @@ export function AppShell({
         ) : (
           /* Bare screen: the sidebar is hidden on phones, so brand and log-out still need a row there. */
           <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
-            <Link href="/account" className="flex items-center gap-2">
+            <Link href="/dashboard" className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
               <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
               <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>

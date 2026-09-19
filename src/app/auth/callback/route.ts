@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     reason = error.message;
   }
 
-  reason ??= "No sign-in code was returned.";
+  reason ??= "No login code was returned.";
   console.error("[auth/callback]", reason);
   return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(reason)}`);
 }
