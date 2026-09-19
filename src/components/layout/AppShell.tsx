@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { NavLink } from "./NavLink";
 
 export interface NavItem {
   href: string;
@@ -22,7 +23,7 @@ export function AppShell({
   barRight,
   children,
 }: {
-  active?: "company" | "problems" | "matches" | "directory" | "account";
+  active?: "company" | "problems" | "services" | "matches" | "directory" | "account";
   /** Signed-out demo browsing: the nav keeps `?demo`, or every link lands on the login screen. */
   demo?: boolean;
   matches?: number;
@@ -34,10 +35,11 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   // Only the signed-in screens have fake data, so only their links carry the flag onwards.
-  const keep = (href: string) => (demo && /^\/(dashboard|problems|matches)/.test(href) ? `${href}?demo` : href);
+  const keep = (href: string) => (demo && /^\/(dashboard|problems|services|matches)/.test(href) ? `${href}?demo` : href);
   const nav: NavItem[] = [
     { href: "/company", label: "Company", icon: "building-2", active: active === "company" },
     { href: keep("/dashboard"), label: "Problems", icon: "file-text", active: active === "problems" },
+    { href: keep("/services"), label: "Services", icon: "package", active: active === "services" },
     { href: keep("/matches"), label: "Matches", icon: "handshake", count: matches, active: active === "matches" },
     { href: "/directory", label: "Directory", icon: "globe", active: active === "directory" },
   ];
@@ -134,25 +136,6 @@ function MobileSignOut() {
   );
 }
 
-function NavLink({ item }: { item: NavItem }) {
-  return (
-    <Link
-      href={item.href}
-      aria-current={item.active ? "page" : undefined}
-      className={`relative flex items-center gap-2.5 rounded-[9px] px-3 py-2 text-[13.5px] transition-colors ${
-        item.active
-          ? "bg-surface-alt font-semibold text-ink before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:rounded-r before:bg-accent"
-          : "text-ink-soft hover:bg-surface-alt/60 hover:text-ink"
-      }`}
-    >
-      <Icon name={item.icon} />
-      {item.label}
-      {item.count ? (
-        <span className="ml-auto rounded-full bg-ink px-2 py-px text-[11px] font-semibold text-surface">{item.count}</span>
-      ) : null}
-    </Link>
-  );
-}
 
 /** First letters of the first two words: "Kaubamaja Logistics" → "KL". */
 export function initialsOf(name: string | null | undefined) {

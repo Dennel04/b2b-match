@@ -3,7 +3,7 @@
 import { ask, askText } from '@/lib/claude';
 import { describeLeaks, findLeaks } from '@/lib/leak';
 import { checkCompatibility, describeCompatibility, FORMAT_LABELS } from '@/lib/overlap';
-import { adminClient, serverClient } from '@/lib/supabase';
+import { adminClient, currentUser } from '@/lib/supabase';
 import { briefPrompt } from '@/prompts/brief';
 import { MatchScoresSchema, matchPrompt } from '@/prompts/match';
 import {
@@ -298,8 +298,7 @@ export async function setMatchStatus(
   matchId: string,
   action: MatchAction,
 ): Promise<ActionResult<Match>> {
-  const db = await serverClient();
-  const { data: { user } } = await db.auth.getUser();
+  const user = await currentUser();
   if (!user) return { ok: false, message: 'Sign in again to continue' };
 
   const admin = adminClient();
@@ -341,8 +340,7 @@ export async function setMatchStatus(
  * "what the buyer sees / what the seller sees" is decided — not in a component.
  */
 export async function getMatchView(matchId: string): Promise<MatchView> {
-  const db = await serverClient();
-  const { data: { user } } = await db.auth.getUser();
+  const user = await currentUser();
   if (!user) throw new Error('Not authenticated');
 
   const { data: m } = await adminClient()

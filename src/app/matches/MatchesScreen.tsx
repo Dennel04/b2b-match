@@ -121,10 +121,8 @@ function Blank({ role }: { role: CompanyRole }) {
     <section className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-9">
       <div className="rounded-xl border border-line bg-surface px-5 py-8 text-center">
         <p className="text-[15px] font-semibold">{offers ? "No one has come to you yet" : "No one to meet yet"}</p>
-        <p className="mx-auto mt-1.5 max-w-[46ch] text-[13.5px] text-ink-soft">
-          {offers
-            ? "Buyers describe their problems privately. When one fits what you offer, the agents talk first and you see the match — never the problem."
-            : "Matching starts on its own once a problem is written down. Nobody is shown your problem — the agents talk first."}
+        <p className="mt-1.5 text-[13.5px] text-ink-soft">
+          {offers ? "Buyers find you through what you offer." : "Write a problem down and matching starts."}
         </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
           <Link
@@ -140,8 +138,6 @@ function Blank({ role }: { role: CompanyRole }) {
             </Link>
           )}
         </div>
-        {/* The same reason onboarding gives for the field this button leads to. */}
-        {offers && <p className="mt-4 text-[12px] text-ink-faint">The matcher reads it against buyers&rsquo; problems.</p>}
       </div>
     </section>
   );

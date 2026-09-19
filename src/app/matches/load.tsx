@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getMatchView } from "@/actions/match";
 import { initialsOf } from "@/components/layout";
-import { serverClient } from "@/lib/supabase";
+import { currentUser, serverClient } from "@/lib/supabase";
 import type { CompanyRole, MatchStatus, MatchView } from "@/types";
 // ponytail: these three read a projected match the same way on both screens; they move to lib/
 // the day the backend owner is free to take them.
@@ -18,7 +18,7 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
   if (demo) return <MatchesScreen d={DEMO_MATCHES} demo />;
 
   const db = await serverClient();
-  const { data: { user } } = await db.auth.getUser();
+  const user = await currentUser();
   if (!user) redirect("/login");
 
   const { data: company } = await db.from("companies").select("id, name, role").eq("owner_id", user.id).limit(1).maybeSingle();
