@@ -1,0 +1,342 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { Composer } from "@/components/Composer";
+import { AppShell } from "@/components/layout";
+import { Pills } from "@/components/cloud";
+import { Button } from "@/components/ui";
+import { FORMATS, PERIODS, type Period } from "../../onboarding/fields";
+import { AREAS, CAPABILITIES, EMPTY, type ServiceDraft } from "./fields";
+import { Hero } from "./Hero";
+import { ServiceForm } from "./ServiceForm";
+import { GATES, SCOPE_QUESTION, TIMINGS, type GateKey } from "./script";
+
+type Message = { from: "agent" | "you"; text: string };
+type Key = keyof ServiceDraft;
+
+/**
+ * Describe what you ship: a chat on the left, the form it fills on the right — the selling
+ * mirror of the problem interview.
+ *
+ * One difference, and it is deliberate: a seller knows their own product, so every question
+ * after the first has a closed answer and costs no model call. The scope answer is appended to
+ * the description in the seller's own words rather than paraphrased.
+ *
+ * ponytail: no model call at all here yet. When `runServiceInterview()` exists it slots in where
+ * `digest()` is, to write a title and tidy the description — nothing else changes.
+ */
+export function Compose({ initials }: { initials: string }) {
+  const [draft, setDraft] = useState<ServiceDraft>(EMPTY);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [started, setStarted] = useState(false);
+  // Which scripted question is on screen. -1 while the open scope question is waiting.
+  const [gate, setGate] = useState(-1);
+  const [filled, setFilled] = useState<Key[]>([]);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [timing, setTiming] = useState<(typeof TIMINGS)[number]["value"] | null>(null);
+
+  const log = useRef<HTMLDivElement>(null);
+
+  const set = <K extends Key>(k: K, v: ServiceDraft[K]) => setDraft((d) => ({ ...d, [k]: v }));
+
+  useEffect(() => {
+    log.current?.scrollTo({ top: log.current.scrollHeight, behavior: "smooth" });
+  }, [messages, gate]);
+
+  /** The hero hands over the service itself; the interview opens on it instead of a blank page. */
+  const begin = (text: string) => {
+    setDraft({ ...EMPTY, description: text });
+    setMessages([
+      { from: "you", text },
+      { from: "agent", text: SCOPE_QUESTION },
+    ]);
+    setStarted(true);
+  };
+
+  /** The scope answer is the seller's own sentence, so it is appended, not rewritten. */
+  const send = () => {
+    const text = input.trim();
+    if (!text) return;
+    setInput("");
+    setMessages((m) => [...m, { from: "you", text }]);
+    setDraft((d) => ({ ...d, description: d.description ? `${d.description}\n\n${text}` : text }));
+    setFilled(["description"]);
+    openGate(0);
+  };
+
+  function openGate(i: number, from: ServiceDraft = draft) {
+    if (i >= GATES.length) {
+      setGate(-1);
+      setDone(true);
+      setMessages((m) => [
+        ...m,
+        { from: "agent", text: "That is enough to list it. Check the form and change anything I got wrong." },
+      ]);
+      return;
+    }
+    setGate(i);
+    setMessages((m) => [...m, { from: "agent", text: GATES[i].question(from.area) }]);
+  }
+
+  /**
+   * A scripted answer is said back in the chat as the person's own reply — otherwise the
+   * questions pile up with nothing between them and the chat reads as spam.
+   */
+  const answerGate = () => {
+    const g = GATES[gate];
+    setMessages((m) => [...m, { from: "you", text: gateReply(g.key, draft, timing) }]);
+    setGate(-1);
+    openGate(gate + 1, draft);
+  };
+
+  const pickTiming = (v: (typeof TIMINGS)[number]["value"] | null) => {
+    setTiming(v);
+    const t = TIMINGS.find((x) => x.value === v);
+    set("availableFrom", t?.days === null || t === undefined ? "" : new Date(Date.now() + t.days * 86_400_000).toISOString().slice(0, 10));
+  };
+
+  function save() {
+    setSaving(true);
+    // ponytail: there is nowhere to write yet. The draft is complete; only the table is missing.
+    setError("Publishing needs the `services` table — migration 0007, see src/app/services/load.tsx. Everything else on this screen is ready.");
+    setSaving(false);
+  }
+
+  const ready = draft.description.trim().length >= 20;
+
+  const form = (
+    <ServiceForm draft={draft} filled={filled} set={set} save={save} error={error} saving={saving} ready={ready} />
+  );
+
+  if (!started) return <Hero onStart={begin} form={form} />;
+
+  return (
+    <AppShell active="services" initials={initials}>
+      <main className="flex flex-col">
+        <section className="mx-auto w-full max-w-[1440px] px-4 pt-6 md:px-9 md:pt-8">
+          <nav className="text-[12.5px] text-ink-faint">
+            <Link href="/services" className="hover:text-ink hover:underline">
+              Services
+            </Link>
+            <span className="px-1.5">›</span>
+            New
+          </nav>
+          <h1 className="mt-1.5 text-[34px] font-bold leading-[1.1] tracking-[-0.03em] md:text-[40px]">
+            Describe what you ship
+          </h1>
+          <p className="mt-2 max-w-[52ch] text-[16px] leading-snug text-ink-soft">
+            Answer a few questions and the form fills itself. Change anything it gets wrong.
+          </p>
+        </section>
+
+        <section className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 pb-12 pt-6 md:px-9 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)]">
+          <Interviewer
+            messages={messages}
+            done={done}
+            input={input}
+            onInput={setInput}
+            onSend={send}
+            onNote={setError}
+            logRef={log}
+            gate={gate >= 0 ? GATES[gate].key : null}
+            onGate={answerGate}
+            draft={draft}
+            set={set}
+            timing={timing}
+            onTiming={pickTiming}
+          />
+
+          {form}
+        </section>
+      </main>
+    </AppShell>
+  );
+}
+
+/** The left half: the conversation, and the one box everything can be said into. */
+function Interviewer({
+  messages,
+  done,
+  input,
+  onInput,
+  onSend,
+  onNote,
+  logRef,
+  gate,
+  onGate,
+  draft,
+  set,
+  timing,
+  onTiming,
+}: {
+  messages: Message[];
+  done: boolean;
+  input: string;
+  onInput: (v: string) => void;
+  onSend: () => void;
+  onNote: (t: string) => void;
+  logRef: React.RefObject<HTMLDivElement | null>;
+  /** A scripted question is on screen: it is answered with controls, not with a sentence. */
+  gate: GateKey | null;
+  onGate: () => void;
+  draft: ServiceDraft;
+  set: <K extends Key>(k: K, v: ServiceDraft[K]) => void;
+  timing: (typeof TIMINGS)[number]["value"] | null;
+  onTiming: (v: (typeof TIMINGS)[number]["value"] | null) => void;
+}) {
+  return (
+    <div className="soft-in flex h-[min(76vh,760px)] flex-col overflow-hidden rounded-[24px] border border-line bg-surface">
+      <div className="flex items-center gap-2 border-b border-line px-4 py-3">
+        <span aria-hidden className="h-2 w-2 rounded-full bg-accent" />
+        <span className="text-[13px] font-semibold">Interview</span>
+        <span className="ml-auto text-[12px] text-ink-faint">{done ? "Enough to list" : "A few questions"}</span>
+      </div>
+
+      <div ref={logRef} className="flex flex-1 flex-col gap-2.5 overflow-y-auto px-4 py-4">
+        {messages.map((m, i) => {
+          const you = m.from === "you";
+          // The tail is the one square corner, on the side the message came from.
+          return (
+            <p
+              key={i}
+              className={`msg-in max-w-[82%] whitespace-pre-wrap px-4 py-2.5 text-[14px] leading-relaxed ${
+                you
+                  ? "self-end rounded-[18px] rounded-br-[6px] bg-ink text-surface"
+                  : "self-start rounded-[18px] rounded-bl-[6px] bg-surface-alt text-ink"
+              }`}
+            >
+              {m.text}
+            </p>
+          );
+        })}
+      </div>
+
+      {gate ? (
+        <Gate which={gate} draft={draft} set={set} onDone={onGate} timing={timing} onTiming={onTiming} />
+      ) : done ? null : (
+        <Composer input={input} onInput={onInput} onSend={onSend} onNote={onNote} busy={false} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * A scripted question, answered with the controls the form already uses. No model call is made
+ * for these, and the answer lands straight in the draft the form is showing.
+ */
+function Gate({
+  which,
+  draft,
+  set,
+  onDone,
+  timing,
+  onTiming,
+}: {
+  which: GateKey;
+  draft: ServiceDraft;
+  set: <K extends Key>(k: K, v: ServiceDraft[K]) => void;
+  onDone: () => void;
+  timing: (typeof TIMINGS)[number]["value"] | null;
+  onTiming: (v: (typeof TIMINGS)[number]["value"] | null) => void;
+}) {
+  const empty =
+    (which === "area" && !draft.area) ||
+    (which === "availability" && !timing) ||
+    (which === "floor" && !Number(draft.floorAmount)) ||
+    (which === "formats" && !draft.formats.length) ||
+    (which === "capabilities" && !draft.capabilities.length);
+
+  return (
+    <div className="flex max-h-[46%] flex-col gap-3 overflow-y-auto border-t border-line p-3">
+      {which === "area" && (
+        <Pills
+          options={AREAS.map((a) => ({ value: a, label: a }))}
+          value={draft.area ? [draft.area] : []}
+          onChange={(v) => set("area", v.find((x) => x !== draft.area) ?? "")}
+        />
+      )}
+
+      {which === "availability" && (
+        <Pills
+          options={TIMINGS.map((t) => ({ value: t.value, label: t.label }))}
+          value={timing ? [timing] : []}
+          onChange={(v) => onTiming(v.find((x) => x !== timing) ?? null)}
+        />
+      )}
+
+      {which === "floor" && (
+        <div className="flex items-center gap-2">
+          <span aria-hidden className="text-[15px] font-semibold text-ink-faint">
+            €
+          </span>
+          <input
+            aria-label="Smallest deal"
+            inputMode="numeric"
+            autoFocus
+            value={draft.floorAmount ? Number(draft.floorAmount).toLocaleString("en-US").replace(/,/g, " ") : ""}
+            onChange={(e) => set("floorAmount", e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
+            onKeyDown={(e) => e.key === "Enter" && onDone()}
+            placeholder="2 400"
+            className="min-w-0 flex-1 bg-transparent text-[15px] tabular-nums outline-none placeholder:text-ink-faint"
+          />
+          <div className="flex gap-1">
+            {PERIODS.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                aria-pressed={draft.floorPeriod === p.value}
+                onClick={() => set("floorPeriod", p.value as Period)}
+                className={`inline-flex h-8 cursor-pointer items-center rounded-full px-3 text-[12.5px] font-medium transition-colors ${
+                  draft.floorPeriod === p.value
+                    ? "bg-selected text-surface"
+                    : "text-ink-soft ring-1 ring-ink/10 hover:text-ink"
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {which === "formats" && <Pills options={FORMATS} value={draft.formats} onChange={(v) => set("formats", v)} />}
+
+      {which === "capabilities" && (
+        <Pills options={CAPABILITIES} value={draft.capabilities} onChange={(v) => set("capabilities", v)} />
+      )}
+
+      <Button className="self-end" variant={empty ? "ghost" : "solid"} onClick={onDone}>
+        {empty ? "Skip" : "Continue"}
+      </Button>
+    </div>
+  );
+}
+
+/** The person's reply to a scripted question, in their voice, as it appears in the chat. */
+export function gateReply(
+  which: GateKey,
+  d: ServiceDraft,
+  timing: (typeof TIMINGS)[number]["value"] | null,
+): string {
+  const list = (xs: string[]) => xs.join(", ");
+  switch (which) {
+    case "area":
+      return d.area || "Not sure yet";
+    case "availability":
+      return TIMINGS.find((t) => t.value === timing)?.label ?? "No fixed date";
+    case "floor":
+      return Number(d.floorAmount)
+        ? `From €${Number(d.floorAmount).toLocaleString("en-US").replace(/,/g, " ")} ${d.floorPeriod === "monthly" ? "per month" : "per project"}`
+        : "I would rather not say";
+    case "formats":
+      return d.formats.length ? list(d.formats.map((f) => FORMATS.find((x) => x.value === f)?.label ?? f)) : "Any format is fine";
+    case "capabilities":
+      return d.capabilities.length
+        ? list(d.capabilities.map((c) => CAPABILITIES.find((x) => x.value === c)?.label ?? c))
+        : "Nothing to declare yet";
+  }
+}
