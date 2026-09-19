@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Composer } from "@/components/Composer";
+import { runServiceInterview, saveService } from "@/actions/service";
+import { Composer, Thinking } from "@/components/Composer";
 import { AppShell } from "@/components/layout";
 import { Pills } from "@/components/cloud";
 import { Button } from "@/components/ui";
+import type { CompanyProfile, InterviewTurn } from "@/types";
 import { FORMATS, PERIODS, type Period } from "../../onboarding/fields";
-import { AREAS, CAPABILITIES, EMPTY, type ServiceDraft } from "./fields";
+import { AREAS, CAPABILITIES, EMPTY, knownLines, sellerTermsFrom, serviceText, type ServiceDraft } from "./fields";
 import { Hero } from "./Hero";
 import { ServiceForm } from "./ServiceForm";
-import { GATES, SCOPE_QUESTION, TIMINGS, type GateKey } from "./script";
+import { GATES, OPEN_QUESTIONS, SCRIPTED_NOTE, TIMINGS, type GateKey } from "./script";
 
 type Message = { from: "agent" | "you"; text: string };
 type Key = keyof ServiceDraft;
@@ -26,84 +29,172 @@ type Key = keyof ServiceDraft;
  * ponytail: no model call at all here yet. When `runServiceInterview()` exists it slots in where
  * `digest()` is, to write a title and tidy the description — nothing else changes.
  */
-export function Compose({ initials }: { initials: string }) {
+export function Compose({
+  companyId,
+  profile,
+  initials,
+}: {
+  companyId: string;
+  profile: CompanyProfile | null;
+  initials: string;
+}) {
+  const router = useRouter();
   const [draft, setDraft] = useState<ServiceDraft>(EMPTY);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [turns, setTurns] = useState<InterviewTurn[]>([]);
   const [input, setInput] = useState("");
   const [started, setStarted] = useState(false);
-  // Which scripted question is on screen. -1 while the open scope question is waiting.
+  const [thinking, setThinking] = useState(false);
+  // Which scripted question is on screen. -1 while the model is still asking open ones.
   const [gate, setGate] = useState(-1);
   const [filled, setFilled] = useState<Key[]>([]);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // The availability chip picked in the interview, so the reply can name it rather than a date.
   const [timing, setTiming] = useState<(typeof TIMINGS)[number]["value"] | null>(null);
 
+  // A field the person edited by hand. The interviewer fills the rest and never takes one back.
+  const mine = useRef(new Set<Key>());
+  const asked = useRef(0);
+  const question = useRef<string>("");
   const log = useRef<HTMLDivElement>(null);
 
-  const set = <K extends Key>(k: K, v: ServiceDraft[K]) => setDraft((d) => ({ ...d, [k]: v }));
+  const set = <K extends Key>(k: K, v: ServiceDraft[K]) => {
+    mine.current.add(k);
+    setDraft((d) => ({ ...d, [k]: v }));
+  };
 
   useEffect(() => {
     log.current?.scrollTo({ top: log.current.scrollHeight, behavior: "smooth" });
-  }, [messages, gate]);
+  }, [messages, thinking, gate]);
 
   /** The hero hands over the service itself; the interview opens on it instead of a blank page. */
   const begin = (text: string) => {
-    setDraft({ ...EMPTY, description: text });
-    setMessages([
-      { from: "you", text },
-      { from: "agent", text: SCOPE_QUESTION },
-    ]);
+    const d: ServiceDraft = { ...EMPTY, description: text };
+    setDraft(d);
+    setMessages([{ from: "you", text }]);
     setStarted(true);
+    // Queued for after the swap has painted, so the screen never waits on the model to change.
+    requestAnimationFrame(() => void turn([], null, d));
   };
 
-  /** The scope answer is the seller's own sentence, so it is appended, not rewritten. */
-  const send = () => {
-    const text = input.trim();
-    if (!text) return;
-    setInput("");
-    setMessages((m) => [...m, { from: "you", text }]);
-    setDraft((d) => ({ ...d, description: d.description ? `${d.description}\n\n${text}` : text }));
-    setFilled(["description"]);
-    openGate(0);
-  };
-
-  function openGate(i: number, from: ServiceDraft = draft) {
-    if (i >= GATES.length) {
-      setGate(-1);
-      setDone(true);
-      setMessages((m) => [
-        ...m,
-        { from: "agent", text: "That is enough to list it. Check the form and change anything I got wrong." },
-      ]);
-      return;
-    }
+  /** The scripted half: a closed question costs no model call, it just shows its own control. */
+  function openGate(i: number, from: ServiceDraft, history: InterviewTurn[] = turns) {
+    if (i >= GATES.length) return void turn(history, null, from, "digest");
     setGate(i);
     setMessages((m) => [...m, { from: "agent", text: GATES[i].question(from.area) }]);
   }
 
+  /** One interview round: ask, merge what came back, show the next question. */
+  async function turn(
+    next: InterviewTurn[],
+    answer: string | null,
+    from: ServiceDraft = draft,
+    mode: "ask" | "digest" = "ask",
+  ) {
+    setError(null);
+    setThinking(true);
+    if (answer) setMessages((m) => [...m, { from: "you", text: answer }]);
+    try {
+      const labels = {
+        formats: from.formats.map((f) => FORMATS.find((x) => x.value === f)?.label ?? f),
+        capabilities: from.capabilities.map((c) => CAPABILITIES.find((x) => x.value === c)?.label ?? c),
+      };
+      const r = await runServiceInterview(next, profile, AREAS, `${SCRIPTED_NOTE}\n${knownLines(from, labels)}`);
+
+      setDraft((d) => {
+        const moved: Key[] = [];
+        const keep = <K extends Key>(k: K, v: ServiceDraft[K] | null | undefined) =>
+          mine.current.has(k) || v === null || v === undefined || (Array.isArray(v) && v.length === 0) || v === ""
+            ? d[k]
+            : (moved.push(k), v);
+        const merged = {
+          ...d,
+          title: keep("title", r.title),
+          description: keep("description", r.summary),
+          area: keep("area", r.area && AREAS.includes(r.area) ? r.area : null),
+          floorAmount: keep("floorAmount", r.floor_amount ? String(r.floor_amount) : null),
+          floorPeriod: keep("floorPeriod", r.floor_period),
+          formats: keep("formats", r.contract_formats),
+          availableFrom: keep("availableFrom", r.available_from),
+          capabilities: keep("capabilities", r.capabilities),
+        };
+        // Outside the updater: it may run twice, and the flash should fire once.
+        queueMicrotask(() => setFilled(moved));
+        return merged;
+      });
+
+      setTurns(next);
+      if (mode === "ask" && r.follow_up && !r.done && asked.current < OPEN_QUESTIONS) {
+        asked.current += 1;
+        question.current = r.follow_up;
+        setMessages((m) => [...m, { from: "agent", text: r.follow_up as string }]);
+      } else if (mode === "ask") {
+        openGate(0, from, next);
+      } else {
+        setDone(true);
+        setMessages((m) => [
+          ...m,
+          { from: "agent", text: "That is enough to list it. Check the form and change anything I got wrong." },
+        ]);
+      }
+    } catch {
+      setError("The interviewer did not answer. You can retry, or just fill the form yourself.");
+    } finally {
+      setThinking(false);
+    }
+  }
+
   /**
-   * A scripted answer is said back in the chat as the person's own reply — otherwise the
-   * questions pile up with nothing between them and the chat reads as spam.
+   * A scripted answer is said back in the chat as the person's own reply and kept as an
+   * interview turn — otherwise the questions pile up with nothing between them and the chat
+   * reads as spam.
    */
   const answerGate = () => {
     const g = GATES[gate];
-    setMessages((m) => [...m, { from: "you", text: gateReply(g.key, draft, timing) }]);
+    const reply = gateReply(g.key, draft, timing);
+    const history = [...turns, { question: g.question(draft.area), answer: reply }];
+    setMessages((m) => [...m, { from: "you", text: reply }]);
+    setTurns(history);
     setGate(-1);
-    openGate(gate + 1, draft);
+    openGate(gate + 1, draft, history);
   };
 
   const pickTiming = (v: (typeof TIMINGS)[number]["value"] | null) => {
     setTiming(v);
     const t = TIMINGS.find((x) => x.value === v);
-    set("availableFrom", t?.days === null || t === undefined ? "" : new Date(Date.now() + t.days * 86_400_000).toISOString().slice(0, 10));
+    set(
+      "availableFrom",
+      t && t.days !== null ? new Date(Date.now() + t.days * 86_400_000).toISOString().slice(0, 10) : "",
+    );
   };
 
-  function save() {
+  const send = () => {
+    const text = input.trim();
+    if (!text || thinking) return;
+    setInput("");
+    void turn([...turns, { question: question.current, answer: text }], text);
+  };
+
+  async function save() {
     setSaving(true);
-    // ponytail: there is nowhere to write yet. The draft is complete; only the table is missing.
-    setError("Publishing needs the `services` table — migration 0007, see src/app/services/load.tsx. Everything else on this screen is ready.");
-    setSaving(false);
+    setError(null);
+    const [title, description] = splitText(serviceText(draft));
+    const r = await saveService({
+      company_id: companyId,
+      title,
+      description,
+      area: draft.area || undefined,
+      terms: sellerTermsFrom(draft),
+      interview_json: turns,
+    });
+    if (!r.ok) {
+      setError(r.message);
+      setSaving(false);
+      return;
+    }
+    router.push(`/services/${r.data.id}`);
   }
 
   const ready = draft.description.trim().length >= 20;
@@ -136,6 +227,7 @@ export function Compose({ initials }: { initials: string }) {
         <section className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 pb-12 pt-6 md:px-9 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)]">
           <Interviewer
             messages={messages}
+            thinking={thinking}
             done={done}
             input={input}
             onInput={setInput}
@@ -160,6 +252,7 @@ export function Compose({ initials }: { initials: string }) {
 /** The left half: the conversation, and the one box everything can be said into. */
 function Interviewer({
   messages,
+  thinking,
   done,
   input,
   onInput,
@@ -174,6 +267,7 @@ function Interviewer({
   onTiming,
 }: {
   messages: Message[];
+  thinking: boolean;
   done: boolean;
   input: string;
   onInput: (v: string) => void;
@@ -213,12 +307,13 @@ function Interviewer({
             </p>
           );
         })}
+        {thinking && <Thinking />}
       </div>
 
       {gate ? (
         <Gate which={gate} draft={draft} set={set} onDone={onGate} timing={timing} onTiming={onTiming} />
       ) : done ? null : (
-        <Composer input={input} onInput={onInput} onSend={onSend} onNote={onNote} busy={false} />
+        <Composer input={input} onInput={onInput} onSend={onSend} onNote={onNote} busy={thinking} />
       )}
     </div>
   );
@@ -314,6 +409,12 @@ function Gate({
       </Button>
     </div>
   );
+}
+
+/** `serviceText()` writes heading, blank line, body. The table keeps the two apart. */
+function splitText(text: string): [title: string, description: string] {
+  const [title, ...rest] = text.split("\n\n");
+  return [title, rest.join("\n\n")];
 }
 
 /** The person's reply to a scripted question, in their voice, as it appears in the chat. */

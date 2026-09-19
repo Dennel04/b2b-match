@@ -113,6 +113,37 @@ export interface Company {
   created_at: string;
 }
 
+/**
+ * One thing a company sells, with its own commercial envelope. A company lists several: a call
+ * centre and a fibre install share a company and nothing else, so they are matched apart.
+ *
+ * `description` is the storefront — it is what buyers' problems are read against. `terms` holds
+ * the seller's floor and is compared by the platform only, never shown to the other side.
+ */
+export interface Service {
+  id: string;
+  company_id: string;
+  title: string;
+  description: string;
+  /** The part of a BUYER'S business it fixes, from the same list a problem is filed under. */
+  area: string | null;
+  terms: SellerTerms | null;
+  interview_json: InterviewTurn[] | null;
+  /** A paused service is not matched. */
+  active: boolean;
+  created_at: string;
+}
+
+export interface ServiceInput {
+  company_id: string;
+  title: string;
+  description: string;
+  area?: string;
+  terms?: SellerTerms;
+  interview_json?: InterviewTurn[];
+  active?: boolean;
+}
+
 /** Private. Never leaves the server for another company's client. */
 export interface Problem {
   id: string;
@@ -167,6 +198,8 @@ export interface Match {
   buyer_company_id: string;
   seller_company_id: string;
   problem_id: string;
+  /** Which service the buyer arrived through. Null on matches scored before services existed. */
+  service_id: string | null;
   score: number;                       // 0..100
   reasoning_public: string;            // no verbatim quotes from the problem
   compatibility_json: Compatibility | null;

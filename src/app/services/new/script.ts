@@ -10,14 +10,6 @@
  */
 export const OPEN_QUESTIONS = 1;
 
-/**
- * The one question worth asking in words. A seller has already said what the thing is on the
- * hero screen; what a buyer's agent still needs is scope — who it is for and where it stops.
- * The answer is appended to the description verbatim, so no model is spent rewriting a sentence
- * the seller already wrote well.
- */
-export const SCOPE_QUESTION =
-  "Who is it for, and what does a buyer actually get? Team size, what is included, what is not.";
 
 export type GateKey = "area" | "availability" | "floor" | "formats" | "capabilities";
 
