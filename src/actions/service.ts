@@ -4,6 +4,7 @@ import { ask } from '@/lib/claude';
 import { currentUser, serverClient } from '@/lib/supabase';
 import { ServiceInterviewSchema, serviceInterviewPrompt } from '@/prompts/service';
 import type { ActionResult, CompanyProfile, InterviewTurn, Service, ServiceInput } from '@/types';
+import { writeFailed } from './result';
 
 /**
  * One turn of the selling-side interview. Pass the caller's company profile when there is one:
@@ -42,9 +43,7 @@ export async function saveService(input: ServiceInput): Promise<ActionResult<Ser
 
   const db = await serverClient();
   const { data, error } = await db.from('services').insert(input).select().single();
-  if (error) {
-    return { ok: false, message: 'Could not publish the service. Try again.' };
-  }
+  if (error) return writeFailed('saveService', error, 'service');
   return { ok: true, data: data as Service };
 }
 
@@ -55,6 +54,6 @@ export async function setServiceActive(id: string, active: boolean): Promise<Act
 
   const db = await serverClient();
   const { data, error } = await db.from('services').update({ active }).eq('id', id).select().single();
-  if (error) return { ok: false, message: 'Could not change the service. Try again.' };
+  if (error) return writeFailed('setServiceActive', error, 'service');
   return { ok: true, data: data as Service };
 }

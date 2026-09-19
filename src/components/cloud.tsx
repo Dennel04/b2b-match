@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 /**
  * The soft language both writing screens are built from: a plate with a generous radius, a label
@@ -56,6 +56,54 @@ export function Pills<T extends string>({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+/**
+ * A long list, narrowed to what the interviewer actually suggested.
+ *
+ * Seventeen chips inside a chat bubble is half a screen of noise, and it wastes the one thing
+ * the interview has that a plain form does not: a model that has just read the answer and knows
+ * which two or three of them are plausible. So the question shows those, and the full list is
+ * one click away — a click that stays rare precisely because the suggestions are informed.
+ *
+ * With nothing suggested (the model was not sure) it opens fully: a narrowed list of zero would
+ * be a dead end, not a shortcut.
+ */
+export function PillsNarrowed<T extends string>({
+  options,
+  suggested,
+  value,
+  onChange,
+  more = "Something else",
+}: {
+  options: { value: T; label: string }[];
+  /** Best guess first. Kept in the list's own order on screen, so the eye reads one column. */
+  suggested: T[];
+  value: T[];
+  onChange: (next: T[]) => void;
+  more?: string;
+}) {
+  const [all, setAll] = useState(false);
+  const open = all || suggested.length === 0;
+  // Whatever is already chosen stays visible, or picking then re-reading the question loses it.
+  const shown = open
+    ? options
+    : options.filter((o) => suggested.includes(o.value) || value.includes(o.value));
+
+  return (
+    <div className="flex flex-col items-start gap-2.5">
+      <Pills options={shown} value={value} onChange={onChange} />
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setAll(true)}
+          className="cursor-pointer px-1 text-[12.5px] text-ink-soft underline-offset-4 transition-colors hover:text-ink hover:underline"
+        >
+          {more} ({options.length - shown.length} more)
+        </button>
+      )}
     </div>
   );
 }

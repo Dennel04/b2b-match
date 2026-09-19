@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { runInterview, saveProblem } from "@/actions/problem";
 import { AppShell } from "@/components/layout";
-import { Button, Icon } from "@/components/ui";
+import { Button } from "@/components/ui";
 import { Composer, Thinking } from "@/components/Composer";
-import type { CompanyProfile, InterviewTurn } from "@/types";
+import type { CompanyProfile, ContractFormat, InterviewTurn, Requirement } from "@/types";
 import {
   FORMATS,
   PERIODS,
@@ -24,7 +24,7 @@ import {
 } from "./fields";
 import { Hero } from "./Hero";
 import { ProblemForm } from "./ProblemForm";
-import { Pills } from "@/components/cloud";
+import { Pills, PillsNarrowed } from "@/components/cloud";
 import { GATES, OPEN_QUESTIONS, SCRIPTED_NOTE, TIMINGS, type GateKey } from "./script";
 
 type Message = { from: "agent" | "you"; text: string };
@@ -61,6 +61,11 @@ export function Compose({
   const [saving, setSaving] = useState(false);
   // The deadline chip picked in the interview, so the reply can name it rather than a date.
   const [timing, setTiming] = useState<(typeof TIMINGS)[number]["value"] | null>(null);
+  // The runners-up the interviewer named, so the closed question offers three chips, not seventeen.
+  const [alts, setAlts] = useState<string[]>([]);
+  // Which of the closed options are worth putting in front of THIS person, so the form does not
+  // ask a €500 job about ISO 27001.
+  const [offer, setOffer] = useState<{ formats: string[]; second: string[] }>({ formats: [], second: [] });
 
   // A field the person edited by hand. The interviewer fills the rest and never takes one back.
   const mine = useRef(new Set<Key>());
@@ -166,6 +171,8 @@ export function Compose({
         return merged;
       });
 
+      setAlts((r.department_alternatives ?? []).filter((a) => DEPARTMENTS.includes(a)));
+      setOffer({ formats: r.suggested_formats ?? [], second: r.suggested_requirements ?? [] });
       setTurns(next);
       if (
         mode === "ask" &&
@@ -231,20 +238,20 @@ export function Compose({
   async function save() {
     setSaving(true);
     setError(null);
-    try {
-      const p = await saveProblem({
-        company_id: companyId,
-        text: problemText(draft),
-        department: draft.department || undefined,
-        interview_json: turns,
-        buyer_terms: buyerTermsFrom(draft),
-        urgency: draft.urgency,
-      });
-      router.push(`/problems/${p.id}`);
-    } catch {
-      setError("Could not save the problem. Try again.");
+    const r = await saveProblem({
+      company_id: companyId,
+      text: problemText(draft),
+      department: draft.department || undefined,
+      interview_json: turns,
+      buyer_terms: buyerTermsFrom(draft),
+      urgency: draft.urgency,
+    });
+    if (!r.ok) {
+      setError(r.message);
       setSaving(false);
+      return;
     }
+    router.push(`/problems/${r.data.id}`);
   }
 
   const ready = draft.description.trim().length >= 20;
@@ -295,6 +302,8 @@ export function Compose({
             logRef={log}
             gate={gate >= 0 ? GATES[gate].key : null}
             onGate={answerGate}
+            alts={alts}
+            offer={offer}
             draft={draft}
             set={set}
             timing={timing}
@@ -320,6 +329,8 @@ function Interviewer({
   logRef,
   gate,
   onGate,
+  alts,
+  offer,
   draft,
   set,
   timing,
@@ -336,6 +347,10 @@ function Interviewer({
   /** A scripted question is on screen: it is answered with controls, not with a sentence. */
   gate: GateKey | null;
   onGate: () => void;
+  /** What the interviewer suggested besides its first answer. */
+  alts: string[];
+  /** Which closed options the interviewer thinks are worth offering this person. */
+  offer: { formats: string[]; second: string[] };
   draft: ProblemDraft;
   set: <K extends Key>(k: K, v: ProblemDraft[K]) => void;
   timing: (typeof TIMINGS)[number]["value"] | null;
@@ -375,7 +390,7 @@ function Interviewer({
       </div>
 
       {gate ? (
-        <Gate which={gate} draft={draft} set={set} onDone={onGate} timing={timing} onTiming={onTiming} />
+        <Gate which={gate} draft={draft} set={set} onDone={onGate} alts={alts} offer={offer} timing={timing} onTiming={onTiming} />
       ) : (
         <Composer
           input={input}
@@ -398,6 +413,8 @@ function Gate({
   draft,
   set,
   onDone,
+  alts,
+  offer,
   timing,
   onTiming,
 }: {
@@ -405,6 +422,8 @@ function Gate({
   draft: ProblemDraft;
   set: <K extends Key>(k: K, v: ProblemDraft[K]) => void;
   onDone: () => void;
+  alts: string[];
+  offer: { formats: string[]; second: string[] };
   timing: (typeof TIMINGS)[number]["value"] | null;
   onTiming: (v: (typeof TIMINGS)[number]["value"] | null) => void;
 }) {
@@ -417,10 +436,12 @@ function Gate({
   return (
     <div className="flex max-h-[46%] flex-col gap-3 overflow-y-auto border-t border-line p-3">
       {which === "department" && (
-        <Pills
+        <PillsNarrowed
           options={DEPARTMENTS.map((d) => ({ value: d, label: d }))}
+          suggested={[...(draft.department ? [draft.department] : []), ...alts]}
           value={draft.department ? [draft.department] : []}
           onChange={(v) => set("department", v.find((x) => x !== draft.department) ?? "")}
+          more="Another part of the business"
         />
       )}
 
@@ -482,18 +503,22 @@ function Gate({
       )}
 
       {which === "formats" && (
-        <Pills
+        <PillsNarrowed
           options={FORMATS}
+          suggested={offer.formats as ContractFormat[]}
           value={draft.formats}
           onChange={(v) => set("formats", v)}
+          more="Other ways of buying"
         />
       )}
 
       {which === "requirements" && (
-        <Pills
+        <PillsNarrowed
           options={REQUIREMENTS}
+          suggested={offer.second as Requirement[]}
           value={draft.requirements}
           onChange={(v) => set("requirements", v)}
+          more="Other things a company must satisfy"
         />
       )}
 

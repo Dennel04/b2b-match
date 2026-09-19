@@ -1,9 +1,10 @@
 'use server';
 
 import { ask } from '@/lib/claude';
-import { serverClient } from '@/lib/supabase';
+import { currentUser, serverClient } from '@/lib/supabase';
 import { InterviewSchema, interviewPrompt } from '@/prompts/interview';
-import type { CompanyProfile, InterviewTurn, Problem, ProblemInput } from '@/types';
+import type { ActionResult, CompanyProfile, InterviewTurn, Problem, ProblemInput } from '@/types';
+import { writeFailed } from './result';
 
 /**
  * One interview turn. Pass the caller's company profile when there is one: the questions get
@@ -24,9 +25,16 @@ export async function runInterview(
   return ask(InterviewSchema, interviewPrompt(turns, today, context, departments, known), { effort: 'low', maxTokens: 1500 });
 }
 
-export async function saveProblem(input: ProblemInput): Promise<Problem> {
+/**
+ * Write the problem down. RLS (`problems_owner`) already limits the insert to a company the
+ * caller owns; the check below is the readable error, not the guard.
+ */
+export async function saveProblem(input: ProblemInput): Promise<ActionResult<Problem>> {
+  const user = await currentUser();
+  if (!user) return { ok: false, message: 'Sign in again to continue' };
+
   const db = await serverClient();
   const { data, error } = await db.from('problems').insert(input).select().single();
-  if (error) throw error;
-  return data as Problem;
+  if (error) return writeFailed('saveProblem', error, 'problem');
+  return { ok: true, data: data as Problem };
 }

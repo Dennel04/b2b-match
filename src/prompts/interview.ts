@@ -27,6 +27,15 @@ export const InterviewSchema = z.object({
   follow_up: z.string().nullable(),
   title: z.string().nullable(),             // short heading for the problem, <= 70 chars
   department: z.string().nullable(),        // the part of the business, from the given list
+  /** Up to two runners-up from the same list. The chat offers these instead of all seventeen. */
+  department_alternatives: z.array(z.string()),
+  /**
+   * Which closed options are worth offering THIS buyer. The chat asks about contract formats and
+   * requirements with buttons and no model call, so without these it offers every one of them —
+   * and a company hiring a few builders for €500 gets asked about ISO 27001.
+   */
+  suggested_formats: z.array(ContractFormatEnum),
+  suggested_requirements: z.array(RequirementEnum),
   summary: z.string().nullable(),           // the problem statement as it stands
   urgency: z.enum(['low', 'medium', 'high']).nullable(),
   terms: z
@@ -92,8 +101,27 @@ Rules:
   "the pr unit works bad and viewers in social media is small" becomes "The PR team is not
   performing and our social media reach is low."
 - title: a short heading in their own words, at most 70 characters, no trailing full stop.
-${departments.length ? `- department: exactly one of ${departments.join(', ')}. Null if it is not clear yet.` : ''}
+${departments.length ? `- department: exactly one of ${departments.join(', ')}. Null if it is not clear yet.
+  File it by the function that OWNS the problem, not by the industry the work happens in. A
+  company that cannot find people to build something has a People & hiring problem, whatever is
+  being built; a company whose own production line is failing has a Production one. Ask yourself
+  whose desk this lands on.
+- department_alternatives: up to TWO more from that same list — the ones you would pick if your
+  first answer is wrong. The person is shown these as buttons instead of the whole list, so they
+  decide whether one tap finishes the question or seventeen options have to be read. Order them
+  best first, never repeat \`department\`, and return an empty array when nothing else is
+  plausible. Guessing wildly here is worse than returning none: a wrong suggestion is read as
+  the product not understanding the problem.` : ''}
 - summary: the problem as it stands, 2-4 sentences. Rewrite it as the answers add to it.
+- suggested_formats and suggested_requirements: the options the form should put in front of THIS
+  buyer, not the ones that exist. The person is asked both with buttons and no further thinking
+  on your side, so an option you list is an option they are nudged to tick.
+  Judge by the size and nature of the deal you have actually heard about. A small one-off job
+  from a company with no regulated data plausibly wants fixed price or outcome-based, and needs
+  a working language and nothing else; ISO 27001, EU data residency and on-site presence belong
+  to large engagements that touch personal data or premises, and offering them to a €500 job
+  reads as a form that was not listening. Two to four formats, zero to three requirements, and
+  an empty array is a real answer — it means "ask this one plainly".
 - If they will not name a budget, do not push. Leave budget_ceiling null and move on.
 - When you have enough OR you have asked 5 questions: done=true and follow_up null.
 - start_by must be an absolute ISO date. Resolve "in a month" against today's date.
