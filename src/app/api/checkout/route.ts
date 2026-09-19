@@ -15,9 +15,6 @@ import Stripe from 'stripe';
  * Test mode only. See STRIPE_INTEGRATION_TODO.md for what is still a placeholder.
  */
 
-/** Deliberately no apiVersion: the SDK pins the one it was built against. */
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '');
-
 /** What an accepted introduction costs the vendor. A real price lives in the Dashboard. */
 const FEE_CENTS = 4900;
 
@@ -26,6 +23,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Stripe is not configured on this deployment' }, { status: 503 });
   }
 
+  // Built per request, after the key check: `new Stripe('')` throws, and at module level that
+  // throw fails `next build` on any deployment without the key. Deliberately no apiVersion: the
+  // SDK pins the one it was built against.
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const origin = process.env.DOMAIN ?? new URL(request.url).origin;
 
   try {
