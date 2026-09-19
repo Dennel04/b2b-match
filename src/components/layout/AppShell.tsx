@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/Icon";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 export interface NavItem {
   href: string;
@@ -25,8 +24,8 @@ export function AppShell({
   active: "company" | "problems" | "offers";
   offers?: number;
   initials: string;
-  /** Left side of the top bar: back link, case reference, status, the control acting on it. */
-  bar: React.ReactNode;
+  /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */
+  bar?: React.ReactNode;
   /** Page-level controls, placed before the privacy marker. */
   barRight?: React.ReactNode;
   children: React.ReactNode;
@@ -64,29 +63,30 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center gap-3 border-b border-line bg-surface px-4 md:px-9">
-          {bar}
-          <div className="ml-auto flex items-center gap-4">
-            {barRight}
-            <ThemeToggle />
-            <span className="hidden items-center gap-1.5 text-[12.5px] text-ink-soft sm:flex">
-              <Icon name="lock" size={13} />
-              Private to you
-            </span>
-            <span
-              aria-hidden
-              className="grid h-8 w-8 place-items-center rounded-full bg-ink text-[11.5px] font-semibold text-surface"
-            >
-              {initials}
-            </span>
-            {/* The sidebar is hidden on phones, so its log-out button moves up here. */}
-            <form action="/auth/signout" method="post" className="md:hidden">
-              <button type="submit" aria-label="Log out" className="grid h-8 w-8 cursor-pointer place-items-center rounded-[9px] text-ink-soft hover:bg-surface-alt hover:text-ink">
-                <Icon name="log-out" />
-              </button>
-            </form>
-          </div>
-        </header>
+        {bar ? (
+          <header className="flex h-16 items-center gap-3 border-b border-line bg-surface px-4 md:px-9">
+            {bar}
+            <div className="ml-auto flex items-center gap-4">
+              {barRight}
+              <span className="hidden items-center gap-1.5 text-[12.5px] text-ink-soft sm:flex">
+                <Icon name="lock" size={13} />
+                Private to you
+              </span>
+              <Avatar initials={initials} />
+              <MobileSignOut />
+            </div>
+          </header>
+        ) : (
+          /* Bare screen: the sidebar is hidden on phones, so brand and log-out still need a row there. */
+          <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
+            <span aria-hidden className="h-2.5 w-2.5 rounded-[3px] bg-accent" />
+            <span className="text-[14.5px] font-semibold tracking-[-0.01em]">B2B Match</span>
+            <div className="ml-auto flex items-center gap-3">
+              <Avatar initials={initials} />
+              <MobileSignOut />
+            </div>
+          </header>
+        )}
 
         {children}
 
@@ -102,6 +102,24 @@ export function AppShell({
         </footer>
       </div>
     </div>
+  );
+}
+
+function Avatar({ initials }: { initials: string }) {
+  return (
+    <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full bg-ink text-[11.5px] font-semibold text-surface">
+      {initials}
+    </span>
+  );
+}
+
+function MobileSignOut() {
+  return (
+    <form action="/auth/signout" method="post" className="md:hidden">
+      <button type="submit" aria-label="Log out" className="grid h-8 w-8 cursor-pointer place-items-center rounded-[9px] text-ink-soft hover:bg-surface-alt hover:text-ink">
+        <Icon name="log-out" />
+      </button>
+    </form>
   );
 }
 

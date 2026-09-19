@@ -25,30 +25,33 @@ export interface ProblemScreenData {
 /** The buyer's problem screen, rebuilt from drafts/design/problem-page.html. */
 export function ProblemScreen({ d, setup }: { d: ProblemScreenData; setup?: React.ReactNode }) {
   return (
-    <AppShell
-      active="problems"
-      offers={d.offers}
-      initials={d.initials}
-      bar={
-        <>
-          <Link href="/dashboard" aria-label="Back to problems" className="text-ink-soft hover:text-ink">
-            <Icon name="chevron-left" />
-          </Link>
-          <span className="font-mono text-[13.5px] font-medium tracking-tight">{d.caseRef}</span>
-          <span className="flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-[12px] font-semibold text-accent-strong">
-            <Icon name="circle-dot" size={13} />
-            {d.status}
-          </span>
-          <BarButton icon="circle-stop">Stop</BarButton>
-        </>
-      }
-      barRight={<BarButton icon="pencil">Edit</BarButton>}
-    >
+    <AppShell active="problems" offers={d.offers} initials={d.initials}>
       <main className="flex flex-col">
         {setup}
-        <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-9 md:px-9">
-          <h1 className="max-w-[24ch] text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">{d.title}</h1>
-          <p className="mt-3 max-w-[60ch] text-[16.5px] leading-[1.6] text-ink-soft">{d.summary}</p>
+        <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-6 md:px-9 md:pt-8">
+          <nav aria-label="Breadcrumb" className="flex items-center gap-1 pb-3 text-[12.5px] text-ink-soft">
+            <Link href="/dashboard" className="rounded-md px-1.5 py-1 -ml-1.5 transition-colors hover:bg-surface-alt hover:text-ink">
+              Problems
+            </Link>
+            <Icon name="chevron-right" size={13} className="text-ink-faint" />
+            <span className="font-mono tracking-tight">{d.caseRef}</span>
+          </nav>
+
+          {/* Title carries its own controls, so the screen needs no top bar. */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
+            <h1 className="max-w-[24ch] text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">{d.title}</h1>
+            <div className="flex flex-none items-center gap-1 md:pt-1.5">
+              <span className="flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1.5 text-[12px] font-semibold text-accent-strong">
+                <Icon name="circle-dot" size={13} />
+                {d.status}
+              </span>
+              <span aria-hidden className="mx-1.5 h-4 w-px bg-line" />
+              <TitleButton icon="pencil">Edit</TitleButton>
+              <TitleButton icon="circle-stop">Stop</TitleButton>
+            </div>
+          </div>
+
+          <p className="mt-3.5 max-w-[60ch] text-[16.5px] leading-[1.6] text-ink-soft">{d.summary}</p>
           <ul className="mt-5 flex flex-wrap gap-2">
             {d.terms.map((t) => (
               <li key={t} className="rounded-full border border-line bg-surface px-3 py-1.5 text-[12.5px] font-medium shadow-[0_1px_0_var(--border)]">
@@ -102,11 +105,11 @@ export function ProblemScreen({ d, setup }: { d: ProblemScreenData; setup?: Reac
   );
 }
 
-function BarButton({ icon, children }: { icon: "circle-stop" | "pencil"; children: React.ReactNode }) {
+function TitleButton({ icon, children }: { icon: "circle-stop" | "pencil"; children: React.ReactNode }) {
   return (
     <button
       type="button"
-      className="flex cursor-pointer items-center gap-1.5 rounded-[9px] border border-line-strong bg-surface px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-surface-alt"
+      className="flex cursor-pointer items-center gap-1.5 rounded-[9px] px-2.5 py-1.5 text-[12.5px] font-semibold text-ink-soft transition-colors hover:bg-surface-alt hover:text-ink"
     >
       <Icon name={icon} size={13} />
       {children}

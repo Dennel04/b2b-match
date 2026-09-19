@@ -32,10 +32,19 @@ Two columns. A fixed 216px sidebar on the left, everything else in a flex column
   to the top bar's height so the two bottom borders form one line. Then nav items: icon, label,
   optional count chip. Active item gets a `#EDF1F3` fill and weight 600. Utility items sit at the
   bottom behind a `border-top`, pushed down with `margin-top:auto`.
-- **Top bar** — 60px, white, `border-bottom`. Left: back chevron, case reference, status chip,
-  and the control that acts on that status. Right, pushed with `margin-left:auto`: page-level
-  controls, then the privacy marker, then the avatar.
-- **Content** — `max-width:1240px`, `padding:0 32px`, centred. The sidebar already gives the
+- **Top bar** — optional. A screen whose title already carries its own controls has none: the
+  breadcrumb (`Problems › case reference`) sits above the title, and the status chip plus the
+  controls that act on it (Edit, Stop) sit on the title's own row, pushed right, as quiet
+  borderless buttons that only fill on hover. The problem screen is the reference for this.
+  When a screen does keep a top bar it is 60px, white, `border-bottom` — left: back chevron,
+  case reference, status chip, the control acting on that status; right, pushed with
+  `margin-left:auto`: page-level controls, then the privacy marker, then the avatar. On phones
+  a bare screen still shows a slim row with the product name, avatar and log-out, because the
+  sidebar is hidden there.
+- **Theme** — follows the system. No theme switch inside the app chrome.
+- **Content** — `max-width:1240px`, `padding:0 32px`, centred. Top padding is 32px under a top
+  bar, 24px on a bare screen — the page starts high, and the rhythm comes from the gaps between
+  sections, not from empty space at the top. The sidebar already gives the
   outer gutter; do not add 48px again.
 - **Footer** — one row, `margin-top:auto`, 12px muted text. A working screen, not a landing page:
   no link columns, no paragraph.
