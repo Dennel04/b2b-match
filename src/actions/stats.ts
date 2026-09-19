@@ -1,7 +1,7 @@
 'use server';
 
 import { adminClient, serverClient } from '@/lib/supabase';
-import type { BlockedReason, Compatibility, CompanyStats, Requirement } from '@/types';
+import type { ActionResult, BlockedReason, Compatibility, CompanyStats, Requirement } from '@/types';
 
 /**
  * The company's own funnel, for its dashboard.
@@ -10,16 +10,28 @@ import type { BlockedReason, Compatibility, CompanyStats, Requirement } from '@/
  * 0006): those rows know which buyer considered which vendor. What comes back here is counts
  * about the caller's own company and nothing else — no problem ids, no buyer names, no dates
  * that would let a vendor work out who is currently shopping in its category.
+ *
+ * Returns, never throws. The dashboard awaits this during render, and Next.js strips the message
+ * off anything a Server Action throws in production (CLAUDE.md), so an explanation has to come
+ * back as data or it reaches the browser as "Minified React error #441".
  */
-export async function getCompanyStats(): Promise<CompanyStats> {
+export async function getCompanyStats(): Promise<ActionResult<CompanyStats>> {
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  if (!user) return { ok: false, message: 'Sign in to see your dashboard.' };
 
   const admin = adminClient();
+  // One owner can own several companies — the seed gives the demo account all of them — and an
+  // unordered `limit(1)` lets two queries pick two different rows. Oldest first, so this half of
+  // the screen is about the same company as the half the page reads for itself.
   const { data: company } = await admin
-    .from('companies').select('id').eq('owner_id', user.id).limit(1).maybeSingle();
-  if (!company) throw new Error('No company yet — finish setup first');
+    .from('companies')
+    .select('id')
+    .eq('owner_id', user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!company) return { ok: false, message: 'Finish setting up your company and this fills in.' };
 
   const [candidates, sellerMatches, problems] = await Promise.all([
     admin
@@ -49,26 +61,60 @@ export async function getCompanyStats(): Promise<CompanyStats> {
       : Promise.resolve({ data: [] as { status: string }[] }),
   ]);
 
+  const buyerRows = buyerCandidates.data ?? [];
+  const buyerMatchRows = buyerMatches.data ?? [];
+
+  const selling = funnel(
+    rows.length,
+    rows.filter((r) => r.cleared_terms).length,
+    rows.filter((r) => r.became_match).length,
+    matches.length,
+  );
+  const buying = funnel(
+    buyerRows.length,
+    buyerRows.filter((c) => c.cleared_terms).length,
+    buyerMatchRows.length,
+    buyerMatchRows.length,
+  );
+
   return {
-    seller: {
-      considered: rows.length,
-      cleared_terms: rows.filter((r) => r.cleared_terms).length,
-      shown: rows.filter((r) => r.became_match).length,
-      avg_score: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
-      proceed: matches.filter((m) => m.deal_envelope_json?.verdict === 'proceed').length,
-      buyer_interested: countStatus('buyer_interested'),
-      accepted: countStatus('accepted'),
-      declined: countStatus('declined'),
-      blocked_by: blockedReasons(rows),
-    },
-    buyer: {
-      problems: problemIds.length,
-      candidates_evaluated: (buyerCandidates.data ?? []).length,
-      cleared_terms: (buyerCandidates.data ?? []).filter((c) => c.cleared_terms).length,
-      matches: (buyerMatches.data ?? []).length,
-      accepted: (buyerMatches.data ?? []).filter((m) => m.status === 'accepted').length,
+    ok: true,
+    data: {
+      seller: {
+        considered: selling.considered,
+        cleared_terms: selling.cleared_terms,
+        shown: selling.shown,
+        avg_score: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
+        proceed: matches.filter((m) => m.deal_envelope_json?.verdict === 'proceed').length,
+        buyer_interested: countStatus('buyer_interested'),
+        accepted: countStatus('accepted'),
+        declined: countStatus('declined'),
+        blocked_by: blockedReasons(rows),
+      },
+      buyer: {
+        problems: problemIds.length,
+        candidates_evaluated: buying.considered,
+        cleared_terms: buying.cleared_terms,
+        matches: buying.shown,
+        accepted: buyerMatchRows.filter((m) => m.status === 'accepted').length,
+      },
     },
   };
+}
+
+/**
+ * The three top steps, floored so a step can never be narrower than the one below it.
+ *
+ * A match IS a vendor that was shown, and therefore one that cleared the terms and was
+ * considered. `match_candidates` only started recording at migration 0006, and `findMatches()`
+ * re-marks an existing pair `became_match: false` when it runs a second time on the same
+ * problem, so the candidate rows can under-report. Without this floor the funnel reads
+ * "considered 0 → shown 5", which is worse than an approximation: it is wrong.
+ */
+function funnel(considered: number, cleared: number, became: number, matches: number) {
+  const shown = Math.max(became, matches);
+  const clearedTerms = Math.max(cleared, shown);
+  return { considered: Math.max(considered, clearedTerms), cleared_terms: clearedTerms, shown };
 }
 
 const REQUIREMENT_LABELS: Record<Requirement, string> = {
