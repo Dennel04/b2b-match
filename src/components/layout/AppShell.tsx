@@ -160,10 +160,3 @@ function MobileSignOut() {
     </form>
   );
 }
-
-
-/** First letters of the first two words: "Kaubamaja Logistics" → "KL". */
-export function initialsOf(name: string | null | undefined) {
-  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  return (words.slice(0, 2).map((w) => w[0]).join("") || "·").toUpperCase();
-}
