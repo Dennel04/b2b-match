@@ -86,7 +86,7 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
   }
 
   return (
-    <Bezel className="w-full max-w-[460px]" inner="flex flex-col gap-6 p-6 sm:p-9">
+    <Bezel className="w-full max-w-[460px]" inner="flex flex-col gap-5 p-6 sm:p-8">
       {/* Segmented control: the indicator slides, the content swaps. */}
       <div role="tablist" className="relative grid grid-cols-2 rounded-full bg-surface-alt p-1">
         <span
@@ -145,8 +145,22 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
           />
         </Field>
 
-        <Field label="Password" help={mode === "signup" ? "At least 6 characters." : undefined}>
+        {/* The row beside the label holds one short line in each mode, so the card keeps its height. */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <label htmlFor="password" className="text-[13px] font-semibold text-ink">
+              Password
+            </label>
+            {mode === "login" ? (
+              <Link href="/forgot-password" className="text-[12.5px] font-semibold text-ink-soft underline-offset-4 hover:text-ink hover:underline">
+                Forgot password?
+              </Link>
+            ) : (
+              <span className="text-[12.5px] text-ink-faint">At least 6 characters</span>
+            )}
+          </div>
           <input
+            id="password"
             type="password"
             required
             minLength={6}
@@ -155,7 +169,7 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
             onChange={(e) => setPassword(e.target.value)}
             className={inputClass}
           />
-        </Field>
+        </div>
 
         {error && (
           <p role="alert" className={`rounded-2xl bg-danger/10 px-4 py-3 text-[13.5px] text-danger ${ENTER}`}>
@@ -171,15 +185,14 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
         <PillButton type="submit" disabled={busy !== null} className="mt-1 w-full justify-between">
           {busy === "email" ? "One moment…" : copy.cta}
         </PillButton>
-        {mode === "signup" && (
-          <p className="text-center text-[12.5px] text-ink-faint">
-            By creating an account you agree to the{" "}
-            <Link href="/terms" className="font-semibold text-ink-soft underline-offset-4 hover:text-ink hover:underline">
-              Terms of service
-            </Link>
-            .
-          </p>
-        )}
+        {/* In both modes, so switching tabs never changes the card's height. */}
+        <p className="text-center text-[12.5px] text-ink-faint">
+          By continuing you agree to the{" "}
+          <Link href="/terms" className="font-semibold text-ink-soft underline-offset-4 hover:text-ink hover:underline">
+            Terms of service
+          </Link>
+          .
+        </p>
       </form>
     </Bezel>
   );

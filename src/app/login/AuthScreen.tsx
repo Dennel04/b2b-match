@@ -4,8 +4,19 @@ import { premiumFont, script } from "../fonts";
 import { Headline } from "./Headline";
 import { MatchDiagram } from "./MatchDiagram";
 
-/** Shared by /login and /signup: the promise on the left, the form on the right. */
-export function AuthScreen({ mode, error }: { mode: "login" | "signup"; error?: string }) {
+/**
+ * Shared by /login, /signup and the password screens: the promise on the left, a form on the
+ * right. `children` takes the log-in form's place, so every signed-out form sits in one spot.
+ */
+export function AuthScreen({
+  mode = "login",
+  error,
+  children,
+}: {
+  mode?: "login" | "signup";
+  error?: string;
+  children?: React.ReactNode;
+}) {
   // One screen on desktop: nothing to scroll to. Phones stack the form above the promise and scroll.
   return (
     <div className={`${premiumFont} ${script.variable} flex min-h-dvh flex-col bg-bg text-ink lg:h-dvh lg:overflow-hidden`}>
@@ -21,7 +32,7 @@ export function AuthScreen({ mode, error }: { mode: "login" | "signup"; error?: 
         </section>
 
         <div className="soft-in order-first flex justify-center lg:order-none lg:justify-end" style={{ ["--i" as string]: 1 }}>
-          <AuthForm initialMode={mode} initialError={error ? `Login failed: ${error}` : undefined} />
+          {children ?? <AuthForm initialMode={mode} initialError={error ? `Login failed: ${error}` : undefined} />}
         </div>
       </main>
     </div>
