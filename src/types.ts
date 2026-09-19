@@ -108,6 +108,8 @@ export interface Problem {
   id: string;
   company_id: string;
   text: string;
+  /** The part of the business it sits in — "Operations", "Finance". Null until it is set. */
+  department: string | null;
   interview_json: InterviewTurn[] | null;
   buyer_terms: BuyerTerms | null;
   urgency: Urgency;
@@ -122,6 +124,7 @@ export interface InterviewTurn {
 export interface ProblemInput {
   company_id: string;
   text: string;
+  department?: string;
   interview_json?: InterviewTurn[];
   buyer_terms?: BuyerTerms;
   urgency?: Urgency;

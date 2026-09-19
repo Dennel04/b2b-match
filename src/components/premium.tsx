@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 /**
  * Building blocks in the high-end-visual-design language (the /lab/f direction), drawn with
@@ -21,7 +21,9 @@ export function Bezel({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`rounded-[2rem] bg-ink/[0.035] p-1.5 ring-1 ring-ink/[0.05] ${className}`}>
+    <div
+      className={`rounded-[2rem] bg-ink/[0.035] p-1.5 ring-1 ring-ink/[0.05] ${className}`}
+    >
       <div
         className={`h-full rounded-[calc(2rem-0.375rem)] bg-surface shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_20px_40px_-24px_rgba(22,50,58,0.28)] ${inner}`}
       >
@@ -63,7 +65,10 @@ export function PillButton({
   icon = true,
   className = "",
   ...rest
-}: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "dark" | "soft"; icon?: boolean }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: "dark" | "soft";
+  icon?: boolean;
+}) {
   const dark = variant === "dark";
   return (
     <button
@@ -87,7 +92,7 @@ export function PillButton({
 }
 
 export const inputClass =
-  "h-12 w-full rounded-2xl border border-transparent bg-surface-alt px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-faint focus:border-accent/50 focus:ring-4 focus:ring-accent/15";
+  "h-12 w-full rounded-2xl border border-transparent bg-surface-alt px-4 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-faint focus:border-ink/20 focus:ring-4 focus:ring-ink/10";
 
 /** Label above, help below; the label never hides inside the input. */
 export function Field({
@@ -105,10 +110,16 @@ export function Field({
     <label className="flex flex-col gap-2">
       <span className="flex items-baseline gap-2 text-[13px] font-semibold text-ink">
         {label}
-        {optionalTag && <span className="font-normal text-ink-faint">optional</span>}
+        {optionalTag && (
+          <span className="font-normal text-ink-faint">optional</span>
+        )}
       </span>
       {children}
-      {help && <span className="text-[12.5px] leading-relaxed text-ink-soft">{help}</span>}
+      {help && (
+        <span className="text-[12.5px] leading-relaxed text-ink-soft">
+          {help}
+        </span>
+      )}
     </label>
   );
 }
@@ -125,9 +136,13 @@ export function FieldGroup({
 }) {
   return (
     <fieldset className="flex flex-col gap-2.5">
-      <legend className="mb-2.5 text-[13px] font-semibold text-ink">{label}</legend>
+      <legend className="mb-2.5 text-[13px] font-semibold text-ink">
+        {label}
+      </legend>
       {children}
-      {help && <p className="text-[12.5px] leading-relaxed text-ink-soft">{help}</p>}
+      {help && (
+        <p className="text-[12.5px] leading-relaxed text-ink-soft">{help}</p>
+      )}
     </fieldset>
   );
 }
@@ -154,10 +169,20 @@ export function Chips<T extends string>({
             type="button"
             aria-pressed={on}
             onClick={() =>
-              onChange(single ? (on ? [] : [o.value]) : on ? value.filter((v) => v !== o.value) : [...value, o.value])
+              onChange(
+                single
+                  ? on
+                    ? []
+                    : [o.value]
+                  : on
+                    ? value.filter((v) => v !== o.value)
+                    : [...value, o.value],
+              )
             }
             className={`cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-medium transition-[background-color,color,transform] duration-200 active:scale-[0.97] ${
-              on ? "bg-ink text-surface" : "bg-surface-alt text-ink-soft hover:text-ink"
+              on
+                ? "bg-ink text-surface"
+                : "bg-surface-alt text-ink-soft hover:text-ink"
             }`}
           >
             {o.label}
@@ -187,7 +212,10 @@ export function TagInput({
   return (
     <div className="flex min-h-12 flex-wrap items-center gap-2 rounded-2xl bg-surface-alt px-3 py-2 focus-within:ring-4 focus-within:ring-accent/15">
       {value.map((t) => (
-        <span key={t} className="inline-flex items-center gap-1.5 rounded-full bg-surface py-1 pl-3 pr-1.5 text-[13px] shadow-[0_1px_2px_rgba(22,50,58,0.08)]">
+        <span
+          key={t}
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface py-1 pl-3 pr-1.5 text-[13px] shadow-[0_1px_2px_rgba(22,50,58,0.08)]"
+        >
           {t}
           <button
             type="button"
@@ -220,8 +248,16 @@ export function TagInput({
 
 function Chevron({ open }: { open: boolean }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden
-      className={`shrink-0 text-ink-faint transition-transform duration-300 ${EASE} ${open ? "rotate-180" : ""}`}>
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+      className={`shrink-0 text-ink-faint transition-transform duration-300 ${EASE} ${open ? "rotate-180" : ""}`}
+    >
       <path d="m6 9 6 6 6-6" />
     </svg>
   );
@@ -237,6 +273,7 @@ export function Select<T extends string>({
   options,
   placeholder = "Choose one",
   label,
+  trigger = inputClass,
 }: {
   value: T | "";
   onChange: (next: T) => void;
@@ -244,14 +281,26 @@ export function Select<T extends string>({
   placeholder?: string;
   /** Accessible name, since the trigger is a button and not a labelled input. */
   label: string;
+  /** The closed control's own shape. A screen that already draws a plate passes a bare one. */
+  trigger?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [up, setUp] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
   const selected = options.find((o) => o.value === value);
   const id = `select-${label.replace(/\W+/g, "-").toLowerCase()}`;
 
   function show() {
-    setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+    setActive(
+      Math.max(
+        0,
+        options.findIndex((o) => o.value === value),
+      ),
+    );
+    const box = root.current?.getBoundingClientRect();
+    // Opens downwards unless the list would fall off the bottom of the window.
+    if (box) setUp(window.innerHeight - box.bottom < 320 && box.top > 320);
     setOpen(true);
   }
   function pick(i: number) {
@@ -267,13 +316,16 @@ export function Select<T extends string>({
       return;
     }
     if (e.key === "Escape") setOpen(false);
-    else if (e.key === "ArrowDown") setActive((a) => Math.min(a + 1, options.length - 1));
+    else if (e.key === "ArrowDown")
+      setActive((a) => Math.min(a + 1, options.length - 1));
     else if (e.key === "ArrowUp") setActive((a) => Math.max(a - 1, 0));
     else if (e.key === "Home") setActive(0);
     else if (e.key === "End") setActive(options.length - 1);
     else if (e.key === "Enter" || e.key === " ") pick(active);
     else if (e.key.length === 1) {
-      const i = options.findIndex((o) => o.label.toLowerCase().startsWith(e.key.toLowerCase()));
+      const i = options.findIndex((o) =>
+        o.label.toLowerCase().startsWith(e.key.toLowerCase()),
+      );
       if (i >= 0) setActive(i);
       return;
     } else return;
@@ -281,7 +333,13 @@ export function Select<T extends string>({
   }
 
   return (
-    <div className="relative" onBlur={(e) => !e.currentTarget.contains(e.relatedTarget) && setOpen(false)}>
+    <div
+      ref={root}
+      className="relative"
+      onBlur={(e) =>
+        !e.currentTarget.contains(e.relatedTarget) && setOpen(false)
+      }
+    >
       <button
         type="button"
         role="combobox"
@@ -292,9 +350,11 @@ export function Select<T extends string>({
         aria-activedescendant={open ? `${id}-${active}` : undefined}
         onClick={() => (open ? setOpen(false) : show())}
         onKeyDown={onKey}
-        className={`${inputClass} flex cursor-pointer items-center justify-between gap-3 text-left ${open ? "border-accent/50 ring-4 ring-accent/15" : ""}`}
+        className={`${trigger} flex cursor-pointer items-center justify-between gap-3 text-left`}
       >
-        <span className={selected ? "" : "text-ink-faint"}>{selected?.label ?? placeholder}</span>
+        <span className={selected ? "" : "text-ink-faint"}>
+          {selected?.label ?? placeholder}
+        </span>
         <Chevron open={open} />
       </button>
       <ul
@@ -302,8 +362,12 @@ export function Select<T extends string>({
         role="listbox"
         aria-label={label}
         tabIndex={-1}
-        className={`absolute inset-x-0 top-full z-30 mt-2 max-h-72 origin-top overflow-auto rounded-2xl bg-surface p-1.5 shadow-[0_24px_48px_-20px_rgba(22,50,58,0.35)] ring-1 ring-ink/[0.07] transition-[opacity,transform] duration-200 ${EASE} ${
-          open ? "scale-100 opacity-100" : "pointer-events-none scale-[0.97] opacity-0"
+        data-open={open}
+        data-up={up}
+        inert={!open}
+        style={{ ["--pop-origin" as string]: up ? "bottom left" : "top left" }}
+        className={`popcard absolute inset-x-0 z-30 max-h-72 overflow-auto rounded-2xl bg-surface p-1.5 shadow-[0_24px_48px_-20px_rgba(22,50,58,0.35)] ring-1 ring-ink/[0.07] ${
+          up ? "bottom-full mb-2" : "top-full mt-2"
         }`}
       >
         {options.map((o, i) => {
@@ -323,7 +387,16 @@ export function Select<T extends string>({
             >
               {o.label}
               {on && (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden className="text-accent">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  aria-hidden
+                  className="text-accent"
+                >
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               )}
@@ -349,7 +422,11 @@ export function Segmented<T extends string>({
 }) {
   const second = value === options[1].value;
   return (
-    <div role="radiogroup" aria-label={label} className="relative grid shrink-0 grid-cols-2 rounded-full bg-surface-alt p-1">
+    <div
+      role="radiogroup"
+      aria-label={label}
+      className="relative grid shrink-0 grid-cols-2 rounded-full bg-surface-alt p-1"
+    >
       <span
         aria-hidden
         className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-surface shadow-[0_1px_3px_rgba(22,50,58,0.12)] transition-transform duration-300 ${EASE}`}

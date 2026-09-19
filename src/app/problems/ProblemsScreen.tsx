@@ -19,7 +19,7 @@ export interface ProblemRow {
 
 export interface ProblemsScreenData {
   initials: string;
-  offers: number;
+  matches: number;
   rows: ProblemRow[];
 }
 
@@ -54,7 +54,7 @@ export function ProblemsScreen({ d, f, setup }: { d: ProblemsScreenData; f: Prob
   };
 
   return (
-    <AppShell active="problems" offers={d.offers} initials={d.initials}>
+    <AppShell active="problems" demo={f.demo} matches={d.matches} initials={d.initials}>
       <main className="flex flex-col">
         {setup}
 

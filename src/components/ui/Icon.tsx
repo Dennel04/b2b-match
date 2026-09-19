@@ -33,6 +33,16 @@ const PATHS = {
   "chevron-left": <path d="m15 18-6-6 6-6" />,
   "chevron-right": <path d="m9 18 6-6-6-6" />,
   plus: <path d="M12 5v14M5 12h14" />,
+  paperclip: (
+    <path d="M13.234 20.252 21 12.3a4.5 4.5 0 0 0-6.364-6.364L4.318 16.268a3 3 0 0 0 4.243 4.243l9.192-9.193" />
+  ),
+  mic: (
+    <>
+      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+      <path d="M12 19v3" />
+    </>
+  ),
   "circle-dot": (
     <>
       <circle cx="12" cy="12" r="10" />

@@ -1,18 +1,66 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { draftCompanyProfile, draftCompanyProfileFromText, saveCompany } from "@/actions/company";
-import { Button, Card, Chips, Field, FieldGroup, TagInput, inputClass } from "@/components/ui";
+import {
+  draftCompanyProfile,
+  draftCompanyProfileFromText,
+  saveCompany,
+} from "@/actions/company";
+import { Button, Icon, TagInput } from "@/components/ui";
+import { Cloud, Pills, Swap, bare } from "@/components/cloud";
 import type { CompanyDraft, Requirement } from "@/types";
-import { FORMATS, PERIODS, REQUIREMENTS, ROLES, SIZES, applyAutofill, sellerTermsFromDraft, sells, type Draft } from "../onboarding/fields";
+import {
+  REQUIREMENTS,
+  ROLES,
+  SIZES,
+  applyAutofill,
+  sellerTermsFromDraft,
+  sells,
+  type Draft,
+} from "../onboarding/fields";
 
 type Source = "site" | "text";
+type Panel = "head" | "about" | "offer";
 type Autofill =
   | { state: "idle" }
   | { state: "running"; source: Source; started: number }
   | { state: "done"; from: string }
   | { state: "error"; message: string };
+
+/**
+ * Starting points for "what you offer". The list is deliberately across industries — this
+ * product is for a drone startup, a print shop and a telco alike — and a company adds its own
+ * whenever none of these is what it sells.
+ */
+const SUGGESTED = [
+  "Custom software",
+  "Mobile apps",
+  "Websites & e-commerce",
+  "Data & analytics",
+  "AI & automation",
+  "IT support",
+  "Cloud & hosting",
+  "Cybersecurity",
+  "Telecoms",
+  "Hardware & devices",
+  "Manufacturing",
+  "Logistics & delivery",
+  "Warehousing",
+  "Printing",
+  "Construction & fit-out",
+  "Design & branding",
+  "Marketing & PR",
+  "Sales & lead generation",
+  "Recruitment",
+  "Training",
+  "Accounting & payroll",
+  "Legal",
+  "Consulting",
+  "Facilities & cleaning",
+  "Equipment rental",
+  "Wholesale & retail",
+];
 
 /** Named steps instead of a spinner; each shows once its time has passed. */
 const RUN_STEPS: Record<Source, { at: number; label: string }[]> = {
@@ -27,7 +75,7 @@ const RUN_STEPS: Record<Source, { at: number; label: string }[]> = {
   ],
 };
 
-/** Exactly what saveCompany() receives. Compared as JSON to know whether anything changed. */
+/** Exactly what saveCompany() receives. */
 function payload(d: Draft) {
   return {
     name: d.name.trim(),
@@ -45,74 +93,45 @@ function payload(d: Draft) {
   };
 }
 
-function Toggle<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: readonly { value: T; label: string }[]; label: string }) {
-  return (
-    <div role="radiogroup" aria-label={label} className="flex items-center gap-1">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          role="radio"
-          aria-checked={value === o.value}
-          onClick={() => onChange(o.value)}
-          className={`cursor-pointer whitespace-nowrap rounded-[8px] px-2.5 py-1.5 text-[12.5px] font-medium transition-colors ${
-            value === o.value ? "bg-ink text-surface" : "text-ink-soft hover:bg-surface-alt hover:text-ink"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
+const monogram = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("") || "CD";
 
-/** Quick picks next to a date: most answers are "now" or "in a few weeks". */
-function DatePick({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [picks] = useState(() => {
-    const inDays = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString().slice(0, 10);
-    return [
-      { value: inDays(0), label: "Right away" },
-      { value: inDays(14), label: "In 2 weeks" },
-      { value: inDays(30), label: "In a month" },
-    ];
-  });
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Chips options={picks} value={value ? [value] : []} onChange={(v) => onChange(v[0] ?? "")} single />
-      <input type="date" aria-label="Exact date" value={value} onChange={(e) => onChange(e.target.value)} className={`${inputClass} h-10 w-auto`} />
-    </div>
-  );
-}
-
-function Section({ title, lead, children }: { title: string; lead?: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3">
-      <div>
-        <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
-        {lead && <p className="mt-0.5 text-[13px] text-ink-soft">{lead}</p>}
-      </div>
-      <Card className="flex flex-col gap-6 p-5 md:p-6">{children}</Card>
-    </section>
-  );
-}
-
-/** The company profile after sign-up: autofill, the public profile, the private working terms. */
-export function CompanyForm({ initial, openTerms = false }: { initial: Draft; openTerms?: boolean }) {
+/**
+ * The company profile, read as a profile: what a counterparty would see, laid out as facts.
+ * Each block is edited in place behind its own pencil, so the page is never a form until asked.
+ */
+export function CompanyForm({
+  initial,
+  demo = false,
+}: {
+  initial: Draft;
+  /** Filled with a made-up company for looking at the screen. Nothing is stored. */
+  demo?: boolean;
+}) {
   const router = useRouter();
   const [d, setD] = useState<Draft>(initial);
-  const [saved, setSaved] = useState(() => JSON.stringify(payload(initial)));
-  const [source, setSource] = useState<Source>(initial.website ? "site" : "text");
+  const [kept, setKept] = useState<Draft>(initial);
+  const [editing, setEditing] = useState<Panel | null>(null);
+  const [source, setSource] = useState<Source>(
+    initial.website ? "site" : "text",
+  );
   const [pasted, setPasted] = useState("");
   const [fill, setFill] = useState<Autofill>({ state: "idle" });
-  const [evidence, setEvidence] = useState<Partial<Record<Requirement, string>>>({});
+  const [evidence, setEvidence] = useState<
+    Partial<Record<Requirement, string>>
+  >({});
   const [saving, setSaving] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [now, setNow] = useState(0);
-  const termsRef = useRef<HTMLDivElement>(null);
 
-  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((prev) => ({ ...prev, [k]: v }));
+  const set = <K extends keyof Draft>(k: K, v: Draft[K]) =>
+    setD((prev) => ({ ...prev, [k]: v }));
   const running = fill.state === "running";
-  const dirty = JSON.stringify(payload(d)) !== saved;
 
   useEffect(() => {
     if (!running) return;
@@ -120,196 +139,444 @@ export function CompanyForm({ initial, openTerms = false }: { initial: Draft; op
     return () => clearInterval(t);
   }, [running]);
 
-  useEffect(() => {
-    if (openTerms) termsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [openTerms]);
-
   async function autofill(from: Source) {
     if (running) return;
     const site = d.website.trim();
-    if (from === "site" && !site) return setFill({ state: "error", message: "Enter your website first." });
+    if (from === "site" && !site)
+      return setFill({ state: "error", message: "Add your website first." });
     setFill({ state: "running", source: from, started: Date.now() });
     try {
-      const draft: CompanyDraft = from === "site" ? await draftCompanyProfile(site) : await draftCompanyProfileFromText(pasted);
+      const draft: CompanyDraft =
+        from === "site"
+          ? await draftCompanyProfile(site)
+          : await draftCompanyProfileFromText(pasted);
       // The name the person typed stays theirs; the draft fills everything else.
-      setD((prev) => ({ ...applyAutofill(prev, draft), name: prev.name || draft.profile.name }));
-      setEvidence(Object.fromEntries(draft.seller_terms.capabilities.map((c, i) => [c, draft.evidence[i] ?? ""])));
-      setFill({ state: "done", from: from === "site" ? `${draft.pages_read.length} pages of ${site}` : "your text" });
+      setD((prev) => ({
+        ...applyAutofill(prev, draft),
+        name: prev.name || draft.profile.name,
+      }));
+      setEvidence(
+        Object.fromEntries(
+          draft.seller_terms.capabilities.map((c, i) => [
+            c,
+            draft.evidence[i] ?? "",
+          ]),
+        ),
+      );
+      setFill({
+        state: "done",
+        from:
+          from === "site"
+            ? `${draft.pages_read.length} pages of ${site}`
+            : "your text",
+      });
     } catch (e) {
-      setFill({ state: "error", message: e instanceof Error ? e.message : "Autofill failed." });
+      setFill({
+        state: "error",
+        message: e instanceof Error ? e.message : "Autofill failed.",
+      });
     }
   }
 
   async function save() {
     const next = payload(d);
     if (!next.name) return setNote("Add a company name.");
+    if (demo) {
+      setKept(d);
+      setEditing(null);
+      return setNote("Nothing is stored in the demo.");
+    }
     setSaving(true);
     setNote(null);
     try {
       await saveCompany(next);
-      setSaved(JSON.stringify(next));
-      setNote("Saved.");
+      setKept(d);
+      setEditing(null);
       router.refresh();
     } catch (e) {
-      setNote(`Could not save: ${e instanceof Error ? e.message : "unknown error"}. Your changes are still here.`);
+      setNote(
+        `Could not save: ${
+          e instanceof Error ? e.message : "unknown error"
+        }. Your changes are still here.`,
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  const elapsed = fill.state === "running" ? Math.max(0, (now - fill.started) / 1000) : 0;
-  const saveButton = (
-    <Button onClick={save} disabled={saving || running || !dirty}>
-      {saving ? "Saving…" : dirty ? "Save changes" : "Saved"}
-    </Button>
-  );
+  const cancel = () => {
+    setD(kept);
+    setEditing(null);
+    setNote(null);
+  };
+
+  const elapsed =
+    fill.state === "running" ? Math.max(0, (now - fill.started) / 1000) : 0;
+  const role = ROLES.find((r) => r.value === d.role);
 
   return (
-    <main className="mx-auto flex w-full max-w-[880px] flex-col gap-9 px-4 pb-16 pt-6 md:px-9 md:pt-8">
-      <div className="flex items-start justify-between gap-6">
-        <div className="min-w-0">
-          <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Company</h1>
-          <p className="mt-2 text-[14px] text-ink-soft">What the matcher knows about you. Your name stays withheld until both sides agree to meet.</p>
-        </div>
-        <div className="flex-none md:mt-1.5">{saveButton}</div>
-      </div>
-
-      <Section title="Autofill" lead="Read your website or pasted text, then check what it filled in below.">
-        <Toggle
-          label="Autofill source"
-          value={source}
-          onChange={setSource}
-          options={[{ value: "site", label: "From website" }, { value: "text", label: "Paste text" }] as const}
-        />
-        {source === "site" ? (
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <input
-              aria-label="Company website"
-              value={d.website}
-              onChange={(e) => set("website", e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && autofill("site")}
-              placeholder="nordkai.ee"
-              className={`${inputClass} flex-1`}
-            />
-            <Button variant="ghost" onClick={() => autofill("site")} disabled={running}>
-              {running ? "Reading…" : "Autofill"}
-            </Button>
-          </div>
+    <main className="flex w-full flex-col px-5 pb-24 pt-8 md:px-12 lg:px-16">
+      <Swap token={editing === "head" ? "head-edit" : "head-read"}>
+        {editing === "head" ? (
+          <section className="flex flex-col gap-5 pb-9">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <Cloud label="Company name">
+                <input
+                  value={d.name}
+                  onChange={(e) => set("name", e.target.value)}
+                  placeholder="Nordkai Logistics OÜ"
+                  className={bare}
+                />
+              </Cloud>
+              <Cloud label="Industry">
+                <input
+                  value={d.industry}
+                  onChange={(e) => set("industry", e.target.value)}
+                  placeholder="Road freight logistics"
+                  className={bare}
+                />
+              </Cloud>
+              <Cloud label="Website">
+                <input
+                  value={d.website}
+                  onChange={(e) => set("website", e.target.value)}
+                  placeholder="nordkai.ee"
+                  className={bare}
+                />
+              </Cloud>
+            </div>
+            <Group label="Company size">
+              <Pills
+                options={SIZES}
+                value={d.size ? [d.size] : []}
+                onChange={(v) => set("size", v.find((x) => x !== d.size) ?? "")}
+              />
+            </Group>
+            <Group label="What brings you here?">
+              <Pills
+                options={ROLES.map((r) => ({ value: r.value, label: r.title }))}
+                value={d.role ? [d.role] : []}
+                onChange={(v) =>
+                  set(
+                    "role",
+                    (v.find((x) => x !== d.role) ?? null) as Draft["role"],
+                  )
+                }
+              />
+            </Group>
+            <Buttons onSave={save} onCancel={cancel} saving={saving} />
+          </section>
         ) : (
-          <div className="flex flex-col gap-3">
-            <textarea
-              aria-label="Text about your company"
-              value={pasted}
-              onChange={(e) => setPasted(e.target.value)}
-              rows={4}
-              placeholder="Paste an about-us page, a one-pager or pitch deck copied out of a PDF, or your LinkedIn company page."
-              className={`${inputClass} h-auto resize-y py-3 leading-relaxed`}
+          <section className="flex items-start gap-5 pb-9">
+            <span
+              aria-hidden
+              className="grid h-16 w-16 flex-none place-items-center rounded-[22px] bg-ink text-[20px] font-semibold text-surface"
+            >
+              {monogram(d.name)}
+            </span>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-[28px] font-bold leading-[1.1] tracking-[-0.03em] md:text-[32px]">
+                {d.name || "Your company"}
+              </h1>
+              <p className="mt-1.5 text-[15px] text-ink-soft">
+                {[d.industry, d.size && `${d.size} people`, role?.title]
+                  .filter(Boolean)
+                  .join(" · ") || "Nothing filled in yet"}
+              </p>
+              {d.website && (
+                <a
+                  href={`https://${d.website.replace(/^https?:\/\//, "")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-[14px] text-ink-soft underline-offset-4 hover:text-ink hover:underline"
+                >
+                  {d.website}
+                </a>
+              )}
+            </div>
+            <Pencil
+              label="Edit company details"
+              onClick={() => setEditing("head")}
             />
-            <Button variant="ghost" className="self-end" onClick={() => autofill("text")} disabled={running || pasted.trim().length < 80}>
-              {running ? "Reading…" : "Autofill"}
-            </Button>
-          </div>
+          </section>
         )}
-        {fill.state === "running" && (
-          <ol aria-live="polite" className="flex flex-col gap-2 text-[13.5px]">
-            {RUN_STEPS[fill.source].filter((s) => s.at <= elapsed).map((s, i, shown) => {
-              const current = i === shown.length - 1;
-              return (
-                <li key={s.label} className={`flex items-center gap-2.5 ${current ? "font-semibold text-ink" : "text-ink-soft"}`}>
-                  <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${current ? "animate-pulse bg-ink" : "bg-accent"}`} />
-                  {s.label}
-                </li>
-              );
-            })}
-          </ol>
-        )}
-        {fill.state === "done" && (
-          <p role="status" className="text-[13.5px] text-ink-soft">Filled from {fill.from}. Check it below, then save.</p>
-        )}
-        {fill.state === "error" && (
-          <p role="alert" className="rounded-[8px] bg-gold-soft px-4 py-3 text-[13.5px] text-ink">
-            {fill.message} Try pasting a description instead, or fill the fields by hand.
-          </p>
-        )}
-      </Section>
+      </Swap>
 
-      <Section title="Profile" lead="Shown to a company you match with: industry and size first, your name only after both agree.">
-        <FieldGroup label="What brings you here?">
-          <Chips options={ROLES.map((r) => ({ value: r.value, label: r.title }))} value={d.role ? [d.role] : []} onChange={(v) => set("role", v[0] ?? null)} single />
-        </FieldGroup>
-        <div className="grid gap-6 sm:grid-cols-2">
-          <Field label="Company name">
-            <input value={d.name} onChange={(e) => set("name", e.target.value)} placeholder="Nordkai Logistics OÜ" className={inputClass} />
-          </Field>
-          <Field label="Industry">
-            <input value={d.industry} onChange={(e) => set("industry", e.target.value)} placeholder="Road freight logistics" className={inputClass} />
-          </Field>
-        </div>
-        <FieldGroup label="Company size" help="People, roughly.">
-          <Chips options={SIZES} value={d.size ? [d.size] : []} onChange={(v) => set("size", v[0] ?? "")} single />
-        </FieldGroup>
-        {sells(d.role) && (
-          <>
-            <Field label="What you do, in 2–3 sentences" help="The matcher reads this against buyers' problems. 40 characters at least.">
+      <Block
+        title="About"
+        editing={editing === "about"}
+        onEdit={() => setEditing("about")}
+      >
+        {editing === "about" ? (
+          <div className="flex flex-col gap-5">
+            <Cloud span label="What you do">
               <textarea
                 value={d.summary}
                 onChange={(e) => set("summary", e.target.value)}
-                rows={3}
-                placeholder="We replace paper back-office processes for logistics companies with 50–300 people."
-                className={`${inputClass} h-auto resize-y py-3 leading-relaxed`}
+                rows={4}
+                placeholder="We move palletised freight between the Baltics and the Nordics."
+                className={`${bare} resize-y leading-relaxed`}
               />
-            </Field>
-            <Field label="Services" help="Type one and press Enter.">
-              <TagInput value={d.services} onChange={(v) => set("services", v)} placeholder="Customs automation" />
-            </Field>
-            <FieldGroup label="What you can offer" help="Buyers can require these. Tick what you meet.">
-              <Chips options={REQUIREMENTS} value={d.capabilities} onChange={(v) => set("capabilities", v)} />
-              {d.capabilities.some((c) => evidence[c]) && (
-                <ul className="flex flex-col gap-1 text-[12.5px] text-ink-soft">
-                  {d.capabilities.filter((c) => evidence[c]).map((c) => (
-                    <li key={c}>
-                      <span className="font-semibold text-ink">{REQUIREMENTS.find((r) => r.value === c)?.label}</span> — from {evidence[c]}
-                    </li>
-                  ))}
-                </ul>
+            </Cloud>
+
+            <div className="flex flex-col gap-3 px-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => autofill(source)}
+                  disabled={running}
+                >
+                  {running
+                    ? "Reading…"
+                    : source === "site"
+                      ? "Read my website"
+                      : "Read the text"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setSource(source === "site" ? "text" : "site")}
+                  className="cursor-pointer text-[13px] text-ink-soft underline-offset-4 transition-colors hover:text-ink hover:underline"
+                >
+                  {source === "site"
+                    ? "Paste a description instead"
+                    : "Use my website instead"}
+                </button>
+              </div>
+              {source === "text" && (
+                <textarea
+                  aria-label="Text about your company"
+                  value={pasted}
+                  onChange={(e) => setPasted(e.target.value)}
+                  rows={4}
+                  placeholder="Paste an about-us page, a one-pager, or your LinkedIn company page."
+                  className={`${bare} rounded-[20px] bg-surface px-4 py-3 leading-relaxed ring-1 ring-ink/[0.08]`}
+                />
               )}
-            </FieldGroup>
-          </>
+              {fill.state === "running" && (
+                <ol
+                  aria-live="polite"
+                  className="flex flex-col gap-2 text-[13.5px]"
+                >
+                  {RUN_STEPS[fill.source]
+                    .filter((s) => s.at <= elapsed)
+                    .map((s, i, shown) => {
+                      const current = i === shown.length - 1;
+                      return (
+                        <li
+                          key={s.label}
+                          className={`flex items-center gap-2.5 ${
+                            current ? "font-semibold text-ink" : "text-ink-soft"
+                          }`}
+                        >
+                          <span
+                            aria-hidden
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              current ? "animate-pulse bg-ink" : "bg-accent"
+                            }`}
+                          />
+                          {s.label}
+                        </li>
+                      );
+                    })}
+                </ol>
+              )}
+              {fill.state === "done" && (
+                <p role="status" className="text-[13.5px] text-ink-soft">
+                  Filled from {fill.from}. Check it before you save.
+                </p>
+              )}
+              {fill.state === "error" && (
+                <p
+                  role="alert"
+                  className="rounded-[18px] bg-gold-soft px-4 py-3 text-[13.5px] text-ink"
+                >
+                  {fill.message} Paste a description instead, or write it
+                  yourself.
+                </p>
+              )}
+            </div>
+            <Buttons onSave={save} onCancel={cancel} saving={saving} />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <p className="max-w-[68ch] text-[15.5px] leading-relaxed text-ink">
+              {d.summary || (
+                <Empty>Say what you do in two or three sentences.</Empty>
+              )}
+            </p>
+          </div>
         )}
-      </Section>
+      </Block>
 
       {sells(d.role) && (
-        <div ref={termsRef} className="scroll-mt-6">
-          <Section title="Working terms" lead="Withheld from everyone. The platform compares them with a buyer's and says only whether they fit. Empty means you are not filtered on it.">
-            <Field label="Smallest deal you take" optional>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative min-w-[180px] flex-1">
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[15px] text-ink-faint">€</span>
-                  <input
-                    inputMode="numeric"
-                    value={d.floorAmount ? Number(d.floorAmount).toLocaleString("en-US").replace(/,/g, " ") : ""}
-                    onChange={(e) => set("floorAmount", e.target.value.replace(/[^\d]/g, "").slice(0, 9))}
-                    placeholder="5 000"
-                    className={`${inputClass} pl-8 tabular-nums`}
-                  />
-                </div>
-                <Toggle label="Period" value={d.floorPeriod} onChange={(v) => set("floorPeriod", v)} options={PERIODS} />
-              </div>
-            </Field>
-            <FieldGroup label="Contract formats you accept">
-              <Chips options={FORMATS} value={d.sellerFormats} onChange={(v) => set("sellerFormats", v)} />
-            </FieldGroup>
-            <FieldGroup label="Free to start from">
-              <DatePick value={d.availableFrom} onChange={(v) => set("availableFrom", v)} />
-            </FieldGroup>
-          </Section>
-        </div>
+        <Block
+          title="What you offer"
+          editing={editing === "offer"}
+          onEdit={() => setEditing("offer")}
+        >
+          {editing === "offer" ? (
+            <div className="flex flex-col gap-6">
+              <Pills
+                options={[...new Set([...SUGGESTED, ...d.services])].map(
+                  (x) => ({
+                    value: x,
+                    label: x,
+                  }),
+                )}
+                value={d.services}
+                onChange={(v) => set("services", v)}
+              />
+              <Cloud span label="Something else">
+                <TagInput
+                  shape=""
+                  value={d.services.filter((x) => !SUGGESTED.includes(x))}
+                  onChange={(own) =>
+                    set("services", [
+                      ...d.services.filter((x) => SUGGESTED.includes(x)),
+                      ...own,
+                    ])
+                  }
+                  placeholder="Drone surveying"
+                />
+              </Cloud>
+              {d.capabilities.some((c) => evidence[c]) && (
+                <ul className="flex flex-col gap-1 px-1 text-[12.5px] text-ink-soft">
+                  {d.capabilities
+                    .filter((c) => evidence[c])
+                    .map((c) => (
+                      <li key={c}>
+                        <span className="font-semibold text-ink">
+                          {REQUIREMENTS.find((r) => r.value === c)?.label}
+                        </span>{" "}
+                        — from {evidence[c]}
+                      </li>
+                    ))}
+                </ul>
+              )}
+              <Buttons onSave={save} onCancel={cancel} saving={saving} />
+            </div>
+          ) : d.services.length ? (
+            <Tags items={d.services} />
+          ) : (
+            <Empty>Add categories</Empty>
+          )}
+        </Block>
       )}
 
-      <div className="flex items-center justify-end gap-4 border-t border-line pt-5">
-        {note && <p role="status" className="min-w-0 flex-1 text-[13.5px] text-ink-soft">{note}</p>}
-        {saveButton}
-      </div>
+      {note && (
+        <p role="status" className="px-1 text-[13.5px] text-ink-soft">
+          {note}
+        </p>
+      )}
     </main>
   );
+}
+
+/** One block of the profile: a heading, its pencil, and whatever it is showing. */
+function Block({
+  title,
+  note,
+  editing,
+  onEdit,
+  children,
+}: {
+  title: string;
+  note?: string;
+  editing: boolean;
+  onEdit: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid gap-x-10 gap-y-5 border-t border-line py-9 md:grid-cols-[minmax(200px,260px)_minmax(0,1fr)_auto]">
+      <div className="min-w-0">
+        <h2 className="text-[19px] font-semibold tracking-[-0.02em]">
+          {title}
+        </h2>
+        {note && (
+          <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">
+            {note}
+          </p>
+        )}
+      </div>
+      <div className={`min-w-0 ${editing ? "md:col-span-2" : ""}`}>
+        <Swap token={editing ? "edit" : "read"}>{children}</Swap>
+      </div>
+      <div>
+        {!editing && (
+          <Pencil label={`Edit ${title.toLowerCase()}`} onClick={onEdit} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** The only way into edit mode. Quiet until you go near it. */
+function Pencil({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="grid h-10 w-10 flex-none cursor-pointer place-items-center rounded-full text-ink-faint transition-colors hover:bg-ink/[0.06] hover:text-ink"
+    >
+      <Icon name="pencil" size={17} />
+    </button>
+  );
+}
+
+function Buttons({
+  onSave,
+  onCancel,
+  saving,
+}: {
+  onSave: () => void;
+  onCancel: () => void;
+  saving: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-1">
+      <Button onClick={onSave} disabled={saving}>
+        {saving ? "Saving…" : "Save"}
+      </Button>
+      <Button variant="quiet" onClick={onCancel}>
+        Cancel
+      </Button>
+    </div>
+  );
+}
+
+function Group({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-col gap-2.5">
+      <span className="px-1 text-[14px] font-semibold tracking-[-0.01em] text-ink">
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function Tags({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {items.map((t) => (
+        <li
+          key={t}
+          className="rounded-full bg-ink/[0.05] px-3.5 py-1.5 text-[13px] font-medium text-ink"
+        >
+          {t}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return <span className="text-[15px] text-ink-faint">{children}</span>;
 }

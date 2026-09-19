@@ -1,20 +1,13 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout";
 import { Icon } from "@/components/ui";
-import { Group } from "./Group";
-
-interface Party {
-  id: string;
-  name: string;
-  place: string;
-  logo?: string;
-}
+import { DeclinedRow, Group, PartyRow, RowButton, type Party } from "@/components/counterparties";
 
 export interface ProblemScreenData {
   caseRef: string;
   status: string;
   initials: string;
-  offers: number;
+  matches: number;
   title: string;
   summary: string;
   terms: string[];
@@ -24,14 +17,14 @@ export interface ProblemScreenData {
 }
 
 /** The buyer's problem screen, rebuilt from drafts/design/problem-page.html. */
-export function ProblemScreen({ d, setup }: { d: ProblemScreenData; setup?: React.ReactNode }) {
+export function ProblemScreen({ d, demo, setup }: { d: ProblemScreenData; demo?: boolean; setup?: React.ReactNode }) {
   return (
-    <AppShell active="problems" offers={d.offers} initials={d.initials}>
+    <AppShell active="problems" demo={demo} matches={d.matches} initials={d.initials}>
       <main className="flex flex-col">
         {setup}
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-6 md:px-9 md:pt-8">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1 pb-3 text-[12.5px] text-ink-soft">
-            <Link href="/dashboard" className="rounded-md px-1.5 py-1 -ml-1.5 transition-colors hover:bg-surface-alt hover:text-ink">
+            <Link href={`/dashboard${demo ? "?demo" : ""}`} className="rounded-md px-1.5 py-1 -ml-1.5 transition-colors hover:bg-surface-alt hover:text-ink">
               Problems
             </Link>
             <Icon name="chevron-right" size={13} className="text-ink-faint" />
@@ -64,7 +57,7 @@ export function ProblemScreen({ d, setup }: { d: ProblemScreenData; setup?: Reac
 
         <Group label="Matched" count={d.matched.length} fact="Every term cleared">
           {d.matched.map((m) => (
-            <Row key={m.id} p={m}>
+            <PartyRow key={m.id} p={m}>
               <span className={`hidden flex-none text-[12px] font-medium sm:block ${m.ready ? "text-accent-strong" : "text-ink-soft"}`}>
                 {m.ready && <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]" />}
                 {m.state}
@@ -74,7 +67,7 @@ export function ProblemScreen({ d, setup }: { d: ProblemScreenData; setup?: Reac
                 {m.score}
               </span>
               <RowButton href={`/matches/${m.id}`} primary={m.ready}>Open</RowButton>
-            </Row>
+            </PartyRow>
           ))}
         </Group>
 
@@ -85,21 +78,15 @@ export function ProblemScreen({ d, setup }: { d: ProblemScreenData; setup?: Reac
           note="Asking reveals nothing about you, and never sends your problem."
         >
           {d.awaiting.map((m) => (
-            <Row key={m.id} p={m}>
+            <PartyRow key={m.id} p={m}>
               <span className="flex-none rounded-full bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold">{m.area}</span>
               <RowButton href={`/matches/${m.id}`}>Ask</RowButton>
-            </Row>
+            </PartyRow>
           ))}
         </Group>
 
         <Group label="Declined" count={d.declined} fact="Nothing was sent to them" muted>
-          <div className="flex items-center gap-4 bg-bg/50 px-4 py-[18px] md:px-[22px]">
-            <span className="grid h-10 w-10 flex-none place-items-center rounded-[11px] bg-surface-alt text-ink-faint">
-              <Icon name="circle-x" />
-            </span>
-            <p className="min-w-0 flex-1 text-[14px] font-semibold">Could help if you moved a term</p>
-            <RowButton href="#">Review</RowButton>
-          </div>
+          <DeclinedRow />
         </Group>
       </main>
     </AppShell>
@@ -118,35 +105,4 @@ function TitleButton({ icon, children }: { icon: "circle-stop" | "pencil"; child
   );
 }
 
-function Row({ p, children }: { p: Party; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-4 border-b border-surface-alt px-4 py-[18px] last:border-0 md:px-[22px]">
-      <span className="grid h-10 w-10 flex-none place-items-center overflow-hidden rounded-[11px] border border-line bg-surface">
-        {p.logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.logo} alt="" width={26} height={26} className="block object-contain" />
-        ) : (
-          <Icon name="building-2" className="text-ink-faint" />
-        )}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">{p.name}</p>
-        <p className="mt-0.5 truncate text-[13px] text-ink-soft">{p.place}</p>
-      </div>
-      {children}
-    </div>
-  );
-}
 
-function RowButton({ href, primary, children }: { href: string; primary?: boolean; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className={`flex-none rounded-[9px] px-4 py-2 text-[13px] font-semibold transition-colors ${
-        primary ? "bg-ink text-surface hover:bg-ink-soft" : "border border-line-strong bg-surface text-ink hover:bg-surface-alt"
-      }`}
-    >
-      {children}
-    </Link>
-  );
-}

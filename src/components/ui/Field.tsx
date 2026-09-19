@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 export const inputClass =
-  "h-11 w-full rounded-[8px] border border-line-strong bg-surface px-3.5 text-[15px] text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-accent";
+  "h-11 w-full rounded-[8px] border border-line-strong bg-surface px-3.5 text-[15px] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-ink-faint focus:border-ink-soft focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ink)_9%,transparent)]";
 
 /** Label above, help below. The label never hides inside the input. */
 export function Field({
@@ -21,10 +21,16 @@ export function Field({
     <label className="flex flex-col gap-2">
       <span className="flex items-baseline gap-2 text-[13px] font-semibold text-ink">
         {label}
-        {optional && <span className="font-normal text-ink-faint">optional</span>}
+        {optional && (
+          <span className="font-normal text-ink-faint">optional</span>
+        )}
       </span>
       {children}
-      {help && <span className="text-[12.5px] leading-relaxed text-ink-soft">{help}</span>}
+      {help && (
+        <span className="text-[12.5px] leading-relaxed text-ink-soft">
+          {help}
+        </span>
+      )}
     </label>
   );
 }
@@ -41,9 +47,13 @@ export function FieldGroup({
 }) {
   return (
     <fieldset className="flex flex-col gap-2.5">
-      <legend className="mb-2.5 text-[13px] font-semibold text-ink">{label}</legend>
+      <legend className="mb-2.5 text-[13px] font-semibold text-ink">
+        {label}
+      </legend>
       {children}
-      {help && <p className="text-[12.5px] leading-relaxed text-ink-soft">{help}</p>}
+      {help && (
+        <p className="text-[12.5px] leading-relaxed text-ink-soft">{help}</p>
+      )}
     </fieldset>
   );
 }
@@ -71,7 +81,13 @@ export function Chips<T extends string>({
             aria-pressed={on}
             onClick={() =>
               onChange(
-                single ? (on ? [] : [o.value]) : on ? value.filter((v) => v !== o.value) : [...value, o.value],
+                single
+                  ? on
+                    ? []
+                    : [o.value]
+                  : on
+                    ? value.filter((v) => v !== o.value)
+                    : [...value, o.value],
               )
             }
             className={`cursor-pointer rounded-[7px] border px-3.5 py-2 text-[13px] font-medium transition-colors ${
@@ -93,10 +109,13 @@ export function TagInput({
   value,
   onChange,
   placeholder,
+  shape = "min-h-11 rounded-[8px] border border-line-strong bg-surface px-2.5 py-2 transition-[border-color,box-shadow] focus-within:border-ink-soft focus-within:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ink)_9%,transparent)]",
 }: {
   value: string[];
   onChange: (next: string[]) => void;
   placeholder?: string;
+  /** The box around the tags. A soft plate already draws one, so it passes an empty shape. */
+  shape?: string;
 }) {
   const [draft, setDraft] = useState("");
   const add = () => {
@@ -106,7 +125,7 @@ export function TagInput({
   };
 
   return (
-    <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-[8px] border border-line-strong bg-surface px-2.5 py-2 focus-within:border-accent">
+    <div className={`flex flex-wrap items-center gap-2 ${shape}`}>
       {value.map((t) => (
         <span
           key={t}

@@ -6,7 +6,7 @@ export const DEMO: ProblemScreenData = {
   caseRef: "PRB-4f21",
   status: "Matching",
   initials: "KM",
-  offers: 2,
+  matches: 2,
   title: "Customs paperwork by hand across three warehouses",
   summary: "Two people, about 60 hours a month, two filing fines this year. A freelancer did not stick.",
   terms: ["Ceiling €4,000 / month", "Start by 15 Nov 2026", "Pilot first or retainer", "DPA, Estonian"],
@@ -24,7 +24,7 @@ export const DEMO: ProblemScreenData = {
 /** The list screen on fake data, before seeding: one company's problems across its departments. */
 export const DEMO_LIST: ProblemsScreenData = {
   initials: "KM",
-  offers: 2,
+  matches: 2,
   rows: [
     {
       id: "p-1",

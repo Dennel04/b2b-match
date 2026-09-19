@@ -10,7 +10,7 @@
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "warm": "tsx --env-file=.env.local scripts/warm.ts",
     "directory": "tsx --env-file=.env.local scripts/directory.ts",
-    "check": "next typegen && tsc --noEmit && tsx src/lib/overlap.check.ts && tsx src/lib/leak.check.ts"
+    "check": "next typegen && tsc --noEmit && tsx src/lib/overlap.check.ts && tsx src/lib/leak.check.ts && tsx src/app/problems/new/fields.check.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

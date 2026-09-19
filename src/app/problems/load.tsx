@@ -14,7 +14,7 @@ import { ProblemsScreen, type ProblemRow, type ProblemsFilter } from "./Problems
  * problem. Matches are read only through getMatchView(), which projects them per viewer.
  */
 export async function renderProblemScreen({ problemId, demo }: { problemId?: string; demo?: boolean }) {
-  if (demo) return <ProblemScreen d={DEMO} />;
+  if (demo) return <ProblemScreen d={DEMO} demo />;
 
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
@@ -46,7 +46,7 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
     caseRef: `PRB-${problem.id.slice(0, 4)}`,
     status: "Matching",
     initials: initialsOf(company.name),
-    offers: 0,
+    matches: 0,
     title,
     summary,
     terms: termChips(problem.buyer_terms),
@@ -76,7 +76,7 @@ const STATE: Record<MatchView["status"], string> = {
 };
 
 /** The area still open, never a figure. */
-function openArea(m: MatchView) {
+export function openArea(m: MatchView) {
   if (m.compatibility?.budget !== "ok") return "Price";
   if (m.compatibility?.timeline !== "ok") return "Deadline";
   return "Contract format";
@@ -99,15 +99,17 @@ function termChips(t: BuyerTerms | null) {
   return chips;
 }
 
-/** First sentence as the heading, the rest below it, without rewording. */
-function splitVerbatim(text: string): [string, string] {
+/** The first line is the heading when there is one; otherwise the first sentence. Never reworded. */
+export function splitVerbatim(text: string): [string, string] {
   const t = text.trim();
+  const br = t.indexOf("\n");
+  if (br > 0 && br <= 110) return [t.slice(0, br).trim(), t.slice(br).trim()];
   const end = t.search(/[.!?](\s|$)/);
   if (end < 0 || end > 110) return [t, ""];
   return [t.slice(0, end + 1), t.slice(end + 1).trim()];
 }
 
-function firstSentence(s: string) {
+export function firstSentence(s: string) {
   const end = s.search(/[.!?](\s|$)/);
   return end < 0 ? s : s.slice(0, end);
 }
@@ -129,7 +131,7 @@ export async function renderProblemsList(f: ProblemsFilter) {
 
   const { data: problems } = await db
     .from("problems")
-    .select("id, text, buyer_terms, created_at")
+    .select("id, text, department, buyer_terms, created_at")
     .eq("company_id", company.id)
     .order("created_at", { ascending: false });
 
@@ -143,8 +145,7 @@ export async function renderProblemsList(f: ProblemsFilter) {
     const terms = termChips(p.buyer_terms);
     rows.push({
       id: p.id,
-      // ponytail: the department is a design-level field until `problems.department` exists.
-      area: null,
+      area: p.department,
       title: splitVerbatim(p.text)[0],
       state: ready ? "ready" : live.length > 0 ? "matching" : "searching",
       matched: live.length - awaiting.length,
@@ -154,5 +155,6 @@ export async function renderProblemsList(f: ProblemsFilter) {
     });
   }
 
-  return <ProblemsScreen d={{ initials: initialsOf(company.name), offers: 0, rows }} f={f} setup={setup} />;
+  const open = rows.reduce((n, r) => n + r.matched + r.awaiting, 0);
+  return <ProblemsScreen d={{ initials: initialsOf(company.name), matches: open, rows }} f={f} setup={setup} />;
 }

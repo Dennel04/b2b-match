@@ -15,14 +15,17 @@ export interface NavItem {
  */
 export function AppShell({
   active,
-  offers,
+  demo,
+  matches,
   initials,
   bar,
   barRight,
   children,
 }: {
-  active?: "company" | "problems" | "offers" | "directory" | "account";
-  offers?: number;
+  active?: "company" | "problems" | "matches" | "directory" | "account";
+  /** Signed-out demo browsing: the nav keeps `?demo`, or every link lands on the login screen. */
+  demo?: boolean;
+  matches?: number;
   initials: string;
   /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */
   bar?: React.ReactNode;
@@ -30,10 +33,12 @@ export function AppShell({
   barRight?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  // Only the signed-in screens have fake data, so only their links carry the flag onwards.
+  const keep = (href: string) => (demo && /^\/(dashboard|problems|matches)/.test(href) ? `${href}?demo` : href);
   const nav: NavItem[] = [
     { href: "/company", label: "Company", icon: "building-2", active: active === "company" },
-    { href: "/dashboard", label: "Problems", icon: "file-text", active: active === "problems" },
-    { href: "/offers", label: "Offers", icon: "handshake", count: offers, active: active === "offers" },
+    { href: keep("/dashboard"), label: "Problems", icon: "file-text", active: active === "problems" },
+    { href: keep("/matches"), label: "Matches", icon: "handshake", count: matches, active: active === "matches" },
     { href: "/directory", label: "Directory", icon: "globe", active: active === "directory" },
   ];
 

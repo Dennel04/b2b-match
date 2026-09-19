@@ -9,12 +9,19 @@ import type { CompanyProfile, InterviewTurn, Problem, ProblemInput } from '@/typ
  * One interview turn. Pass the caller's company profile when there is one: the questions get
  * sharper and the ones the profile already answers are skipped.
  */
-export async function runInterview(turns: InterviewTurn[], company?: CompanyProfile | null) {
+export async function runInterview(
+  turns: InterviewTurn[],
+  company?: CompanyProfile | null,
+  /** The parts of the business the UI offers, so the interviewer picks one of them. */
+  departments: string[] = [],
+  /** What the person already typed into the form themselves — never asked about again. */
+  known = '',
+) {
   const today = new Date().toISOString().slice(0, 10);
   const context = company
     ? { industry: company.industry, size_hint: company.size_hint, summary: company.summary }
     : null;
-  return ask(InterviewSchema, interviewPrompt(turns, today, context), { effort: 'low' });
+  return ask(InterviewSchema, interviewPrompt(turns, today, context, departments, known), { effort: 'low', maxTokens: 1500 });
 }
 
 export async function saveProblem(input: ProblemInput): Promise<Problem> {

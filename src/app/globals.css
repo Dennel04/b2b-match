@@ -36,9 +36,16 @@ body {
 }
 
 /* Quality floor. Applies everywhere, never announced in the UI. */
-:where(a, button, input, select, textarea, [role="tab"], summary):focus-visible {
-  outline: 2px solid var(--accent);
+:where(a, button, [role="tab"], summary):focus-visible {
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
+}
+
+/* Form fields carry their own focus style: a boxed input rings its own border (see `inputClass`),
+   and a transparent one lets the plate around it light up. A generic outline here would draw a
+   second rectangle around both. */
+:where(input, select, textarea):focus-visible {
+  outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -277,3 +284,123 @@ body {
   .rw-italic, .rw-eraser, .rw-layer::after, .rw-char::after { display: none; }
   .rw-layer, .rw-char { animation: none; opacity: 1; clip-path: none; }
 }
+
+/* Describe-a-problem hero. A slow aurora in the product's own inks — nothing saturated, no second
+   palette. Reduced motion stops it via the rule above. */
+@keyframes aurora {
+  0% { transform: translate3d(-5%, -3%, 0) scale(1.05); }
+  50% { transform: translate3d(5%, 4%, 0) scale(1.18); }
+  100% { transform: translate3d(-5%, -3%, 0) scale(1.05); }
+}
+.aurora { animation: aurora 26s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+
+@keyframes caret { 50% { opacity: 0; } }
+.caret { animation: caret 1.05s steps(1) infinite; }
+
+/* The hero's arrow points at the form below it; the anchor scrolls there instead of jumping. */
+html { scroll-behavior: smooth; }
+@keyframes nudge {
+  0%, 70%, 100% { transform: translateY(0); }
+  85% { transform: translateY(4px); }
+}
+.nudge { animation: nudge 2.4s ease-in-out infinite; }
+
+/* A date field opens its picker wherever you click it. Chrome only opens on the little calendar
+   icon, and a click elsewhere selects a dd/mm/yyyy segment instead — which reads as the field
+   being highlighted for copying. Stretching the indicator over the whole field fixes both, with
+   no JS: the click lands on the picker button. Keyboard focus still moves through the segments. */
+input[type="date"].bare::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+input[type="date"].bare {
+  position: relative;
+}
+
+/* Popovers: a menu blooms from the control that opened it, never from its own centre. 180 ms in,
+   120 ms out, on a strong ease-out — the fast part happens while the eye is still on the trigger.
+   `--pop-origin` is set by the component once it knows whether it opens down or up. */
+.popcard {
+  transform-origin: var(--pop-origin, top left);
+  transition:
+    opacity 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.popcard[data-open="false"] {
+  opacity: 0;
+  transform: scale(0.96) translateY(-6px);
+  pointer-events: none;
+  transition-duration: 120ms;
+}
+.popcard[data-open="false"][data-up="true"] {
+  transform: scale(0.96) translateY(6px);
+}
+.popcard[data-open="true"] {
+  opacity: 1;
+  transform: none;
+}
+/* Motion off: the menu still appears and disappears, it just does not travel. */
+@media (prefers-reduced-motion: reduce) {
+  .popcard[data-open="false"] {
+    transform: none;
+  }
+}
+
+/* Hero → interview. The plate the person typed into is named `interview` on both screens, so the
+   browser morphs it into the chat panel and cross-fades everything else around it. 420 ms: this
+   is a place change, not a menu, and it is the one orchestrated moment on the screen. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+::view-transition-group(interview) {
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* The model is out. A shape that keeps changing reads as thought; a spinner reads as a wait. */
+@keyframes blob {
+  0% { border-radius: 60% 40% 55% 45% / 45% 55% 45% 55%; transform: rotate(0deg) scale(1); }
+  33% { border-radius: 40% 60% 40% 60% / 60% 40% 60% 40%; transform: rotate(120deg) scale(0.88); }
+  66% { border-radius: 55% 45% 60% 40% / 40% 60% 40% 60%; transform: rotate(240deg) scale(1.06); }
+  100% { border-radius: 60% 40% 55% 45% / 45% 55% 45% 55%; transform: rotate(360deg) scale(1); }
+}
+.blob {
+  animation: blob 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* A field the interview just wrote. One pass of light, then it is an ordinary field again. */
+@keyframes fill-flash {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 45%, transparent); }
+  40% { box-shadow: 0 0 0 5px color-mix(in oklab, var(--accent) 16%, transparent); }
+  100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--accent) 0%, transparent); }
+}
+.fill-flash {
+  animation: fill-flash 1.1s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* A message arrives; it does not blink into place. */
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.msg-in {
+  animation: msg-in 260ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* The view that just replaced another one. Short, and only opacity and transform move. */
+@keyframes swap-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.swap-in {
+  animation: swap-in 220ms var(--ease-out) both;
+}
+
