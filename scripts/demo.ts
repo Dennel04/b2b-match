@@ -14,6 +14,16 @@ import type { AgentDialogueLine, BuyerTerms, DealEnvelope, SellerTerms } from '.
 const EMAIL = 'admin@super.com';
 const PASSWORD = 'password123';
 
+/**
+ * The buyers that come to the demo account must be owned by someone else, or getMatchView()
+ * reads the pair as one owner holding both sides and shows it from the buying side — which is
+ * the free side, and never the blurred one.
+ */
+const INCOMING_OWNER = 'incoming@demo.crossdesk.ee';
+
+/** What the demo account starts with, so an unlock can be shown twice and still have change. */
+const START_CREDITS = 30;
+
 /** Dates are relative to the run, so a regenerated demo never shows a start date in the past. */
 const inDays = (n: number) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10);
 
@@ -147,6 +157,104 @@ const PROBLEMS = [
       requirements: ['estonian_language'],
       dealbreakers: [],
     } satisfies BuyerTerms,
+  },
+];
+
+/**
+ * Buyers who came to Nordwell through its own services: this is the selling side, the one that
+ * costs credits to open. Each is a company in full — industry, size, city, languages, what it
+ * serves — because the credit buys exactly that, and a profile with three fields in it is not
+ * worth ten of anything.
+ *
+ * They are invented, like every buyer in this project (scripts/seed.ts says why), and they carry
+ * no logo for the same reason: there is no real site to read one off.
+ */
+const INCOMING = [
+  {
+    service: 'Last-mile delivery across the Baltics',
+    score: 88,
+    company: {
+      name: 'Pakiaed OU',
+      website: 'https://pakiaed.ee',
+      profile: {
+        name: 'Pakiaed OU',
+        industry: 'Parcel logistics',
+        size_hint: '~90 people, 180 lockers',
+        services: ['Parcel locker network', 'Locker installation', 'Firmware and callouts'],
+        keywords: ['parcel lockers', 'last mile', 'e-commerce delivery', 'Baltics'],
+        summary:
+          'An Estonian parcel operator running 180 automated pick-up points for small e-commerce ' +
+          'brands across the Baltics, installed and serviced by its own field crew.',
+        city: 'Tallinn',
+        country: 'Estonia',
+        languages: ['Estonian', 'English'],
+        industries_served: ['E-commerce', 'Retail'],
+        employees: 90,
+        founded: 2016,
+      },
+    },
+    problem: {
+      department: 'Logistics & supply chain',
+      text:
+        'Our own vans cannot cover the Latvian routes\n' +
+        'Eight of our lockers in Latvia are served by two vans that are already full, and a late ' +
+        'refill means a parcel sits a day longer than we promise. Hiring a third crew for one ' +
+        'country is more than the route earns.',
+      urgency: 'high' as const,
+      terms: {
+        budget_ceiling: { amount: 7_000, currency: 'EUR', period: 'monthly' },
+        contract_formats: ['monthly_retainer', 'outcome_based'],
+        start_by: inDays(45),
+        requirements: ['gdpr_dpa', 'english_language'],
+        dealbreakers: [],
+      } satisfies BuyerTerms,
+    },
+    reasoning_public:
+      'Runs a parcel locker network across the Baltics and needs delivery capacity on Latvian ' +
+      'routes, with service callouts on the same contract. Your fleet already covers those roads.',
+  },
+  {
+    service: 'Contract warehousing in Tallinn and Riga',
+    score: 84,
+    company: {
+      name: 'Kaluri Kalatoostus OU',
+      website: 'https://kaluri.ee',
+      profile: {
+        name: 'Kaluri Kalatoostus OU',
+        industry: 'Food production',
+        size_hint: '~140 people, two plants',
+        services: ['Chilled fish processing', 'Private-label packing', 'Export to Nordics'],
+        keywords: ['food production', 'chilled logistics', 'private label', 'export'],
+        summary:
+          'A family-owned Estonian fish processor packing chilled and smoked products for Nordic ' +
+          'retail chains under their own private labels, from two plants on the north coast.',
+        city: 'Parnu',
+        country: 'Estonia',
+        languages: ['Estonian', 'English', 'Finnish'],
+        industries_served: ['Retail', 'Food service'],
+        employees: 140,
+        founded: 1998,
+      },
+    },
+    problem: {
+      department: 'Operations',
+      text:
+        'Export stock is stored in three rented rooms\n' +
+        'Pallets waiting for the Finland run sit in three rented cold rooms with three different ' +
+        'contracts, and nobody can say in one place what is where. Twice this year we shipped a ' +
+        'pallet that was already promised to another chain.',
+      urgency: 'medium' as const,
+      terms: {
+        budget_ceiling: { amount: 5_000, currency: 'EUR', period: 'monthly' },
+        contract_formats: ['monthly_retainer'],
+        start_by: inDays(60),
+        requirements: ['gdpr_dpa', 'estonian_language'],
+        dealbreakers: ['No shared pallet space with raw meat'],
+      } satisfies BuyerTerms,
+    },
+    reasoning_public:
+      'Packs chilled private-label food for Nordic retail and wants one bonded warehouse instead ' +
+      'of three rented rooms. Your Tallinn and Riga space and stock portal answer what they asked.',
   },
 ];
 
@@ -347,7 +455,78 @@ async function main() {
     console.log(`  + match ${r.score} ${r.seller.companies.name} (${r.status})`);
   }
 
-  console.log(`Done: ${EMAIL} / ${PASSWORD} — ${SERVICES.length} services, ${problems.length} problems, ${rows.length} matches.`);
+  // 5. The selling side: buyers who came to Nordwell's own services, none of them opened yet.
+  //    Their owner is a second account, so the demo account reads these as a seller and every
+  //    row is blurred behind its credit. Deleting the companies takes their matches, and with
+  //    them any unlock already paid for — a regenerated demo is always locked again.
+  const { data: others } = await db.auth.admin.listUsers({ perPage: 1000 });
+  let incomingOwner = others.users.find((u) => u.email === INCOMING_OWNER)?.id;
+  if (!incomingOwner) {
+    const { data, error } = await db.auth.admin.createUser({ email: INCOMING_OWNER, email_confirm: true });
+    if (error) throw error;
+    incomingOwner = data.user.id;
+  }
+  await db.from('companies').delete().eq('owner_id', incomingOwner);
+
+  const { data: own } = await db.from('services').select('id, title, terms').eq('company_id', company.id);
+
+  for (const inc of INCOMING) {
+    const service = (own ?? []).find((s) => s.title === inc.service);
+    if (!service) throw new Error(`Demo service missing: ${inc.service}`);
+
+    const { data: buyer, error: bErr } = await db
+      .from('companies')
+      .insert({
+        owner_id: incomingOwner,
+        name: inc.company.name,
+        website: inc.company.website,
+        role: 'buyer',
+        profile_json: inc.company.profile,
+        seller_terms: null,
+      })
+      .select('id')
+      .single();
+    if (bErr) throw bErr;
+
+    const { data: problem, error: bpErr } = await db
+      .from('problems')
+      .insert({
+        company_id: buyer.id,
+        text: inc.problem.text,
+        department: inc.problem.department,
+        urgency: inc.problem.urgency,
+        buyer_terms: inc.problem.terms,
+      })
+      .select('id')
+      .single();
+    if (bpErr) throw bpErr;
+
+    const { error: mErr } = await db.from('matches').insert({
+      buyer_company_id: buyer.id,
+      seller_company_id: company.id,
+      problem_id: problem.id,
+      service_id: service.id,
+      score: inc.score,
+      // The buyer has already said they want to meet: the next move, and the credit, are the
+      // seller's.
+      status: 'buyer_interested',
+      reasoning_public: inc.reasoning_public,
+      compatibility_json: checkCompatibility(inc.problem.terms, service.terms as SellerTerms),
+      agent_dialogue_json: dialogue('A monthly retainer'),
+      deal_envelope_json: envelope('monthly_retainer', inDays(21)),
+      negotiation_started_at: new Date().toISOString(),
+    });
+    if (mErr) throw mErr;
+    console.log(`  + incoming ${inc.score} ${inc.company.name} (locked)`);
+  }
+
+  const { error: crErr } = await db.from('companies').update({ credits: START_CREDITS }).eq('id', company.id);
+  if (crErr) throw crErr;
+
+  console.log(
+    `Done: ${EMAIL} / ${PASSWORD} — ${SERVICES.length} services, ${problems.length} problems, ` +
+      `${rows.length} matches out, ${INCOMING.length} locked in, ${START_CREDITS} credits.`,
+  );
 }
 
 const BRIEF = `## Why you are meeting
