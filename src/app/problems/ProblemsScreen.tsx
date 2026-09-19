@@ -37,7 +37,13 @@ export interface ProblemsFilter {
  * controls, not a filter rail: how it is cut (deadline or part of the business), and whether
  * closed ones are in. State needs no filter: every row already says it.
  */
-export function ProblemsScreen({ d, f }: { d: ProblemsScreenData; f: ProblemsFilter}) {
+export function ProblemsScreen({
+  d,
+  f,
+}: {
+  d: ProblemsScreenData;
+  f: ProblemsFilter;
+}) {
   const byPart = f.by === "part" && d.rows.some((r) => r.area);
   const withClosed = f.closed !== undefined;
 
@@ -49,24 +55,37 @@ export function ProblemsScreen({ d, f }: { d: ProblemsScreenData; f: ProblemsFil
   const href = (next: Partial<ProblemsFilter>) => {
     const by = "by" in next ? next.by : byPart ? "part" : undefined;
     const withC = "closed" in next ? next.closed !== undefined : withClosed;
-    const parts = [f.demo && "demo", by === "part" && "by=part", withC && "closed"].filter(Boolean);
+    const parts = [
+      f.demo && "demo",
+      by === "part" && "by=part",
+      withC && "closed",
+    ].filter(Boolean);
     return parts.length ? `/problems?${parts.join("&")}` : "/problems";
   };
 
   return (
-    <AppShell active="problems" demo={f.demo} matches={d.matches} initials={d.initials}>
+    <AppShell
+      active="problems"
+      demo={f.demo}
+      matches={d.matches}
+      initials={d.initials}
+    >
       <main className="flex flex-col">
-
         <section className="mx-auto w-full max-w-[1200px] px-4 pt-6 md:px-9 md:pt-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
             <div className="min-w-0">
-              <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Problems</h1>
+              <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">
+                Problems
+              </h1>
               <p className="mt-2 text-[14px] text-ink-soft">
                 {open} open
                 {ready > 0 && (
                   <>
                     <span className="ml-3 font-semibold text-accent-strong">
-                      <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]" />
+                      <span
+                        aria-hidden
+                        className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]"
+                      />
                       {ready} ready to meet
                     </span>
                   </>
@@ -109,30 +128,38 @@ export function ProblemsScreen({ d, f }: { d: ProblemsScreenData; f: ProblemsFil
         {/* Sections breathe, the list keeps one edge: air above each heading, never a box per group. */}
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-4 md:px-9">
           {rows.length === 0 ? (
-            <p className="text-[14px] text-ink-soft">No problems described yet.</p>
+            <Blank
+              title="Nothing stuck yet"
+              lead="Describe what is not working and the platform goes looking. Your words stay private — only the platform reads them."
+              href="/problems/new"
+              action="Describe a problem"
+            />
           ) : (
-            (byPart ? byArea(rows) : byDeadline(rows)).map(([label, list], i) => (
-              <div key={label} className={i > 0 ? "mt-8" : "mt-2"}>
-                {/*
-                  * Label left, count on the right edge of the card. The count is inventory, not
-                  * a notification: plain figures, no filled badge — nothing here is unread.
-                  */}
-                <div className="flex items-baseline gap-2.5 pb-2.5">
-                  <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink-soft">{label}</h2>
-                  <span className="text-[12.5px] text-ink-faint">
-                    {list.length} {list.length === 1 ? "problem" : "problems"}
-                  </span>
+            (byPart ? byArea(rows) : byDeadline(rows)).map(
+              ([label, list], i) => (
+                <div key={label} className={i > 0 ? "mt-8" : "mt-2"}>
+                  {/*
+                   * Label left, count on the right edge of the card. The count is inventory, not
+                   * a notification: plain figures, no filled badge — nothing here is unread.
+                   */}
+                  <div className="flex items-baseline gap-2.5 pb-2.5">
+                    <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink-soft">
+                      {label}
+                    </h2>
+                    <span className="text-[12.5px] text-ink-faint">
+                      {list.length} {list.length === 1 ? "problem" : "problems"}
+                    </span>
+                  </div>
+                  <div className="overflow-hidden rounded-xl border border-line bg-surface">
+                    {list.map((r) => (
+                      <ProblemLine key={r.id} r={r} demo={f.demo} />
+                    ))}
+                  </div>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-line bg-surface">
-                  {list.map((r) => (
-                    <ProblemLine key={r.id} r={r} demo={f.demo} />
-                  ))}
-                </div>
-              </div>
-            ))
+              ),
+            )
           )}
         </section>
-
       </main>
     </AppShell>
   );
@@ -143,9 +170,16 @@ type Section = [label: string, rows: ProblemRow[]];
 /** Default cut: a start date is the one term that moves on its own. */
 function byDeadline(rows: ProblemRow[]): Section[] {
   const soon = Date.now() + 45 * 864e5;
-  const of = (r: ProblemRow) => (!r.startBy ? 2 : new Date(r.startBy).getTime() <= soon ? 0 : 1);
+  const of = (r: ProblemRow) =>
+    !r.startBy ? 2 : new Date(r.startBy).getTime() <= soon ? 0 : 1;
   const at = (i: number) =>
-    rows.filter((r) => of(r) === i).sort((a, b) => rank(a) - rank(b) || (a.startBy ?? "9").localeCompare(b.startBy ?? "9"));
+    rows
+      .filter((r) => of(r) === i)
+      .sort(
+        (a, b) =>
+          rank(a) - rank(b) ||
+          (a.startBy ?? "9").localeCompare(b.startBy ?? "9"),
+      );
   return (
     [
       ["Starting soon", at(0)],
@@ -160,7 +194,9 @@ function byArea(rows: ProblemRow[]): Section[] {
   const areas = [...new Set(rows.map((r) => r.area ?? "No part set"))];
   return areas
     .map((a): Section => {
-      const list = rows.filter((r) => (r.area ?? "No part set") === a).sort((x, y) => rank(x) - rank(y));
+      const list = rows
+        .filter((r) => (r.area ?? "No part set") === a)
+        .sort((x, y) => rank(x) - rank(y));
       return [a, list];
     })
     .sort((x, y) => y[1].length - x[1].length);
@@ -173,7 +209,9 @@ function ProblemLine({ r, demo }: { r: ProblemRow; demo?: boolean }) {
       className="flex items-center gap-6 border-b border-line px-4 py-[18px] transition-colors last:border-b-0 hover:bg-surface-alt/50 md:px-5"
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">{r.title}</p>
+        <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">
+          {r.title}
+        </p>
         <p className="mt-1 truncate text-[13px] text-ink-soft">
           {r.area && <span className="text-ink">{r.area}</span>}
           {r.area && r.terms && " · "}
@@ -186,7 +224,9 @@ function ProblemLine({ r, demo }: { r: ProblemRow; demo?: boolean }) {
         <Signal r={r} />
       </span>
 
-      <span className={`hidden w-[56px] flex-none text-right text-[12.5px] tabular-nums md:block ${overdue(r) ? "text-ink" : "text-ink-faint"}`}>
+      <span
+        className={`hidden w-[56px] flex-none text-right text-[12.5px] tabular-nums md:block ${overdue(r) ? "text-ink" : "text-ink-faint"}`}
+      >
         {dateLabel(r.startBy)}
       </span>
     </Link>
@@ -198,7 +238,10 @@ function ProblemLine({ r, demo }: { r: ProblemRow; demo?: boolean }) {
  * a meeting waiting > a company to ask > matching in the background.
  */
 function Signal({ r }: { r: ProblemRow }) {
-  if (r.state === "closed") return <span className="text-[12px] font-medium text-ink-faint">Closed</span>;
+  if (r.state === "closed")
+    return (
+      <span className="text-[12px] font-medium text-ink-faint">Closed</span>
+    );
   if (r.state === "ready")
     return (
       <Chip tone="accent">
@@ -206,13 +249,13 @@ function Signal({ r }: { r: ProblemRow }) {
         {r.matched} ready to meet
       </Chip>
     );
-  if (r.awaiting > 0)
+  if (r.awaiting > 0) return <Chip tone="seal">{r.awaiting} to ask</Chip>;
+  if (r.matched > 0)
     return (
-      <Chip tone="seal">
-        {r.awaiting} to ask
-      </Chip>
+      <span className="text-[12.5px] text-ink-soft tabular-nums">
+        {r.matched} matched
+      </span>
     );
-  if (r.matched > 0) return <span className="text-[12.5px] text-ink-soft tabular-nums">{r.matched} matched</span>;
   return <span className="text-[12.5px] text-ink-faint">Searching</span>;
 }
 
@@ -230,19 +273,68 @@ function overdue(r: ProblemRow) {
 
 function dateLabel(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
-function Toggle({ href, on, children }: { href: string; on: boolean; children: React.ReactNode }) {
+function Toggle({
+  href,
+  on,
+  children,
+}: {
+  href: string;
+  on: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
       aria-current={on ? "true" : undefined}
       className={`whitespace-nowrap rounded-[8px] px-2.5 py-1.5 text-[12.5px] font-medium transition-colors ${
-        on ? "bg-selected text-surface" : "text-ink-soft hover:bg-surface-alt hover:text-ink"
+        on
+          ? "bg-selected text-surface"
+          : "text-ink-soft hover:bg-surface-alt hover:text-ink"
       }`}
     >
       {children}
     </Link>
+  );
+}
+
+/**
+ * An empty list is an invitation, not a status line. The header already carries the same button;
+ * this one says why the page is empty and what would change it, where the eye actually lands.
+ */
+function Blank({
+  title,
+  lead,
+  href,
+  action,
+}: {
+  title: string;
+  lead: string;
+  href: string;
+  action: string;
+}) {
+  return (
+    <div className="mt-2 flex flex-col items-start gap-5 rounded-xl border border-line bg-surface px-6 py-12 md:items-center md:px-8 md:py-16 md:text-center">
+      <div className="flex flex-col gap-2 md:items-center">
+        <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
+          {title}
+        </h2>
+        <p className="max-w-[52ch] text-[14.5px] leading-relaxed text-ink-soft">
+          {lead}
+        </p>
+      </div>
+      <Link
+        href={href}
+        className="inline-flex items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+      >
+        <Icon name="plus" size={15} />
+        {action}
+      </Link>
+    </div>
   );
 }

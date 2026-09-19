@@ -36,7 +36,13 @@ export interface ServicesFilter {
  * Each service is matched on its own terms, because a call centre and a fibre install are not
  * the same deal.
  */
-export function ServicesScreen({ d, f }: { d: ServicesScreenData; f: ServicesFilter }) {
+export function ServicesScreen({
+  d,
+  f,
+}: {
+  d: ServicesScreenData;
+  f: ServicesFilter;
+}) {
   const byPart = f.by === "part" && d.rows.some((r) => r.area);
   const withPaused = f.paused !== undefined;
 
@@ -48,24 +54,37 @@ export function ServicesScreen({ d, f }: { d: ServicesScreenData; f: ServicesFil
   const href = (next: Partial<ServicesFilter>) => {
     const by = "by" in next ? next.by : byPart ? "part" : undefined;
     const withP = "paused" in next ? next.paused !== undefined : withPaused;
-    const parts = [f.demo && "demo", by === "part" && "by=part", withP && "paused"].filter(Boolean);
+    const parts = [
+      f.demo && "demo",
+      by === "part" && "by=part",
+      withP && "paused",
+    ].filter(Boolean);
     return parts.length ? `/services?${parts.join("&")}` : "/services";
   };
 
   return (
-    <AppShell active="services" demo={f.demo} matches={d.matches} initials={d.initials}>
+    <AppShell
+      active="services"
+      demo={f.demo}
+      matches={d.matches}
+      initials={d.initials}
+    >
       <main className="flex flex-col">
-
         <section className="mx-auto w-full max-w-[1200px] px-4 pt-6 md:px-9 md:pt-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
             <div className="min-w-0">
-              <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Services</h1>
+              <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">
+                Services
+              </h1>
               <p className="mt-2 text-[14px] text-ink-soft">
                 {live} live
                 {interested > 0 && (
                   <>
                     <span className="ml-3 font-semibold text-accent-strong">
-                      <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]" />
+                      <span
+                        aria-hidden
+                        className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]"
+                      />
                       {interested} with a buyer waiting
                     </span>
                   </>
@@ -108,30 +127,38 @@ export function ServicesScreen({ d, f }: { d: ServicesScreenData; f: ServicesFil
         {/* Sections breathe, the list keeps one edge: air above each heading, never a box per group. */}
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-4 md:px-9">
           {rows.length === 0 ? (
-            <p className="text-[14px] text-ink-soft">Nothing listed yet. Each service is matched on its own terms.</p>
+            <Blank
+              title="Nothing listed yet"
+              lead="List what you do and buyers with a matching problem are shown to you. Each service is matched on its own terms."
+              href="/services/new"
+              action="List a service"
+            />
           ) : (
-            (byPart ? byArea(rows) : byAvailability(rows)).map(([label, list], i) => (
-              <div key={label} className={i > 0 ? "mt-8" : "mt-2"}>
-                {/*
-                  * Label left, count beside it. The count is inventory, not a notification:
-                  * plain figures, no filled badge — nothing here is unread.
-                  */}
-                <div className="flex items-baseline gap-2.5 pb-2.5">
-                  <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink-soft">{label}</h2>
-                  <span className="text-[12.5px] text-ink-faint">
-                    {list.length} {list.length === 1 ? "service" : "services"}
-                  </span>
+            (byPart ? byArea(rows) : byAvailability(rows)).map(
+              ([label, list], i) => (
+                <div key={label} className={i > 0 ? "mt-8" : "mt-2"}>
+                  {/*
+                   * Label left, count beside it. The count is inventory, not a notification:
+                   * plain figures, no filled badge — nothing here is unread.
+                   */}
+                  <div className="flex items-baseline gap-2.5 pb-2.5">
+                    <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink-soft">
+                      {label}
+                    </h2>
+                    <span className="text-[12.5px] text-ink-faint">
+                      {list.length} {list.length === 1 ? "service" : "services"}
+                    </span>
+                  </div>
+                  <div className="overflow-hidden rounded-xl border border-line bg-surface">
+                    {list.map((r) => (
+                      <ServiceLine key={r.id} r={r} demo={f.demo} />
+                    ))}
+                  </div>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-line bg-surface">
-                  {list.map((r) => (
-                    <ServiceLine key={r.id} r={r} demo={f.demo} />
-                  ))}
-                </div>
-              </div>
-            ))
+              ),
+            )
           )}
         </section>
-
       </main>
     </AppShell>
   );
@@ -142,11 +169,16 @@ type Section = [label: string, rows: ServiceRow[]];
 /** Default cut: when you can take the work is the one term that moves on its own. */
 function byAvailability(rows: ServiceRow[]): Section[] {
   const now = Date.now();
-  const of = (r: ServiceRow) => (!r.availableFrom ? 2 : new Date(r.availableFrom).getTime() <= now ? 0 : 1);
+  const of = (r: ServiceRow) =>
+    !r.availableFrom ? 2 : new Date(r.availableFrom).getTime() <= now ? 0 : 1;
   const at = (i: number) =>
     rows
       .filter((r) => of(r) === i)
-      .sort((a, b) => rank(a) - rank(b) || (a.availableFrom ?? "9").localeCompare(b.availableFrom ?? "9"));
+      .sort(
+        (a, b) =>
+          rank(a) - rank(b) ||
+          (a.availableFrom ?? "9").localeCompare(b.availableFrom ?? "9"),
+      );
   return (
     [
       ["Available now", at(0)],
@@ -161,7 +193,9 @@ function byArea(rows: ServiceRow[]): Section[] {
   const areas = [...new Set(rows.map((r) => r.area ?? "No part set"))];
   return areas
     .map((a): Section => {
-      const list = rows.filter((r) => (r.area ?? "No part set") === a).sort((x, y) => rank(x) - rank(y));
+      const list = rows
+        .filter((r) => (r.area ?? "No part set") === a)
+        .sort((x, y) => rank(x) - rank(y));
       return [a, list];
     })
     .sort((x, y) => y[1].length - x[1].length);
@@ -174,7 +208,9 @@ function ServiceLine({ r, demo }: { r: ServiceRow; demo?: boolean }) {
       className="flex items-center gap-6 border-b border-line px-4 py-[18px] transition-colors last:border-b-0 hover:bg-surface-alt/50 md:px-5"
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">{r.title}</p>
+        <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">
+          {r.title}
+        </p>
         <p className="mt-1 truncate text-[13px] text-ink-soft">
           {r.area && <span className="text-ink">{r.area}</span>}
           {r.area && r.terms && " · "}
@@ -199,7 +235,10 @@ function ServiceLine({ r, demo }: { r: ServiceRow; demo?: boolean }) {
  * a buyer waiting on an answer > a term to move > matching in the background.
  */
 function Signal({ r }: { r: ServiceRow }) {
-  if (r.state === "paused") return <span className="text-[12px] font-medium text-ink-faint">Paused</span>;
+  if (r.state === "paused")
+    return (
+      <span className="text-[12px] font-medium text-ink-faint">Paused</span>
+    );
   if (r.state === "interested")
     return (
       <Chip tone="accent">
@@ -208,7 +247,12 @@ function Signal({ r }: { r: ServiceRow }) {
       </Chip>
     );
   if (r.awaiting > 0) return <Chip tone="seal">{r.awaiting} a term away</Chip>;
-  if (r.matched > 0) return <span className="text-[12.5px] text-ink-soft tabular-nums">{r.matched} matched</span>;
+  if (r.matched > 0)
+    return (
+      <span className="text-[12.5px] text-ink-soft tabular-nums">
+        {r.matched} matched
+      </span>
+    );
   return <span className="text-[12.5px] text-ink-faint">Listed</span>;
 }
 
@@ -222,19 +266,68 @@ function rank(r: ServiceRow) {
 
 function dateLabel(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+  });
 }
 
-function Toggle({ href, on, children }: { href: string; on: boolean; children: React.ReactNode }) {
+function Toggle({
+  href,
+  on,
+  children,
+}: {
+  href: string;
+  on: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
       aria-current={on ? "true" : undefined}
       className={`whitespace-nowrap rounded-[8px] px-2.5 py-1.5 text-[12.5px] font-medium transition-colors ${
-        on ? "bg-ink text-surface" : "text-ink-soft hover:bg-surface-alt hover:text-ink"
+        on
+          ? "bg-ink text-surface"
+          : "text-ink-soft hover:bg-surface-alt hover:text-ink"
       }`}
     >
       {children}
     </Link>
+  );
+}
+
+/**
+ * An empty list is an invitation, not a status line. The header already carries the same button;
+ * this one says why the page is empty and what would change it, where the eye actually lands.
+ */
+function Blank({
+  title,
+  lead,
+  href,
+  action,
+}: {
+  title: string;
+  lead: string;
+  href: string;
+  action: string;
+}) {
+  return (
+    <div className="mt-2 flex flex-col items-start gap-5 rounded-xl border border-line bg-surface px-6 py-12 md:items-center md:px-8 md:py-16 md:text-center">
+      <div className="flex flex-col gap-2 md:items-center">
+        <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
+          {title}
+        </h2>
+        <p className="max-w-[52ch] text-[14.5px] leading-relaxed text-ink-soft">
+          {lead}
+        </p>
+      </div>
+      <Link
+        href={href}
+        className="inline-flex items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+      >
+        <Icon name="plus" size={15} />
+        {action}
+      </Link>
+    </div>
   );
 }
