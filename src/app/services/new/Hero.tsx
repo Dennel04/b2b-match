@@ -51,15 +51,14 @@ export function Hero({ onStart, form }: { onStart: (text: string) => void; form:
         <div className="relative z-10 mx-auto flex w-full max-w-[880px] flex-1 flex-col justify-center px-5 pb-16 md:px-8">
           <span className="soft-in inline-flex w-fit items-center gap-1.5 rounded-full border border-line bg-surface/70 px-3 py-1.5 text-[12px] font-medium text-ink-soft backdrop-blur">
             <Icon name="handshake" size={12} />
-            Read against buyers&rsquo; problems. Your figures stay yours
+            Shown to buyers. Your figures are not
           </span>
 
           <h1 className="soft-in mt-5 text-[40px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[64px]" style={{ "--i": 1 } as React.CSSProperties}>
             Describe what you ship
           </h1>
           <p className="soft-in mt-3 max-w-[54ch] text-[15px] leading-relaxed text-ink-soft md:text-[16.5px]" style={{ "--i": 2 } as React.CSSProperties}>
-            One service at a time. What it is, who it is for, what it includes —
-            the price and the terms are asked in a few questions afterwards.
+            One service at a time. Say what it is. The rest is a few questions.
           </p>
 
           <div
