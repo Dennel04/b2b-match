@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RemoteLogo } from "@/components/RemoteLogo";
 import { Icon } from "@/components/ui";
 
 /**
@@ -12,7 +13,9 @@ export interface Party {
   id: string;
   name: string;
   place: string;
-  logo?: string;
+  logo?: string | null;
+  /** Still anonymous: `name` is what they do, not who they are, so it carries no initials. */
+  anon?: boolean;
 }
 
 /** A titled section of a working screen: label, count, and a short right-aligned fact. */
@@ -55,12 +58,7 @@ export function PartyRow({ p, children }: { p: Party; children: React.ReactNode 
   return (
     <div className="flex items-center gap-4 border-b border-surface-alt px-4 py-[18px] last:border-0 md:px-5">
       <span className="grid h-10 w-10 flex-none place-items-center overflow-hidden rounded-[11px] border border-line bg-surface">
-        {p.logo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={p.logo} alt="" width={26} height={26} className="block object-contain" />
-        ) : (
-          <Icon name="building-2" className="text-ink-faint" />
-        )}
+        {p.anon ? <Icon name="building-2" className="text-ink-faint" /> : <RemoteLogo url={p.logo} name={p.name} className="p-1.5" />}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">{p.name}</p>

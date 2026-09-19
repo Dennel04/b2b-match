@@ -405,11 +405,13 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
     viewer: isBuyer && isSeller ? 'both' : isBuyer ? 'buyer' : 'seller',
     buyer: {
       name: accepted || isBuyer ? row.buyer.name : null,
+      logo: accepted || isBuyer ? (row.buyer.profile_json?.logo_url ?? null) : null,
       industry: row.buyer.profile_json?.industry ?? 'undisclosed industry',
       size_hint: row.buyer.profile_json?.size_hint ?? '',
     },
     seller: {
       name: accepted || isSeller ? row.seller.name : null,
+      logo: accepted || isSeller ? (row.seller.profile_json?.logo_url ?? null) : null,
       summary: row.seller.profile_json?.summary ?? '',
     },
     problem_text: isBuyer ? row.problems.text : null,

@@ -281,8 +281,9 @@ export interface MatchView {
   score: number;
   reasoning_public: string;
   viewer: 'buyer' | 'seller' | 'both';
-  buyer: { name: string | null; industry: string; size_hint: string };
-  seller: { name: string | null; summary: string };
+  /** `logo` follows `name` exactly: both appear only once the match is accepted. */
+  buyer: { name: string | null; logo: string | null; industry: string; size_hint: string };
+  seller: { name: string | null; logo: string | null; summary: string };
   problem_text: string | null;
   compatibility: Compatibility | null;
   /** Lines appear one at a time while `negotiating`; `envelope` arrives last. */

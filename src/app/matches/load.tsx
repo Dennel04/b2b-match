@@ -51,7 +51,10 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
       name: selling
         ? (m.buyer.name ?? `A ${m.buyer.industry} company${m.buyer.size_hint ? `, ${m.buyer.size_hint}` : ""}`)
         : (m.seller.name ?? firstSentence(m.seller.summary)),
-      place: m.reasoning_public,
+      // The reason, not the reasoning: a row is read in a glance, the match screen is read.
+      place: firstSentence(m.reasoning_public),
+      logo: selling ? m.buyer.logo : m.seller.logo,
+      anon: selling ? !m.buyer.name : !m.seller.name,
     };
     const context = selling ? "They came to you" : m.problem_text ? splitVerbatim(m.problem_text)[0] : "";
 
@@ -120,6 +123,7 @@ export async function renderMatchScreen(matchId: string) {
           matches: await unseenMatchCount(),
           counterparty,
           problemTitle: m.problem_text ? splitVerbatim(m.problem_text)[0] : null,
+          logo: selling ? m.buyer.logo : m.seller.logo,
           // ponytail: only the selling side shows its own figures here; the buyer reads theirs
           // on the problem screen, where the ceiling lives.
           terms: selling ? sellerChips(own?.terms ?? null) : [],

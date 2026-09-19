@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppShell } from "@/components/layout";
+import { RemoteLogo } from "@/components/RemoteLogo";
 import { Card, Chip, Icon, Pill, Row } from "@/components/ui";
 import type { MatchView } from "@/types";
 import { MatchActions } from "./MatchActions";
@@ -12,6 +13,8 @@ export interface MatchScreenData {
   counterparty: string;
   /** The buyer's own problem, shown only to the buyer — the seller never receives it. */
   problemTitle: string | null;
+  /** Null until both sides accepted: a logo names a company as surely as its name does. */
+  logo: string | null;
   terms: string[];
   formats: string[];
 }
@@ -34,7 +37,15 @@ export function MatchScreen({ d }: { d: MatchScreenData }) {
           </nav>
 
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
-            <div className="min-w-0">
+            <div className="flex min-w-0 items-start gap-3.5">
+              <span className="mt-0.5 grid h-11 w-11 flex-none place-items-center overflow-hidden rounded-[12px] border border-line bg-surface md:mt-1">
+                {m.status === "accepted" ? (
+                  <RemoteLogo url={d.logo} name={d.counterparty} className="p-1.5" />
+                ) : (
+                  <Icon name="building-2" className="text-ink-faint" />
+                )}
+              </span>
+              <div className="min-w-0">
               <h1 className="max-w-[26ch] text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">
                 {d.counterparty}
               </h1>
@@ -43,6 +54,7 @@ export function MatchScreen({ d }: { d: MatchScreenData }) {
                   Against your problem: <span className="text-ink-soft">{d.problemTitle}</span>
                 </p>
               )}
+              </div>
             </div>
             <div className="flex flex-none items-center gap-1.5 md:pt-1.5">
               <Chip tone={m.status === "declined" ? "quiet" : "accent"}>
