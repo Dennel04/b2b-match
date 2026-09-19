@@ -93,7 +93,7 @@ export function ServicesScreen({
             </div>
             <Link
               href="/services/new"
-              className="inline-flex flex-none items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft md:mt-1.5"
+              className="inline-flex flex-none items-center gap-2 rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong md:mt-1.5"
             >
               <Icon name="plus" size={15} />
               Add a service
@@ -142,14 +142,14 @@ export function ServicesScreen({
                    * plain figures, no filled badge — nothing here is unread.
                    */}
                   <div className="flex items-baseline gap-2.5 pb-2.5">
-                    <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink-soft">
+                    <h2 className="text-[15px] font-semibold tracking-[-0.01em]">
                       {label}
                     </h2>
                     <span className="text-[12.5px] text-ink-faint">
                       {list.length} {list.length === 1 ? "service" : "services"}
                     </span>
                   </div>
-                  <div className="overflow-hidden rounded-xl border border-line bg-surface">
+                  <div className="overflow-hidden rounded-[10px] border border-line bg-surface">
                     {list.map((r) => (
                       <ServiceLine key={r.id} r={r} demo={f.demo} />
                     ))}
@@ -312,7 +312,7 @@ function Blank({
   action: string;
 }) {
   return (
-    <div className="mt-2 flex flex-col items-start gap-5 rounded-xl border border-line bg-surface px-6 py-12 md:items-center md:px-8 md:py-16 md:text-center">
+    <div className="mt-2 flex flex-col items-start gap-5 rounded-[10px] border border-line bg-surface px-6 py-12 md:items-center md:px-8 md:py-16 md:text-center">
       <div className="flex flex-col gap-2 md:items-center">
         <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
           {title}
@@ -323,7 +323,7 @@ function Blank({
       </div>
       <Link
         href={href}
-        className="inline-flex items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+        className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong"
       >
         <Icon name="plus" size={15} />
         {action}

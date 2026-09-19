@@ -9,15 +9,19 @@
   /* Surfaces — a cool paper ground, never cream */
   --bg: #f4f6f8;
   --surface: #ffffff;
-  --surface-alt: #edf1f3;
+  --surface-alt: #ecf1f5;
 
-  /* Ink — a real slate-teal, never a tinted black */
-  --ink: #16323a;
-  --ink-soft: #5c6e75;
-  --ink-faint: #8e9897;
+  /* Ink — the logo's slate blue taken dark, never a tinted black */
+  --ink: #172f45;
+  --ink-soft: #5b6c7a;
+  --ink-faint: #8b97a1;
   /* A picked chip, pill, date or toggle: two steps lighter than ink (≈300 on a ramp where ink is
      500), so a choice reads as chosen without looking like a button. White text still passes AA. */
-  --ink-selected: #56777f;
+  --ink-selected: #4f7391;
+
+  /* Brand — the colour of the mark. Primary buttons, and nothing that is not an action. */
+  --brand: #2d5778;
+  --brand-strong: #234862;
 
   /* Rules */
   --border: #e4e9ed;

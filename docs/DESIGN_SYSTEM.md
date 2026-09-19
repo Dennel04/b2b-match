@@ -17,7 +17,8 @@ something true.
   in the site header, 32 px in the app sidebar.
 - **Wordmark:** "**Cross**desk" — "Cross" in 800, "desk" in 400, one word, no space, Plus
   Jakarta Sans. Component: `src/components/Logo.tsx`.
-- The mark keeps its own colour (`#2D5778`); nothing else in the product uses it.
+- The mark's colour (`#2D5778`) is the `--brand` token: primary buttons use it, and the ink
+  family is the same slate blue taken dark, so the product reads as one colour with the logo.
 
 ## Colour
 
@@ -28,15 +29,16 @@ Every colour is a token in `src/styles/tokens.css`, exposed to Tailwind in `src/
 |---|---|---|
 | `--bg` | `#F4F6F8` | page ground — cool paper, never cream |
 | `--surface` | `#FFFFFF` | cards, bars, sidebar |
-| `--surface-alt` | `#EDF1F3` | active nav, quiet panels, inputs on signed-out screens |
-| `--ink` | `#16323A` | text and primary buttons — slate-teal, never a tinted black |
-| `--ink-soft` | `#5C6E75` | secondary text |
-| `--ink-faint` | `#8E9897` | metadata, placeholders |
-| `--ink-selected` | `#56777F` | a **picked** chip, pill, date, role card or toggle (Tailwind `bg-selected`) — two steps lighter than ink, so a choice never looks like a button. Buttons stay ink. |
+| `--surface-alt` | `#ECF1F5` | active nav, quiet panels, inputs on signed-out screens |
+| `--ink` | `#172F45` | text, avatars, count chips — the logo's slate blue taken dark, never a tinted black |
+| `--ink-soft` | `#5B6C7A` | secondary text |
+| `--ink-faint` | `#8B97A1` | metadata, placeholders |
+| `--ink-selected` | `#4F7391` | a **picked** chip, pill, date, role card or toggle (Tailwind `bg-selected`) — lighter than the brand, so a choice never looks like a button |
+| `--brand` / `--brand-strong` | `#2D5778` / `#234862` | **primary actions only**: the one solid button on a screen, and its hover |
 | `--border` / `--border-strong` | `#E4E9ED` / `#DDE3E7` | hairlines, input borders |
 | `--accent` (+ `-strong`, `-soft`) | `#2F6D52` | **state only**: ready, compatible, done, focus |
 | `--seal` (+ `-soft`) | `#8F6A35` / `#F3ECDC` | **withheld or negotiable only** |
-| `--danger` | `#9C4230` | errors |
+| `--danger` | `#9C4230` | errors — text in `danger` on `danger/10`, never gold |
 
 Accent and seal are signals, not decoration. A screen with no states has no green; the login
 screen is monochrome on purpose. When in doubt, use ink.
@@ -68,6 +70,16 @@ signed-out zone.
 - A button with a trailing arrow is a `PillButton`. The arrow points right at rest and turns 45°
   counter-clockwise on hover (500 ms, `--ease-drawer`); the circle around it never moves.
 - A button names what happens: "Accept meeting", not "Submit".
+- Three kinds, one look each, on every screen:
+
+| Kind | Classes | Where |
+|---|---|---|
+| Primary | `bg-brand text-surface hover:bg-brand-strong` | `Button` (solid), `PillButton` (dark), `RowButton primary`, header calls to action |
+| Secondary | `border border-line-strong bg-surface text-ink hover:bg-surface-alt` | `Button` ghost, row buttons, "Company details" |
+| Quiet | `text-ink-soft hover:bg-surface-alt hover:text-ink`, no border | title-row controls (Edit, Stop) |
+
+- Chips that report a state (status, score, negotiable area) are 7 px; tags a person picked or
+  typed are pills.
 
 ## Motion
 
@@ -87,7 +99,8 @@ Rules:
   from `scale(0)`. Animate `transform`, `opacity` and `clip-path` only.
 - Appearing in place: Tailwind `starting:` (CSS `@starting-style`), 200 ms, `ease-out`.
 - Page sections on signed-out screens enter with `.soft-in`, staggered by `--i`.
-- No looping motion, with one deliberate exception: the login headline.
+- No looping motion, with two deliberate exceptions on the login screen: the headline and the
+  agent diagram.
 - Every animation has a reduced-motion path: the end state, still.
 
 What exists:
@@ -95,8 +108,9 @@ What exists:
 - **Login headline** — "what's broken." types itself in, a black "private" bar sweeps over it,
   an eraser rubs it out from the right, and it types itself again in italics. 14 s loop, CSS
   only (`.rw-*` in `globals.css`, markup in `src/app/login/AuthScreen.tsx`).
-- **Login diagram** — two agents walk towards a lock three times, then the terms meet. Plays
-  once (`src/app/login/MatchDiagram.tsx`).
+- **Login diagram** — two agents walk towards a lock three times, the terms meet and hold, and
+  the lock comes back. 8 s loop; under reduced motion only the outcome shows
+  (`src/app/login/MatchDiagram.tsx`).
 - **Auth form** — the heading and any message settle in when they change.
 
 Tools for motion work, in `.claude/skills/`: `find-animation-opportunities` (where motion

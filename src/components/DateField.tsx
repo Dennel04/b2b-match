@@ -147,7 +147,7 @@ export function DateField({
         data-up={up}
         inert={!open}
         style={{ ["--pop-origin" as string]: up ? "bottom left" : "top left" }}
-        className={`popcard absolute left-0 z-30 w-[304px] rounded-[26px] bg-surface p-4 shadow-[0_28px_56px_-22px_rgba(22,50,58,0.38)] ring-1 ring-ink/[0.07] ${
+        className={`popcard absolute left-0 z-30 w-[304px] rounded-[26px] bg-surface p-4 shadow-[0_28px_56px_-22px_rgba(23,47,69,0.38)] ring-1 ring-ink/[0.07] ${
           up ? "bottom-full mb-3" : "top-full mt-3"
         }`}
       >

@@ -10,6 +10,8 @@
   --color-ink-soft: var(--ink-soft);
   --color-ink-faint: var(--ink-faint);
   --color-selected: var(--ink-selected);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
   --color-line: var(--border);
   --color-line-strong: var(--border-strong);
   --color-accent: var(--accent);

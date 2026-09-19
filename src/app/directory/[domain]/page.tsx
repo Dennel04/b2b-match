@@ -70,7 +70,7 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
             href={c.website}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex flex-none items-center gap-2 self-start rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft md:self-auto"
+            className="inline-flex flex-none items-center gap-2 self-start rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong md:self-auto"
           >
             Visit {c.domain}
             <Icon name="arrow-up-right" size={15} />

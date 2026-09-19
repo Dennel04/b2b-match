@@ -2,7 +2,7 @@ type Variant = "solid" | "ghost" | "quiet";
 
 const VARIANTS: Record<Variant, string> = {
   /** The one action a screen wants you to take. */
-  solid: "bg-ink text-bg hover:bg-ink-soft",
+  solid: "bg-brand text-surface hover:bg-brand-strong",
   /** An alternative action, equal in weight, lower in emphasis. */
   ghost: "border border-line-strong bg-surface text-ink hover:bg-surface-alt",
   /** Page-level controls in a bar, not decisions about content. */

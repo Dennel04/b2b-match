@@ -54,7 +54,7 @@ flex column on the right.
 
 - **Sidebar** — white, `border-right` 1px. A 64px header holding the product name, aligned to
   the top bar's height so the two bottom borders form one line; it is a link to `/dashboard`.
-  Then nav items: icon, label, optional count chip. Active item gets a `#EDF1F3` fill and weight 600. Utility items sit at the
+  Then nav items: icon, label, optional count chip. Active item gets a `surface-alt` fill and weight 600. Utility items sit at the
   bottom behind a `border-top`, pushed down with `margin-top:auto`.
 - **Top bar** — optional. A screen whose title already carries its own controls has none: the
   breadcrumb (`Problems › case reference`) sits above the title, and the status chip plus the
@@ -85,10 +85,11 @@ Defined in `src/app/globals.css`. Never write raw hex in a component.
 |---|---|---|
 | `--bg` | `#F4F6F8` | page ground, cool, never cream |
 | `--surface` | `#FFFFFF` | cards, bars, sidebar |
-| `--surface-alt` | `#EDF1F3` | active nav, quiet panels |
-| `--ink` | `#16323A` | text; a real slate-teal, never a tinted black |
-| `--ink-soft` | `#5C6E75` | secondary text |
-| `--ink-faint` | `#8E9897` | metadata, timestamps |
+| `--surface-alt` | `#ECF1F5` | active nav, quiet panels |
+| `--ink` | `#172F45` | text; the logo's slate blue taken dark, never a tinted black |
+| `--ink-soft` | `#5B6C7A` | secondary text |
+| `--ink-faint` | `#8B97A1` | metadata, timestamps |
+| `--brand` | `#2D5778` | the logo's colour; primary buttons only (`bg-brand`, hover `bg-brand-strong`) |
 | `--border` | `#E4E9ED` | rules and card borders |
 | `--accent` | `#2F6D52` | **state only**, never decoration — see below |
 | `--gold` / `--gold-soft` | `#8F6A35` / `#F3ECDC` | **withheld or negotiable, nothing else** |

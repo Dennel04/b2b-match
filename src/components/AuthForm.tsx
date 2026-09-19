@@ -90,7 +90,7 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
       <div role="tablist" className="relative grid grid-cols-2 rounded-full bg-surface-alt p-1">
         <span
           aria-hidden
-          className="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-surface shadow-[0_1px_3px_rgba(22,50,58,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+          className="absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-surface shadow-[0_1px_3px_rgba(23,47,69,0.12)] transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
           style={{ transform: mode === "login" ? "translateX(0)" : "translateX(100%)" }}
         />
         {(["login", "signup"] as const).map((m) => (

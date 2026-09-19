@@ -127,7 +127,7 @@ function Blank({ role }: { role: CompanyRole }) {
         <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
           <Link
             href={offers ? "/company" : "/problems/new"}
-            className="inline-flex items-center gap-2 rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+            className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong"
           >
             <Icon name={offers ? "building-2" : "plus"} size={15} />
             {offers ? "Review your services" : "Describe a problem"}

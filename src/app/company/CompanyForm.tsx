@@ -298,7 +298,7 @@ export function CompanyForm({
       {fill.state === "error" && (
         <p
           role="alert"
-          className="rounded-[18px] bg-gold-soft px-4 py-3 text-[13.5px] text-ink"
+          className="rounded-[18px] bg-danger/10 px-4 py-3 text-[13.5px] text-danger"
         >
           {fill.message} Paste a description instead, or write it yourself.
         </p>

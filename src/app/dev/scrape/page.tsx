@@ -39,10 +39,10 @@ export default async function ScrapeDebugPage({ searchParams }: PageProps<"/dev/
           aria-label="Website"
           className="h-10 flex-1 rounded-[8px] border border-line-strong bg-surface px-3 outline-none focus:border-accent"
         />
-        <button className="cursor-pointer rounded-[8px] bg-ink px-4 font-semibold text-surface hover:bg-ink-soft">Run</button>
+        <button className="cursor-pointer rounded-[8px] bg-brand px-4 font-semibold text-surface hover:bg-brand-strong">Run</button>
       </form>
 
-      {failure && <p className="rounded-[8px] bg-gold-soft px-4 py-3">{failure}</p>}
+      {failure && <p className="rounded-[8px] bg-danger/10 px-4 py-3 text-danger">{failure}</p>}
 
       {result && (
         <>

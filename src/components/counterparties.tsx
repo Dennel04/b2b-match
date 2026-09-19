@@ -77,7 +77,7 @@ export function RowButton({ href, primary, children }: { href: string; primary?:
     <Link
       href={href}
       className={`flex-none rounded-[8px] px-4 py-2 text-[13px] font-semibold transition-colors ${
-        primary ? "bg-ink text-surface hover:bg-ink-soft" : "border border-line-strong bg-surface text-ink hover:bg-surface-alt"
+        primary ? "bg-brand text-surface hover:bg-brand-strong" : "border border-line-strong bg-surface text-ink hover:bg-surface-alt"
       }`}
     >
       {children}

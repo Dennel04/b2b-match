@@ -25,7 +25,7 @@ export function Bezel({
       className={`rounded-[2rem] bg-ink/[0.035] p-1.5 ring-1 ring-ink/[0.05] ${className}`}
     >
       <div
-        className={`h-full rounded-[calc(2rem-0.375rem)] bg-surface shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_20px_40px_-24px_rgba(22,50,58,0.28)] ${inner}`}
+        className={`h-full rounded-[calc(2rem-0.375rem)] bg-surface shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_20px_40px_-24px_rgba(23,47,69,0.28)] ${inner}`}
       >
         {children}
       </div>
@@ -73,9 +73,9 @@ export function PillButton({
   return (
     <button
       {...rest}
-      className={`group inline-flex cursor-pointer items-center justify-center gap-3 rounded-full py-2 text-[14.5px] font-semibold transition-transform duration-500 ${EASE} active:scale-[0.98] disabled:cursor-default disabled:opacity-50 ${
+      className={`group inline-flex cursor-pointer items-center justify-center gap-3 rounded-full py-2 text-[14.5px] font-semibold transition-[transform,background-color] duration-500 ${EASE} active:scale-[0.98] disabled:cursor-default disabled:opacity-50 ${
         icon ? "pl-5 pr-2" : "px-5"
-      } ${dark ? "bg-ink text-surface" : "bg-ink/[0.06] text-ink hover:bg-ink/[0.09]"} ${className}`}
+      } ${dark ? "bg-brand text-surface hover:bg-brand-strong" : "bg-ink/[0.06] text-ink hover:bg-ink/[0.09]"} ${className}`}
     >
       <span className={icon ? "" : "py-1.5"}>{children}</span>
       {icon && (
@@ -214,7 +214,7 @@ export function TagInput({
       {value.map((t) => (
         <span
           key={t}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface py-1 pl-3 pr-1.5 text-[13px] shadow-[0_1px_2px_rgba(22,50,58,0.08)]"
+          className="inline-flex items-center gap-1.5 rounded-full bg-surface py-1 pl-3 pr-1.5 text-[13px] shadow-[0_1px_2px_rgba(23,47,69,0.08)]"
         >
           {t}
           <button
@@ -366,7 +366,7 @@ export function Select<T extends string>({
         data-up={up}
         inert={!open}
         style={{ ["--pop-origin" as string]: up ? "bottom left" : "top left" }}
-        className={`popcard absolute inset-x-0 z-30 max-h-72 overflow-auto rounded-2xl bg-surface p-1.5 shadow-[0_24px_48px_-20px_rgba(22,50,58,0.35)] ring-1 ring-ink/[0.07] ${
+        className={`popcard absolute inset-x-0 z-30 max-h-72 overflow-auto rounded-2xl bg-surface p-1.5 shadow-[0_24px_48px_-20px_rgba(23,47,69,0.35)] ring-1 ring-ink/[0.07] ${
           up ? "bottom-full mb-2" : "top-full mt-2"
         }`}
       >
@@ -429,7 +429,7 @@ export function Segmented<T extends string>({
     >
       <span
         aria-hidden
-        className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-surface shadow-[0_1px_3px_rgba(22,50,58,0.12)] transition-transform duration-300 ${EASE}`}
+        className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-surface shadow-[0_1px_3px_rgba(23,47,69,0.12)] transition-transform duration-300 ${EASE}`}
         style={{ transform: second ? "translateX(100%)" : "none" }}
       />
       {options.map((o) => (

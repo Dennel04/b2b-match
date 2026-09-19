@@ -62,7 +62,7 @@ export function Hero({ onStart, form }: { onStart: (text: string) => void; form:
           </p>
 
           <div
-            className="soft-in mt-8 rounded-[24px] border border-line bg-surface/85 p-4 shadow-[0_24px_60px_-32px_rgba(22,50,58,0.35)] backdrop-blur-xl transition-[border-color,box-shadow] duration-300 focus-within:border-accent/45 focus-within:shadow-[0_28px_70px_-30px_rgba(47,109,82,0.4)] md:p-5"
+            className="soft-in mt-8 rounded-[24px] border border-line bg-surface/85 p-4 shadow-[0_24px_60px_-32px_rgba(23,47,69,0.35)] backdrop-blur-xl transition-[border-color,box-shadow] duration-300 focus-within:border-accent/45 focus-within:shadow-[0_28px_70px_-30px_rgba(47,109,82,0.4)] md:p-5"
             style={{ "--i": 3, viewTransitionName: "interview" } as React.CSSProperties}
           >
             <div className="flex items-end gap-3">

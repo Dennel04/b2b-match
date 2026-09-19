@@ -94,7 +94,7 @@ export function ProblemsScreen({
             </div>
             <Link
               href="/problems/new"
-              className="inline-flex flex-none items-center gap-2 rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft md:mt-1.5"
+              className="inline-flex flex-none items-center gap-2 rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong md:mt-1.5"
             >
               <Icon name="plus" size={15} />
               Describe a problem
@@ -330,7 +330,7 @@ function Blank({
       </div>
       <Link
         href={href}
-        className="inline-flex items-center gap-2 rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+        className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong"
       >
         <Icon name="plus" size={15} />
         {action}

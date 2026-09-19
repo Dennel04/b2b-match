@@ -17,7 +17,7 @@ export const bare =
 
 /** A choice is a small cloud: the plate's own shape, at pill scale. Same ecosystem, same weight. */
 export const plate =
-  "bg-surface/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_20px_44px_-30px_rgba(22,50,58,0.32)] ring-1 ring-ink/[0.06] backdrop-blur-xl";
+  "bg-surface/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_20px_44px_-30px_rgba(23,47,69,0.32)] ring-1 ring-ink/[0.06] backdrop-blur-xl";
 export const pill =
   "inline-flex h-11 items-center rounded-full px-5 text-[14px] font-medium transition-shadow duration-300";
 
@@ -48,8 +48,8 @@ export function Pills<T extends string>({
             }
             className={`${pill} cursor-pointer ${
               on
-                ? "bg-selected text-surface shadow-[0_18px_36px_-22px_rgba(22,50,58,0.6)]"
-                : `${plate} text-ink hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_24px_50px_-28px_rgba(22,50,58,0.42)]`
+                ? "bg-selected text-surface shadow-[0_18px_36px_-22px_rgba(23,47,69,0.6)]"
+                : `${plate} text-ink hover:shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_24px_50px_-28px_rgba(23,47,69,0.42)]`
             }`}
           >
             {o.label}
@@ -150,7 +150,7 @@ export function Cloud({
         </div>
       ) : (
         <div
-          className={`flex flex-1 flex-col justify-center rounded-[26px] px-5 py-4 ${height} ${plate} transition-shadow duration-300 focus-within:shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_26px_56px_-26px_rgba(22,50,58,0.4)] focus-within:ring-ink/15`}
+          className={`flex flex-1 flex-col justify-center rounded-[26px] px-5 py-4 ${height} ${plate} transition-shadow duration-300 focus-within:shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),0_26px_56px_-26px_rgba(23,47,69,0.4)] focus-within:ring-ink/15`}
         >
           {children}
         </div>
