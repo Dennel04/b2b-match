@@ -44,7 +44,7 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     role: company.role as CompanyRole,
     matched: [],
     awaiting: [],
-    declined: 0,
+    declined: { selling: 0, buying: 0 },
   };
 
   for (const m of views) {
@@ -62,10 +62,12 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     };
     const context = selling ? "They came to you" : m.problem_text ? splitVerbatim(m.problem_text)[0] : "";
 
-    if (m.status === "declined" || m.negotiation?.envelope?.verdict === "reject") d.declined++;
+    const side = selling ? "selling" : "buying";
+
+    if (m.status === "declined" || m.negotiation?.envelope?.verdict === "reject") d.declined[side]++;
     else if (m.status !== "proposed" || m.negotiation?.envelope?.verdict === "proceed")
-      d.matched.push({ ...party, context, state: STATE[m.status][selling ? 1 : 0], yours: isYourMove(m), score: m.score, locked });
-    else d.awaiting.push({ ...party, context, area: openArea(m) });
+      d.matched.push({ ...party, side, context, state: STATE[m.status][selling ? 1 : 0], yours: isYourMove(m), score: m.score, locked });
+    else d.awaiting.push({ ...party, side, context, area: openArea(m) });
   }
 
   return (
