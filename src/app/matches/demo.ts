@@ -14,8 +14,8 @@ export const DEMO_MATCHES: MatchesScreenData = {
       // The one row the stage is for: a buyer who has said they want to meet, still unopened.
       id: "m-5",
       side: "selling",
-      name: "Parcel logistics, ~90 people",
-      place: "Needs delivery capacity on the Latvian routes your fleet already covers",
+      name: "An online grocery company",
+      place: "Short of delivery capacity on the Riga routes your fleet already runs",
       context: "Last-mile delivery across the Baltics",
       state: "Interest received",
       yours: true,

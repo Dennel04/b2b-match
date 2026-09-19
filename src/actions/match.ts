@@ -390,6 +390,19 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
   if (!isBuyer && !isSeller) throw new Error('Not a party to this match');
 
   const accepted = row.status === 'accepted';
+  // A seller that has spent a credit on this match has bought exactly this: who it is. Before
+  // that the buyer is a company and an industry, as it is to everyone else.
+  const paidFor =
+    isSeller &&
+    !!(
+      await adminClient()
+        .from('match_unlocks')
+        .select('match_id')
+        .eq('match_id', matchId)
+        .eq('company_id', row.seller_company_id)
+        .maybeSingle()
+    ).data;
+  const named = accepted || isBuyer || paidFor;
   const negotiating = isRunning(row.negotiation_started_at, row.deal_envelope_json);
   // On the demo account one owner holds both companies; the buying side is the one it reads.
   const seenAt = isBuyer ? row.buyer_seen_at : row.seller_seen_at;
@@ -405,8 +418,8 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
     reasoning_public: row.reasoning_public,
     viewer: isBuyer && isSeller ? 'both' : isBuyer ? 'buyer' : 'seller',
     buyer: {
-      name: accepted || isBuyer ? row.buyer.name : null,
-      logo: accepted || isBuyer ? (row.buyer.profile_json?.logo_url ?? null) : null,
+      name: named ? row.buyer.name : null,
+      logo: named ? (row.buyer.profile_json?.logo_url ?? null) : null,
       industry: row.buyer.profile_json?.industry ?? 'undisclosed industry',
       size_hint: row.buyer.profile_json?.size_hint ?? '',
     },

@@ -174,32 +174,32 @@ const INCOMING = [
     service: 'Last-mile delivery across the Baltics',
     score: 88,
     company: {
-      name: 'Pakiaed OU',
-      website: 'https://pakiaed.ee',
+      name: 'Baltic Basket',
+      website: 'https://balticbasket.ee',
       profile: {
-        name: 'Pakiaed OU',
-        industry: 'Parcel logistics',
-        size_hint: '~90 people, 180 lockers',
-        services: ['Parcel locker network', 'Locker installation', 'Firmware and callouts'],
-        keywords: ['parcel lockers', 'last mile', 'e-commerce delivery', 'Baltics'],
+        name: 'Baltic Basket',
+        industry: 'Online grocery',
+        size_hint: '~120 people',
+        services: ['Online grocery', 'Same-day delivery', 'Subscription boxes'],
+        keywords: ['e-commerce', 'grocery', 'chilled delivery', 'Baltics'],
         summary:
-          'An Estonian parcel operator running 180 automated pick-up points for small e-commerce ' +
-          'brands across the Baltics, installed and serviced by its own field crew.',
+          'An online grocer delivering chilled weekly orders to households in Tallinn, Tartu and ' +
+          'Riga, with its own picking centre and a subscription box for regular customers.',
         city: 'Tallinn',
         country: 'Estonia',
-        languages: ['Estonian', 'English'],
-        industries_served: ['E-commerce', 'Retail'],
-        employees: 90,
-        founded: 2016,
+        languages: ['Estonian', 'English', 'Russian'],
+        industries_served: ['Households', 'Small offices'],
+        employees: 120,
+        founded: 2017,
       },
     },
     problem: {
       department: 'Logistics & supply chain',
       text:
         'Our own vans cannot cover the Latvian routes\n' +
-        'Eight of our lockers in Latvia are served by two vans that are already full, and a late ' +
-        'refill means a parcel sits a day longer than we promise. Hiring a third crew for one ' +
-        'country is more than the route earns.',
+        'Riga orders are served by two vans that are already full, and a late round means chilled ' +
+        'goods go back to the depot. Hiring a third crew for one city costs more than the route ' +
+        'earns today.',
       urgency: 'high' as const,
       terms: {
         budget_ceiling: { amount: 7_000, currency: 'EUR', period: 'monthly' },
@@ -210,28 +210,28 @@ const INCOMING = [
       } satisfies BuyerTerms,
     },
     reasoning_public:
-      'Runs a parcel locker network across the Baltics and needs delivery capacity on Latvian ' +
-      'routes, with service callouts on the same contract. Your fleet already covers those roads.',
+      'Delivers chilled grocery orders daily in three Baltic cities and is short of capacity on ' +
+      'the Riga routes. Your fleet already runs those roads, with returns handled at the warehouse.',
   },
   {
     service: 'Contract warehousing in Tallinn and Riga',
     score: 84,
     company: {
-      name: 'Kaluri Kalatoostus OU',
-      website: 'https://kaluri.ee',
+      name: 'Tamme Furniture',
+      website: 'https://tammefurniture.ee',
       profile: {
-        name: 'Kaluri Kalatoostus OU',
-        industry: 'Food production',
-        size_hint: '~140 people, two plants',
-        services: ['Chilled fish processing', 'Private-label packing', 'Export to Nordics'],
-        keywords: ['food production', 'chilled logistics', 'private label', 'export'],
+        name: 'Tamme Furniture',
+        industry: 'Furniture manufacturing',
+        size_hint: '~140 people',
+        services: ['Oak and birch furniture', 'Private-label production', 'Export to the Nordics'],
+        keywords: ['furniture', 'manufacturing', 'private label', 'export'],
         summary:
-          'A family-owned Estonian fish processor packing chilled and smoked products for Nordic ' +
-          'retail chains under their own private labels, from two plants on the north coast.',
-        city: 'Parnu',
+          'A family-owned Estonian furniture maker producing oak and birch pieces for Nordic retail ' +
+          'chains under their own labels, from a single plant outside Viljandi.',
+        city: 'Viljandi',
         country: 'Estonia',
         languages: ['Estonian', 'English', 'Finnish'],
-        industries_served: ['Retail', 'Food service'],
+        industries_served: ['Retail', 'Hospitality'],
         employees: 140,
         founded: 1998,
       },
@@ -239,22 +239,22 @@ const INCOMING = [
     problem: {
       department: 'Operations',
       text:
-        'Export stock is stored in three rented rooms\n' +
-        'Pallets waiting for the Finland run sit in three rented cold rooms with three different ' +
+        'Export stock is spread across three rented halls\n' +
+        'Finished pieces waiting for the Finland run sit in three rented halls on three different ' +
         'contracts, and nobody can say in one place what is where. Twice this year we shipped a ' +
-        'pallet that was already promised to another chain.',
+        'batch that was already promised to another chain.',
       urgency: 'medium' as const,
       terms: {
         budget_ceiling: { amount: 5_000, currency: 'EUR', period: 'monthly' },
         contract_formats: ['monthly_retainer'],
         start_by: inDays(60),
         requirements: ['gdpr_dpa', 'estonian_language'],
-        dealbreakers: ['No shared pallet space with raw meat'],
+        dealbreakers: [],
       } satisfies BuyerTerms,
     },
     reasoning_public:
-      'Packs chilled private-label food for Nordic retail and wants one bonded warehouse instead ' +
-      'of three rented rooms. Your Tallinn and Riga space and stock portal answer what they asked.',
+      'Makes private-label furniture for Nordic retail and wants one bonded warehouse instead of ' +
+      'three rented halls. Your Tallinn and Riga space and the stock portal answer what they asked.',
   },
 ];
 

@@ -114,11 +114,12 @@ export function splitVerbatim(text: string): [string, string] {
  * the industry and, where a profile states one, the size. Never the first line of a summary:
  * a sentence in the title slot reads as a paragraph and says nothing at a glance.
  */
-export function anonymousName({ industry, size_hint }: { industry: string; size_hint: string }) {
-  // The headcount, and nothing after it: a size_hint written as "~90 people, 180 lockers" turned
-  // the one line that names a counterparty into a specification of it.
-  const size = size_hint.split(",")[0].trim();
-  return size ? `${industry}, ${size}` : industry;
+export function anonymousName({ industry }: { industry: string; size_hint: string }) {
+  // A company, not a specification of one. The row's title is where a name goes, so before there
+  // is a name it says the nearest true thing — "A parcel logistics company" — and the size, city
+  // and the rest stay on the match screen where they are read rather than glanced at.
+  const what = industry.trim().toLowerCase() || "company";
+  return `${/^[aeiou]/.test(what) ? "An" : "A"} ${what} company`;
 }
 
 export function firstSentence(s: string) {
