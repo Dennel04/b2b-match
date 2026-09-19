@@ -42,23 +42,22 @@ export default async function AccountPage() {
         <Header />
 
         {showSeller && (
-          <Section title="As a vendor" fact="Buyers' problems you were checked against">
+          <Section title="As a vendor">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <Stat label="Considered" value={s.considered} note="Problems your profile was checked against" />
-              <Stat label="Shown to buyers" value={s.shown} note={s.avg_score !== null ? `Average fit ${s.avg_score} of 100` : "None yet"} />
-              <Stat label="Buyers interested" value={s.buyer_interested + s.accepted} note="Asked to meet after the agents' talk" />
-              <Stat label="Meetings" value={s.accepted} note={s.accepted ? "Names shared on both sides" : "None confirmed yet"} state={s.accepted > 0} />
+              <Stat label="Considered" value={s.considered} note="Buyers' problems checked against your profile" />
+              <Stat label="Shown to buyers" value={s.shown} note={s.avg_score !== null ? `Average fit ${s.avg_score} of 100` : undefined} />
+              <Stat label="Buyers interested" value={s.buyer_interested + s.accepted} note="Asked to meet after the agents talked" />
+              <Stat label="Meetings" value={s.accepted} note={s.accepted ? "Names shared on both sides" : undefined} state={s.accepted > 0} />
             </div>
 
             <div className="grid gap-3 lg:grid-cols-2">
               <Card className="p-5">
                 <h3 className="text-[13.5px] font-semibold">From considered to meeting</h3>
-                <p className="mt-0.5 text-[12.5px] text-ink-soft">How far your profile got with each problem</p>
                 <Funnel
                   steps={[
                     ["Considered", s.considered],
                     ["Cleared terms", s.cleared_terms],
-                    ["Shown to the buyer", s.shown],
+                    ["Shown to buyers", s.shown],
                     ["Agents said proceed", s.proceed],
                     ["Buyer interested", s.buyer_interested + s.accepted],
                     ["Meeting", s.accepted],
@@ -71,10 +70,10 @@ export default async function AccountPage() {
         )}
 
         {showBuyer && (
-          <Section title="As a buyer" fact="What your problems have found">
+          <Section title="As a buyer">
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <Stat label="Problems written" value={b.problems} note="Private to your company" />
-              <Stat label="Vendors checked" value={b.candidates_evaluated} note={`${b.cleared_terms} cleared your terms`} />
+              <Stat label="Vendors checked" value={b.candidates_evaluated} note={b.candidates_evaluated ? `${b.cleared_terms} cleared your terms` : undefined} />
               <Stat label="Matches" value={b.matches} note="Scored high enough to show you" />
               <Stat label="Meetings" value={b.accepted} note="Confirmed by both sides" state={b.accepted > 0} />
             </div>
@@ -90,10 +89,7 @@ function Header() {
     <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div className="min-w-0">
         <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Dashboard</h1>
-        <p className="mt-2 max-w-[60ch] text-[14px] leading-relaxed text-ink-soft">
-          How your company is doing behind the wall: how often you are considered, how far you get, and what
-          stops you. Only you see these numbers.
-        </p>
+        <p className="mt-2 text-[14px] text-ink-soft">How far you get behind the wall. Only you see these numbers.</p>
       </div>
       <Link
         href="/company"
@@ -105,20 +101,17 @@ function Header() {
   );
 }
 
-function Section({ title, fact, children }: { title: string; fact?: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-3">
-        <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
-        {fact && <span className="ml-auto text-right text-[12.5px] text-ink-soft">{fact}</span>}
-      </div>
+      <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
       {children}
     </section>
   );
 }
 
 /** A number is the whole message here, so it is a tile, not a chart. */
-function Stat({ label, value, note, state = false }: { label: string; value: number; note: string; state?: boolean }) {
+function Stat({ label, value, note, state = false }: { label: string; value: number; note?: string; state?: boolean }) {
   return (
     <Card className="p-4 md:p-5">
       <p className="text-[12.5px] font-medium text-ink-soft">{label}</p>
@@ -126,7 +119,7 @@ function Stat({ label, value, note, state = false }: { label: string; value: num
         {value}
         {state && <Chip tone="accent">Confirmed</Chip>}
       </p>
-      <p className="mt-2 text-[12px] leading-snug text-ink-faint">{note}</p>
+      {note && <p className="mt-2 text-[12px] leading-snug text-ink-faint">{note}</p>}
     </Card>
   );
 }
@@ -160,9 +153,9 @@ function Blocked({ reasons, considered, cleared }: { reasons: CompanyStats["sell
   return (
     <Card className="flex flex-col p-5">
       <h3 className="text-[13.5px] font-semibold">What kept you out</h3>
-      <p className="mt-0.5 text-[12.5px] text-ink-soft">
-        {considered ? `${considered - cleared} of ${considered} stopped at the terms check` : "Nothing to show yet"}
-      </p>
+      {considered > 0 && (
+        <p className="mt-0.5 text-[12.5px] text-ink-soft">{considered - cleared} of {considered} stopped at the terms check</p>
+      )}
       {reasons.length ? (
         <>
           <ol className="mt-5 flex flex-col gap-3">
@@ -184,7 +177,7 @@ function Blocked({ reasons, considered, cleared }: { reasons: CompanyStats["sell
         </>
       ) : (
         <p className="mt-5 text-[13px] leading-relaxed text-ink-soft">
-          {considered ? "No buyer was filtered out on your terms." : "Once buyers describe problems, this shows what stopped them seeing you."}
+          {considered ? "Your terms filtered out no one." : "This fills in once buyers start describing problems."}
         </p>
       )}
     </Card>
