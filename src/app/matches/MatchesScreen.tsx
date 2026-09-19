@@ -79,7 +79,7 @@ export function MatchesScreen({ d }: { d: MatchesScreenData; demo?: boolean }) {
         ) : (
           <div className="pt-4">
             {has(selling) && (
-              <Side title="They came to you" lead="Buyers who arrived through your services." {...selling} />
+              <Side title="Your clients" lead="Buyers who came to you through your own services." {...selling} />
             )}
             {has(buying) && (
               <Side title="Can help you" lead="Vendors matched to the problems you wrote." {...buying} />

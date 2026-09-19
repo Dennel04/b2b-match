@@ -62,7 +62,7 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     };
     // Which of this company's own things the pair was made through: the service a buyer came to,
     // or the problem a vendor answers. Without it a row is a company and no reason.
-    const context = selling ? (m.service?.title ?? "They came to you") : m.problem_text ? splitVerbatim(m.problem_text)[0] : "";
+    const context = selling ? (m.service?.title ?? "Your services") : m.problem_text ? splitVerbatim(m.problem_text)[0] : "";
 
     const side = selling ? "selling" : "buying";
 
