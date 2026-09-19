@@ -117,42 +117,70 @@ html {
   to { opacity: 1; transform: none; }
 }
 
-/* ── Login: the promise, told once ─────────────────────────────────────────────
-   A first-visit screen, so it may spend a little time (the "delight budget"). Everything runs
-   once and rests in its final state, except the "what's broken" rewrite below. Under reduced motion the global rule above
-   collapses durations, so each element lands straight in its end state. */
+/* ── Login: the promise, on a loop ─────────────────────────────────────────────
+   A first-visit screen, so it may spend a little time (the "delight budget"). The agent diagram
+   and the "what's broken" rewrite below both loop. Under reduced motion the diagram skips
+   straight to its outcome (see the end of this block). */
 
-/* Two agents walk towards the lock from either side, three times, then the terms meet. */
+/* One 8 s loop, 1 s after load: two agents walk towards the lock from either side three times
+   (0.6–3.3 s into the loop, 0.9 s a walk), the terms meet and hold, then the lock comes back. */
 @keyframes agent-left {
-  0% { transform: translateX(-100%); opacity: 0; }
-  20% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { transform: translateX(0); opacity: 0; }
+  0%, 7.5% { transform: translateX(-100%); opacity: 0; }
+  9.75% { opacity: 1; }
+  17.06% { opacity: 1; }
+  18.75% { transform: translateX(0); opacity: 0; }
+  18.76% { transform: translateX(-100%); opacity: 0; }
+  21% { opacity: 1; }
+  28.31% { opacity: 1; }
+  30% { transform: translateX(0); opacity: 0; }
+  30.01% { transform: translateX(-100%); opacity: 0; }
+  32.25% { opacity: 1; }
+  39.56% { opacity: 1; }
+  41.25%, 100% { transform: translateX(0); opacity: 0; }
 }
 @keyframes agent-right {
-  0% { transform: translateX(100%); opacity: 0; }
-  20% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { transform: translateX(0); opacity: 0; }
+  0%, 7.5% { transform: translateX(100%); opacity: 0; }
+  9.75% { opacity: 1; }
+  17.06% { opacity: 1; }
+  18.75% { transform: translateX(0); opacity: 0; }
+  18.76% { transform: translateX(100%); opacity: 0; }
+  21% { opacity: 1; }
+  28.31% { opacity: 1; }
+  30% { transform: translateX(0); opacity: 0; }
+  30.01% { transform: translateX(100%); opacity: 0; }
+  32.25% { opacity: 1; }
+  39.56% { opacity: 1; }
+  41.25%, 100% { transform: translateX(0); opacity: 0; }
 }
-.agent-left { animation: agent-left 0.9s var(--ease-in-out) 1.6s 3 both; }
-.agent-right { animation: agent-right 0.9s var(--ease-in-out) 1.6s 3 both; }
+.agent-left { animation: agent-left 8s var(--ease-in-out) 1s infinite both; }
+.agent-right { animation: agent-right 8s var(--ease-in-out) 1s infinite both; }
 
-@keyframes fade-out-scale {
-  to { opacity: 0; transform: scale(0.9); }
+/* The lock and "negotiating" leave as the agents arrive (3.3 s), "Terms fit" holds until
+   about 7 s, then the lock comes back for the next round. */
+@keyframes meet-out {
+  0%, 41.25% { opacity: 1; transform: none; }
+  44.4%, 87.5% { opacity: 0; transform: scale(0.9); }
+  91.9%, 100% { opacity: 1; transform: none; }
 }
-@keyframes fade-in-scale {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: none; }
+@keyframes meet-in {
+  0%, 41.9% { opacity: 0; transform: scale(0.9); }
+  46.25%, 86% { opacity: 1; transform: none; }
+  89.5%, 100% { opacity: 0; transform: scale(0.9); }
 }
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes meet-ring {
+  0%, 41.9% { opacity: 0; }
+  48.1%, 86% { opacity: 1; }
+  89.5%, 100% { opacity: 0; }
 }
-/* 1.6 s start + 3 × 0.9 s of walking: the terms meet at 4.3 s. */
-.meet-out { animation: fade-out-scale 0.25s var(--ease-out) 4.3s both; }
-.meet-in { animation: fade-in-scale 0.35s var(--ease-out) 4.35s both; }
-.meet-ring { animation: fade-in 0.5s var(--ease-out) 4.35s both; }
+.meet-out { animation: meet-out 8s var(--ease-out) 1s infinite both; }
+.meet-in { animation: meet-in 8s var(--ease-out) 1s infinite both; }
+.meet-ring { animation: meet-ring 8s var(--ease-out) 1s infinite both; }
+
+/* Reduced motion: no loop, only the outcome — the terms fit. */
+@media (prefers-reduced-motion: reduce) {
+  .agent-left, .agent-right, .meet-out, .meet-in, .meet-ring { animation: none; }
+  .agent-left, .agent-right, .meet-out { opacity: 0; }
+}
 
 
 /* "what's broken." rewrites itself, on a 14 s loop the user asked for on purpose. Each 7 s half:

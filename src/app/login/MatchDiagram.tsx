@@ -1,7 +1,7 @@
 /**
  * The product in one picture, played once: a buyer's problem and a vendor's offer, two agents
  * walking towards a lock from either side, and the terms meeting in the middle. Pure CSS
- * (see "Login" in globals.css); it rests on its final state and never loops.
+ * (see "Login" in globals.css), on an 8 s loop.
  */
 export function MatchDiagram() {
   return (
