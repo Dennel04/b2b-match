@@ -14,16 +14,28 @@ import type {
 export function checkCompatibility(buyer: BuyerTerms, seller: SellerTerms): Compatibility {
   const budget = compareBudget(buyer.budget_ceiling, seller.budget_floor);
   const timeline = compareDates(seller.available_from, buyer.start_by);
-  const formats = buyer.contract_formats.filter((f) => seller.contract_formats.includes(f));
+  const formats = compareFormats(buyer.contract_formats, seller.contract_formats);
   const missing = buyer.requirements.filter((r) => !seller.capabilities.includes(r));
 
   return {
     budget,
     timeline,
-    contract_formats: formats,
+    formats,
+    contract_formats: buyer.contract_formats.filter((f) => seller.contract_formats.includes(f)),
     missing_requirements: missing,
-    hard_fail: budget === 'gap' || timeline === 'gap' || !formats.length || missing.length > 0,
+    hard_fail: budget === 'gap' || timeline === 'gap' || formats === 'gap' || missing.length > 0,
   };
+}
+
+/**
+ * Silence is not a refusal. A side that has named no contract format has not ruled anything
+ * out — exactly as an unstated budget does not, and for the same reason: the filter exists to
+ * remove pairs that cannot work, not pairs that have not finished filling in a form. Only two
+ * stated sets that do not meet are a gap.
+ */
+function compareFormats(buyer: ContractFormat[], seller: ContractFormat[]): Compatibility['formats'] {
+  if (!buyer.length || !seller.length) return 'unknown';
+  return buyer.some((f) => seller.includes(f)) ? 'ok' : 'gap';
 }
 
 /** The seller passes if their minimum deal size is at or below the buyer's ceiling. */
@@ -46,7 +58,9 @@ export function describeCompatibility(c: Compatibility): string {
   return [
     `Budget: ${{ ok: 'compatible', gap: 'incompatible', unknown: 'not stated' }[c.budget]}`,
     `Timeline: ${{ ok: 'compatible', gap: 'incompatible', unknown: 'not stated' }[c.timeline]}`,
-    `Contract formats both sides accept: ${c.contract_formats.map(fmt).join(', ') || 'none'}`,
+    c.formats === 'unknown'
+      ? 'Contract format: neither side has named one, so agree one between you'
+      : `Contract formats both sides accept: ${c.contract_formats.map(fmt).join(', ') || 'none'}`,
     c.missing_requirements.length
       ? `Unmet buyer requirements: ${c.missing_requirements.join(', ')}`
       : 'All buyer requirements are met',

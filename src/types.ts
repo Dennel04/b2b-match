@@ -55,7 +55,9 @@ export interface SellerTerms {
 export interface Compatibility {
   budget: 'ok' | 'gap' | 'unknown';
   timeline: 'ok' | 'gap' | 'unknown';
-  contract_formats: ContractFormat[];   // intersection; empty means nothing to discuss
+  /** 'unknown' when either side named none: silence rules nothing out, as with budget. */
+  formats: 'ok' | 'gap' | 'unknown';
+  contract_formats: ContractFormat[];   // the intersection, empty whenever formats is not 'ok'
   missing_requirements: Requirement[];
   hard_fail: boolean;                   // filtered out before the model is called
 }

@@ -264,13 +264,16 @@ export async function negotiate(matchId: string): Promise<ActionResult<Negotiati
     { effort: 'high' },
   );
 
-  // What the platform already knows for certain is copied, never asked of the model.
+  // What the platform already knows for certain is copied, never asked of the model. The one
+  // exception is the format when neither side had named any: there is no intersection to check
+  // it against, and what the agents settled on is then the whole point of having asked them.
+  const formatStands =
+    compatibility.formats === 'unknown' ||
+    (!!decided.agreed_format && compatibility.contract_formats.includes(decided.agreed_format));
+
   const envelope: DealEnvelope = {
     verdict: decided.verdict,
-    agreed_format:
-      decided.agreed_format && compatibility.contract_formats.includes(decided.agreed_format)
-        ? decided.agreed_format
-        : null,
+    agreed_format: formatStands ? decided.agreed_format : null,
     budget_compatible: compatibility.budget === 'ok',
     earliest_start: sellerTerms.available_from,
     open_questions: decided.open_questions,

@@ -40,11 +40,23 @@ assert.equal(
   'gap',
 );
 
-// No shared contract format — nothing to discuss.
-assert.equal(
-  checkCompatibility(buyer, { ...seller, contract_formats: ['outcome_based'] }).hard_fail,
-  true,
-);
+// Two stated sets that do not meet — nothing to discuss.
+const clash = checkCompatibility(buyer, { ...seller, contract_formats: ['outcome_based'] });
+assert.equal(clash.formats, 'gap');
+assert.equal(clash.hard_fail, true);
+
+// Silence is not a refusal. A company that has named no contract format has ruled nothing out,
+// and must still be matched — every real account starts here, with the form half filled.
+for (const pair of [
+  [buyer, { ...seller, contract_formats: [] }],
+  [{ ...buyer, contract_formats: [] }, seller],
+  [{ ...buyer, contract_formats: [] }, { ...seller, contract_formats: [] }],
+] as [BuyerTerms, SellerTerms][]) {
+  const quiet = checkCompatibility(pair[0], pair[1]);
+  assert.equal(quiet.formats, 'unknown');
+  assert.equal(quiet.hard_fail, false);
+  assert.deepEqual(quiet.contract_formats, [], 'an unknown format agrees on nothing yet');
+}
 
 // A buyer requirement is unmet.
 assert.deepEqual(

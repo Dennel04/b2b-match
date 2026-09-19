@@ -132,6 +132,7 @@ Write one line: 1-2 sentences of natural spoken English, no preamble, no stage d
 export const envelopePrompt = (opts: {
   transcript: AgentDialogueLine[];
   compatibilitySummary: string;
+  /** Empty when neither side named one — then whatever the agents agreed is the answer. */
   allowedFormats: ContractFormat[];
 }) => `
 Two AI agents have finished negotiating for their companies. You are the platform, deciding
@@ -143,13 +144,20 @@ ${opts.transcript.map((l) => `${l.speaker === 'buyer_agent' ? "Buyer's agent" : 
 
 Mechanical terms check, computed by the platform before the agents spoke:
 ${opts.compatibilitySummary}
-Contract formats BOTH sides accept: ${opts.allowedFormats.join(', ') || 'none'}
+${
+  opts.allowedFormats.length
+    ? `Contract formats BOTH sides accept: ${opts.allowedFormats.join(', ')}`
+    : 'Neither side had named a contract format in advance, so any format the agents settled on stands.'
+}
 
 Return:
 - verdict: 'proceed' only if the vendor can genuinely help AND the agents converged on a shared
   contract format. When in doubt, 'reject' — a wasted human meeting costs more than a missed match.
-- agreed_format: what they settled on. It MUST be one of the formats both sides accept, listed
-  above, or null if they did not converge.
+- agreed_format: what they settled on${
+  opts.allowedFormats.length
+    ? '. It MUST be one of the formats both sides accept, listed above, or null if they did not converge.'
+    : ', or null if they did not converge on one.'
+}
 - open_questions: 1-3 things the agents could not settle that the humans must discuss. This is the
   most valuable field — it becomes the meeting briefing.
 - confidence: 0-100, how sure you are the meeting is worth both sides' time.
