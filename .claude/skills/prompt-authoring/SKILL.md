@@ -49,6 +49,15 @@ That is enforced in prompt text, so treat these as code:
   never shown to any vendor, it only filters who they see. The prompt receives the previous
   turns and, when known, the company profile — keep both in it, or the model restarts the
   interview every call.
+- `service.ts` — the selling mirror, and a **separate prompt on purpose**: `interview.ts` digs
+  for a pain the person is reluctant to state, this one tidies a product they know by heart.
+  Do not merge them behind a flag. Same rule about the floor as the ceiling: say why you are
+  asking — no buyer ever sees the figure, it only keeps them out of conversations that were
+  never going to pay. Two things the prompt exists to enforce, and both are benched: `area` is
+  the part of the **buyer's** business the service fixes (a call centre is Customer support,
+  never the seller's own Sales), and the summary keeps the facts while losing the sales
+  language. Never let it add a capability, client or certification the person did not state —
+  an invented detail becomes a wasted human meeting.
 - `profile.ts` — drafts a profile from the company's website. Nothing without evidence in the
   page text, and **never a money figure**: `budget_floor` stays null and is asked later, on the
   first match that needs it.
@@ -72,6 +81,34 @@ eight-word phrase or a specific number from the problem gets the line regenerate
 the offending fragment quoted back — and the finished transcript is checked again and
 discarded if anything slipped through. If a prompt change makes negotiations start failing
 that guard, fix the prompt — never loosen the guard to make the demo pass.
+
+## Schema shape
+
+Two rules, measured rather than assumed, and `ServiceInterviewSchema` is the worked example:
+
+- **Known fields first, decision fields last.** Field order is causally upstream of quality: a
+  `done` or `follow_up` placed before the fields it judges makes the model commit before it has
+  written the evidence down. Record what was learned, then decide.
+- **Flat beats nested.** Extraction accuracy falls off steeply with nesting depth.
+  `ServiceInterviewSchema` keeps `floor_amount` / `floor_period` / `available_from` at the top
+  level rather than under a `terms` object, and loses nothing by it.
+
+`InterviewSchema` predates both and still nests under `terms`; leave it unless you are changing
+it for another reason, and bench it if you do.
+
+## Benching a prompt
+
+A prompt change is not done until it has been run on the input it actually gets — second
+language, typos, sales language, vague about scope. One bench per interview:
+
+```bash
+npx tsx --env-file=.env.local scripts/bench.ts          # the buying side
+npx tsx --env-file=.env.local scripts/bench-service.ts  # the selling side
+```
+
+They call the real model and cost money, so they stay out of `npm run check`. A bench prints
+the fields that matter and flags the ones that came back outside their allowed list. Write the
+cases messy on purpose: a bench on clean input tells you nothing.
 
 ## Dates
 

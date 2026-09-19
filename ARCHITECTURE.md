@@ -15,14 +15,20 @@ src/
     globals.css           Tailwind import, token bridge, quality floor
     fonts.ts              the one typeface
     login/ signup/        signed-out screens — no app chrome
-    dashboard/ problems/   signed-in screens — wrapped in <AppShell>
     onboarding/           company setup
+    problems/             the buying side: problems, and the interview that writes one
+    dashboard/            the company's own funnel, opened from the brand — counts, never a list
+    services/             the selling side: what the company sells, one row per service
+    matches/              counterparties across every problem and service
+    company/ account/     the company's own profile
+    directory/            the public company directory
     auth/                 route handlers (OAuth callback, sign-out)
   components/
     ui/                   design system primitives — Card, Button, Chip, Field, Icon
     layout/               AppShell: sidebar, top bar, footer
     <Feature>.tsx         shared across routes but not a primitive
   actions/                Server Actions — the only place the database is written
+                          (company, problem, service, match, stats)
   lib/                    clients and pure logic: claude, supabase, overlap, leak
   prompts/                one file per model task, schema + builder
   styles/tokens.css       every colour, radius and shape value in the product
@@ -30,6 +36,13 @@ src/
 supabase/migrations/      forward-only SQL
 drafts/design/            the reference screen, not code to import
 ```
+
+**Two sides, one shape.** `problems/` and `services/` are deliberate mirrors: a buying company
+writes down what it needs, a selling one what it offers, and both are matched on terms the other
+side never reads. A screen that exists on one side should exist on the other in the same shape —
+list, detail, interview — and share its parts (`components/counterparties.tsx`,
+`components/Composer.tsx`) rather than grow a second vocabulary. Diverge only where the sides
+genuinely differ, and say why in a comment.
 
 **Chrome.** Signed-in screens wrap their content in `<AppShell>`; signed-out screens do not.
 When that becomes repetitive, move the signed-in routes into a `(app)` route group — a folder in
@@ -86,9 +99,11 @@ without touching markup.
 ## Verification
 
 ```bash
-npm run check    # next typegen + tsc --noEmit + overlap and leak self-checks
+npm run check    # next typegen + tsc --noEmit + every *.check.ts self-check
 npm run build    # the real gate before a push that touches routes
 ```
+
+A new self-check is added to the `check` script the moment it is written, or it never runs.
 
 `npm run check` runs on a fresh clone. Run it before every push. Non-trivial logic leaves one
 runnable check behind — see `src/lib/overlap.check.ts` for the shape.

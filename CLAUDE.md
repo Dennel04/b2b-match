@@ -16,7 +16,16 @@ npm run check   # next typegen + tsc --noEmit + overlap and leak self-checks
 
 Run it after any change to `src/lib/overlap.ts`, `src/lib/leak.ts`, `src/prompts/negotiate.ts`,
 `src/types.ts`, or `src/actions/`. It works on a fresh clone — `next typegen` generates the
-route types `tsc` needs.
+route types `tsc` needs. A new `*.check.ts` is wired into the `check` script in the same commit,
+or it never runs.
+
+The two interview prompts have a bench each, run by hand against the real model — they cost
+money, so they are not in `check`:
+
+```bash
+npx tsx --env-file=.env.local scripts/bench.ts          # the buying side
+npx tsx --env-file=.env.local scripts/bench-service.ts  # the selling side
+```
 
 ## Invariants
 
@@ -32,6 +41,14 @@ any prompt sent on behalf of the other side.
   never loosen the guard.
 - Budget figures are compared only inside `checkCompatibility()`. One side's number must
   never enter the other side's prompt or response. Expose compatibility, not amounts.
+- A seller's terms live on the **service**, not on the company (migration 0007). A company
+  selling a call centre at €2,400/month and a fibre install at €18,000/project has two
+  envelopes, and a match records which service a buyer arrived through (`matches.service_id`).
+  `companies.seller_terms` remains only as the fallback for a company that has listed nothing.
+- `services` is the storefront: any signed-in user may read a row, because that is what a
+  buyer's problem is scored against. Its `terms` column rides along and is the seller's floor —
+  a component must never project another company's `terms`. `getMatchView()` is the only path
+  that reports on the other side's terms, and it reports compatibility, never figures.
 - Match status changes only through `setMatchStatus()`, which enforces the double opt-in
   order (buyer `interested` → seller `accept`). Clients cannot write `matches` (migration
   0002). A match screen reads through `getMatchView()`, which decides per viewer what is
@@ -65,6 +82,22 @@ any prompt sent on behalf of the other side.
   build every screen from it. Open it over http, not `file://`.
 - `.claude/skills/b2b-match-ui` — that direction written down: layout, tokens, group vocabulary,
   privacy and copy rules. Read it before touching any screen.
+
+## The two sides mirror each other
+
+`problems/` is the buying side, `services/` the selling side, and they are built as reflections:
+list, detail, and an interview that fills a form beside a chat. They share `Group`/`PartyRow`
+(`src/components/counterparties.tsx`) and the chat box (`src/components/Composer.tsx`).
+
+Where they differ, they differ on purpose, and the reason is written down:
+
+- The interviews are separate prompts (`interview.ts`, `service.ts`), not one prompt with a
+  flag. One digs for a pain the person is reluctant to state; the other tidies a product the
+  person knows by heart.
+- A problem is private in full. A service is a storefront with one private column.
+
+Adding a screen to one side without asking what its mirror is, is how the two vocabularies
+drift apart.
 
 ## Priority
 

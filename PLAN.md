@@ -69,9 +69,12 @@ say "this is just another spam channel".
 ## 3. What we build in 24 hours
 
 ### The demo path
-1. Company A (seller) registers, fills in its service profile and its **working terms**:
-   minimum deal size, contract formats, the date it is free from, what it meets (DPA, ISO,
-   language).
+1. Company A (seller) registers, then lists **each thing it sells on its own** — an AI
+   interview per service, ending in its own **working terms**: minimum deal size, contract
+   formats, the date it is free from, what it meets (DPA, ISO, language). One envelope per
+   company was the original design and it was wrong: an operator selling a call centre at
+   €2,400/month and a fibre install at €18,000/project had half its catalogue matched on the
+   wrong figure.
 2. Company B (buyer) goes through an AI interview: what hurts, **budget ceiling**, which
    contract formats it will consider, when it must start, hard requirements. All of it marked
    "visible to the system only".
@@ -90,7 +93,8 @@ say "this is just another spam channel".
 
 ### Must have
 - Auth
-- Company profile (entered by hand) and seller working terms
+- Company profile (read off the website, confirmed by hand)
+- Services: one row per thing sold, each with its own working terms
 - Private problems, AI interview that captures the commercial envelope
 - Mechanical terms check: budget, timing, contract format, requirements
 - Matching with a score and an explanation
@@ -132,9 +136,9 @@ requirements (DPA, ISO 27001, language). Fail here and the model is never called
 This is a direct analogy to a dark pool: orders are not published, the engine crosses them
 internally. See `docs/RESEARCH.md` §6.
 
-**Stage 2 — Claude scores only the survivors.** The problem text plus the surviving profiles
+**Stage 2 — Claude scores only the survivors.** The problem text plus the surviving services
 go out in one request: "score each 0-100, explain in two sentences, return JSON." Above 70 we
-store a match.
+store a match, and the match records which service it came through.
 
 **Stage 3 — the agents negotiate, in isolation.** Four rounds, and each round is **two separate
 model calls**. The buyer's agent gets the problem, the dealbreakers and the transcript so far.
@@ -164,21 +168,32 @@ clients can no longer write `matches` at all — status moves only through `setM
 which enforces the double opt-in order. Screens read a match through `getMatchView()`, which
 projects by role: the problem text goes to its owner only, names appear only once accepted.
 
-### Schema (draft)
+### Schema
 ```
 companies   id, owner_id, name, website, role ('seller'|'buyer'|'both'),
             profile_json, seller_terms, created_at
-problems    id, company_id, text, interview_json, buyer_terms, urgency, created_at  -- RLS: owner only
-matches     id, buyer_company_id, seller_company_id, problem_id, score,
+problems    id, company_id, text, department, interview_json, buyer_terms,
+            urgency, created_at                                 -- RLS: owner only
+services    id, company_id, title, description, area, terms, interview_json,
+            active, created_at                                  -- RLS: read any, write own
+matches     id, buyer_company_id, seller_company_id, problem_id, service_id, score,
             reasoning_public, compatibility_json, agent_dialogue_json,
             deal_envelope_json, status, brief_md, created_at
+match_candidates  every pair the matcher considered and why it fell out   -- no RLS policy:
+                                                                            aggregates only
 ```
+
+Migrations are forward-only and applied in number order; `0007` is the one that split a
+seller's terms out of the company and onto each service.
 
 ### Server function contract
 ```ts
 saveCompany(input): Promise<Company>
 runInterview(turns: InterviewTurn[]): Promise<{ done, follow_up, summary, urgency, terms }>
 saveProblem(input: ProblemInput): Promise<Problem>
+runServiceInterview(turns, company?, areas?, known?)                      // the selling mirror
+saveService(input: ServiceInput): Promise<ActionResult<Service>>
+setServiceActive(id, active): Promise<ActionResult<Service>>              // pause stops matching
 checkCompatibility(buyer: BuyerTerms, seller: SellerTerms): Compatibility  // pure, no AI
 findMatches(problemId: string): Promise<Match[]>                          // terms check → Claude
 negotiate(matchId: string): Promise<Negotiation>                          // 2 calls/round, leak-checked, cached

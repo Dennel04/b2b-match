@@ -1,26 +1,66 @@
 # Frontend handoff: what the backend gives you and how to call it
 
 The backend is written, runs end to end against the live Supabase project and the DeepSeek
-model, and is exercised by `npm run warm`. Nothing in `src/app/` calls it yet. This page is the
-contract — everything below is verified, not planned.
+model, and is exercised by `npm run warm`. The screens now call it. This page is the contract —
+everything below is verified, not planned.
+
+Two exceptions, both on the selling side and both marked `ponytail:` where they bite:
+`findMatches()` does not yet write `matches.service_id` (it still scores a buyer against the
+company as a whole, not against each live service on its own terms), so the counts on
+`/services` read zero and the groups on a service screen come back empty.
 
 ## 1. The five calls that make the demo
 
 All are Server Actions in `src/actions/`. Import them into a Server Component or call them from
 a form action; never from a client component directly with fetch. All types are in `src/types.ts`.
 
-| Call | Returns | Takes | Notes |
+| Call | Returns | Latency | Notes |
 |---|---|---|---|
 | `findMatches(problemId)` | `Match[]` | 7–25 s | Runs the mechanical filter, then the model scores the survivors. Inserts rows with `status: 'proposed'`. Returns `[]` when nothing passes — that is a valid result, show it ("nothing above threshold"), don't treat it as an error. |
 | `negotiate(matchId)` | `Negotiation` = `{ lines, envelope }` | **45–80 s first time, instant after** | The 8-line agent transcript plus the `DealEnvelope`. Cached in the row; calling it again returns the stored result. Sets `status: 'declined'` if the agents' verdict is `reject`. **Stores each line as it is produced** — poll `getMatchView` meanwhile to show progress (§3). Throws "already running" if called twice. |
 | `getMatchView(matchId)` | `MatchView` | instant | **The one read path for a match screen.** Projected for the current viewer — see §3. |
-| `setMatchStatus(matchId, action)` | `Match` | instant | `action` is `'interested' \| 'accept' \| 'decline'`. Enforces the order (§4); throws on an illegal move. |
+| `setMatchStatus(matchId, action)` | `ActionResult<Match>` | instant | `action` is `'interested' \| 'accept' \| 'decline'`. Enforces the order (§4); an illegal move comes back as `{ ok: false, message }` — see §5. |
 | `generateBrief(matchId)` | `string` (markdown) | ~10 s first time | Only for `status === 'accepted'`; throws otherwise. Cached in `brief_md`. |
 
 Onboarding calls, same rules: `draftCompanyProfile(website?)` → `CompanyDraft` (§2a),
 `saveCompany(input)` (create or update the signed-in user's company), `runInterview(turns, company?)`
 → `{ done, follow_up, summary, urgency, terms }` (one turn ≈ 3–5 s; loop until `done`; pass the
 company's `profile_json` so the questions skip what it already answers), `saveProblem(input)` → `Problem`.
+
+## 1a. The selling side — `src/actions/service.ts`
+
+The mirror of the two calls above, and the reason it is a mirror rather than a flag on them is
+in §2b.
+
+| Call | Returns | Latency | Notes |
+|---|---|---|---|
+| `runServiceInterview(turns, company?, areas?, known?)` | `ServiceInterviewSchema` | 3–5 s a turn | One turn of the selling interview. Loop until `done`. Pass `profile_json` and the area list so it picks from it. |
+| `saveService(input)` | `ActionResult<Service>` | instant | Publishes one service. RLS (`services_write`) limits the insert to a company the caller owns. |
+| `setServiceActive(id, active)` | `ActionResult<Service>` | instant | Pause stops the service being matched; it keeps its history. |
+
+`ServiceInterviewSchema` is flat and its known fields come **before** `done`/`follow_up` — the
+model writes down what it learned, then judges whether that is enough. Do not reorder it.
+
+A `Service` carries its own `SellerTerms` in `terms`. `companies.seller_terms` is the fallback
+for a company that has listed nothing, not the place a listed service's floor lives.
+
+## 2. The screens, and which call feeds each
+
+1. **Problems list** — the signed-in user's problems, each with a "Find matches" button →
+   `findMatches`. Read the list with `serverClient().from('problems').select('*, companies(name)')`
+   (RLS returns only your own).
+2. **Matches for a problem** — `from('matches').select('id, score, status, deal_envelope_json')
+   .eq('problem_id', id)`. Show score and status. **Do not show the other company's name here** —
+   it is anonymous until accepted, and after migration 0002 the embed returns `null` anyway.
+3. **Match page** — `getMatchView(id)`. The centrepiece: the transcript, the outcome, the buttons.
+4. **Briefing** — `generateBrief(id)` once accepted; render the markdown (five fixed `##` sections,
+   under 300 words — a hand-rolled renderer is fine, no new dependency).
+5. **Services** — `/services` lists what the company sells, `/services/[id]` shows who arrived
+   through one of them, `/services/new` is the interview that writes one. Read them through
+   `src/app/services/load.tsx`; a service screen groups its counterparties with the same
+   `Matched` / `Awaiting` / `Declined` vocabulary a problem screen uses.
+6. **Matches** — `/matches`, every counterparty across both sides on one screen, sorted so the
+   rows waiting on this viewer come first.
 
 ## 2a. Onboarding with (almost) no typing — how to build that page
 
@@ -47,18 +87,23 @@ takes part in matching. Ask for those *lazily*, at the moment they matter: when 
 that match ("Set your minimum deal size to be considered") that saves through `saveCompany`.
 One field in context beats ten fields up front.
 
-## 2. The screens, and which call feeds each
+## 2b. Why the two interviews are separate prompts
 
-1. **Problems list** — the signed-in user's problems, each with a "Find matches" button →
-   `findMatches`. Read the list with `serverClient().from('problems').select('*, companies(name)')`
-   (RLS returns only your own).
-2. **Matches for a problem** — `from('matches').select('id, score, status, deal_envelope_json')
-   .eq('problem_id', id)`. Show score and status. **Do not show the other company's name here** —
-   it is anonymous until accepted, and after migration 0002 the embed returns `null` anyway.
-3. **Match page** — `getMatchView(id)`. The centrepiece: the transcript, the outcome, the buttons.
-   This is the screen `src/app/preview/page.tsx` mocks up; the real data has the same shape.
-4. **Briefing** — `generateBrief(id)` once accepted; render the markdown (five fixed `##` sections,
-   under 300 words — a hand-rolled renderer is fine, no new dependency).
+`interview.ts` digs for a pain the person is reluctant to state. `service.ts` tidies a product
+the person knows by heart and strips the sales language off it. One prompt with a flag would do
+neither well, and the schemas differ in shape as well as in field names.
+
+Both are benched by hand against the real model — they cost money, so they are not in
+`npm run check`:
+
+```bash
+npx tsx --env-file=.env.local scripts/bench.ts          # the buying side
+npx tsx --env-file=.env.local scripts/bench-service.ts  # the selling side
+```
+
+`bench-service.ts` checks the two things its prompt exists for: `area` must be the part of the
+**buyer's** business the service fixes (a call centre is Customer support, never the seller's
+own Sales), and the summary must keep the facts while losing "industry leading, best in class".
 
 ## 3. `MatchView`: what the current viewer is allowed to see
 
@@ -163,13 +208,16 @@ per-week series fine enough to let a vendor work out who is currently shopping i
 
 - `.env.local` — ask for it; it holds the Supabase keys, the DeepSeek key and
   `ANTHROPIC_BASE_URL` (the model provider is a deployment setting, see `.env.example`).
-- Migrations: apply every file in `supabase/migrations/` in number order. `0001`–`0003` are
-  already applied; **`0006_match_candidates.sql` must be run in the Supabase SQL Editor**, then
-  `npm run backfill:candidates` once, or the dashboard shows zeros.
+- Migrations: apply every file in `supabase/migrations/` in number order, in the Supabase SQL
+  Editor. Two need a note:
+  **`0006_match_candidates.sql`** must be followed by `npm run backfill:candidates` once, or the
+  dashboard shows zeros. **`0007_services.sql`** creates the `services` table and adds
+  `matches.service_id`; until it is applied, `/services` shows an empty list (the read failure is
+  caught, the screen does not crash) and publishing a service returns `{ ok: false }`.
 - Demo account: the user that owns all seeded companies (the one in `SEED_OWNER_ID`). Sign in as
   it and you see every problem and every match with `viewer: 'both'`. Any other account sees
   only its own rows.
-- `npm run check` before every push (route typegen + tsc + the two self-checks).
+- `npm run check` before every push (route typegen + tsc + every `*.check.ts`).
 
 ## 7. Rules that apply to screens (from CLAUDE.md)
 

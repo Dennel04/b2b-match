@@ -31,18 +31,28 @@ npm run dev
 
 1. Create a project at supabase.com.
 2. SQL Editor → run every file in `supabase/migrations/` in order (`0001`, then `0002`, …).
-   They are forward-only; a project that has run `0001` only needs the newer ones.
+   They are forward-only; a project that has run `0001` only needs the newer ones. `0006` wants
+   `npm run backfill:candidates` after it, and `0007` is the one that gives each service its own
+   terms — without it `/services` is empty and publishing one fails.
 3. Copy the keys from Settings → API into `.env.local`.
 
 ## Commands
 
 ```bash
 npm run dev     # development server
-npm run check   # route typegen + typecheck + overlap/leak self-checks — run before every push
+npm run check   # route typegen + typecheck + every *.check.ts — run before every push
 npm run seed    # 18 seeded companies with profiles, terms and problems
 ```
 
 `npm run seed` needs `SEED_OWNER_ID` in `.env.local` — the id of any registered user.
+
+The two interview prompts have a bench each. They call the real model, so they cost money and
+are deliberately out of `check`:
+
+```bash
+npx tsx --env-file=.env.local scripts/bench.ts          # the buying side
+npx tsx --env-file=.env.local scripts/bench-service.ts  # the selling side
+```
 
 ## Working in parallel
 
