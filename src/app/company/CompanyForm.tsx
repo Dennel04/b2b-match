@@ -176,10 +176,8 @@ export function CompanyForm({
         return setFill({ state: "error", message: result.message });
       const draft: CompanyDraft = result.data;
       // The name the person typed stays theirs; the draft fills everything else.
-      setD((prev) => ({
-        ...applyAutofill(prev, draft),
-        name: prev.name || draft.profile.name,
-      }));
+      const filled: Draft = { ...applyAutofill(d, draft), name: d.name || draft.profile.name };
+      setD(filled);
       setEvidence(
         Object.fromEntries(
           draft.seller_terms.capabilities.map((c, i) => [
@@ -202,11 +200,35 @@ export function CompanyForm({
             ? `${draft.pages_read.length} pages of ${site}`
             : "your text",
       });
+      // Kept, not offered. What was read is what the site says, and a profile nobody confirmed
+      // is a profile the matcher cannot use — so it is stored and then edited like any other.
+      await persist(filled);
     } catch (e) {
       setFill({
         state: "error",
         message: e instanceof Error ? e.message : "Autofill failed.",
       });
+    }
+  }
+
+  /** Write a draft as it stands. The one place that talks to saveCompany(). */
+  async function persist(next: Draft) {
+    if (!payload(next).name) return setNote("Add a company name.");
+    if (demo) return setKept(next);
+    setSaving(true);
+    setNote(null);
+    try {
+      await saveCompany(payload(next));
+      setKept(next);
+      router.refresh();
+    } catch (e) {
+      setNote(
+        `Could not save: ${
+          e instanceof Error ? e.message : "unknown error"
+        }. Your changes are still here.`,
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -218,23 +240,9 @@ export function CompanyForm({
       setEditing(null);
       return setNote("Nothing is stored in the demo.");
     }
-    setSaving(true);
-    setNote(null);
-    try {
-      await saveCompany(next);
-      setKept(d);
-      setEditing(null);
-      if (!running) setFill({ state: "idle" });
-      router.refresh();
-    } catch (e) {
-      setNote(
-        `Could not save: ${
-          e instanceof Error ? e.message : "unknown error"
-        }. Your changes are still here.`,
-      );
-    } finally {
-      setSaving(false);
-    }
+    await persist(d);
+    setEditing(null);
+    if (!running) setFill({ state: "idle" });
   }
 
   const cancel = () => {
@@ -266,33 +274,38 @@ export function CompanyForm({
   const progress = (
     <>
       {fill.state === "running" && (
-        <ol aria-live="polite" className="flex flex-col gap-2 text-[13.5px]">
-          {RUN_STEPS[fill.source]
-            .filter((s) => s.at <= elapsed)
-            .map((s, i, shown) => {
-              const current = i === shown.length - 1;
-              return (
-                <li
-                  key={s.label}
-                  className={`flex items-center gap-2.5 ${
-                    current ? "font-semibold text-ink" : "text-ink-soft"
+        /*
+         * One row, left to right: the whole read is three steps and the person is waiting on
+         * all of them. Stacked, each new line pushed the form down while the eye was on it.
+         */
+        <ol aria-live="polite" className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px]">
+          {RUN_STEPS[fill.source].map((s, i, all) => {
+            const reached = s.at <= elapsed;
+            const current = reached && (i === all.length - 1 || all[i + 1].at > elapsed);
+            return (
+              <li key={s.label} className="flex items-center gap-3">
+                {i > 0 && <span aria-hidden className="h-px w-5 bg-line-strong" />}
+                <span
+                  className={`flex items-center gap-2 whitespace-nowrap ${
+                    current ? "font-semibold text-ink" : reached ? "text-ink-soft" : "text-ink-faint"
                   }`}
                 >
                   <span
                     aria-hidden
                     className={`h-1.5 w-1.5 rounded-full ${
-                      current ? "animate-pulse bg-ink" : "bg-accent"
+                      current ? "animate-pulse bg-ink" : reached ? "bg-accent" : "bg-line-strong"
                     }`}
                   />
                   {s.label}
-                </li>
-              );
-            })}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       )}
       {fill.state === "done" && (
         <p role="status" className="text-[13.5px] text-ink-soft">
-          Filled from {fill.from}. Check it before you save.
+          Filled from {fill.from}{demo ? ". Nothing is stored in the demo" : " and saved"}. Edit anything that reads wrong.
         </p>
       )}
       {fill.state === "error" && (
