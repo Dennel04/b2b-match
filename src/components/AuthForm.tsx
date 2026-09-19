@@ -17,6 +17,10 @@ const COPY = {
   signup: { title: "Create your account", subtitle: "Then set up your company. Every step can be skipped.", cta: "Create account" },
 } as const;
 
+/** Entry for anything that appears in place: 200 ms, strong ease-out, from 4 px below and transparent. */
+const ENTER =
+  "transition-[opacity,translate] duration-200 ease-out starting:translate-y-1 starting:opacity-0 motion-reduce:starting:translate-y-0";
+
 /** Where each mode lands: new accounts go through company setup first. */
 const NEXT: Record<Mode, string> = { login: "/dashboard", signup: "/onboarding" };
 
@@ -105,7 +109,8 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
         ))}
       </div>
 
-      <div>
+      {/* Remounted per tab, so @starting-style plays: the new heading settles in instead of swapping. */}
+      <div key={mode} className={ENTER}>
         <h1 className="text-[26px] font-bold tracking-[-0.03em]">{copy.title}</h1>
         <p className="mt-1 text-[14px] text-ink-soft">{copy.subtitle}</p>
       </div>
@@ -152,12 +157,12 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
         </Field>
 
         {error && (
-          <p role="alert" className="rounded-2xl bg-danger/10 px-4 py-3 text-[13.5px] text-danger">
+          <p role="alert" className={`rounded-2xl bg-danger/10 px-4 py-3 text-[13.5px] text-danger ${ENTER}`}>
             {error}
           </p>
         )}
         {notice && (
-          <p role="status" className="rounded-2xl bg-accent-soft px-4 py-3 text-[13.5px] text-ink">
+          <p role="status" className={`rounded-2xl bg-accent-soft px-4 py-3 text-[13.5px] text-ink ${ENTER}`}>
             {notice}
           </p>
         )}

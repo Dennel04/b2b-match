@@ -41,8 +41,8 @@ export function AppShell({
       <aside className="hidden w-[224px] flex-none flex-col border-r border-line bg-surface md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-line px-4">
           {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
-          <img src="/crossdesk-icon.svg" alt="" width={20} height={20} className="h-5 w-5" />
-          <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Crossdesk</span>
+          <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
+          <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
         </div>
         <nav aria-label="Main" className="flex flex-col gap-1 px-3 py-4">
           {nav.map((item) => (
@@ -81,8 +81,8 @@ export function AppShell({
           /* Bare screen: the sidebar is hidden on phones, so brand and log-out still need a row there. */
           <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
             {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
-          <img src="/crossdesk-icon.svg" alt="" width={20} height={20} className="h-5 w-5" />
-            <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Crossdesk</span>
+          <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
+            <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
             <div className="ml-auto flex items-center gap-3">
               <Avatar initials={initials} />
               <MobileSignOut />

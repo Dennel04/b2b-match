@@ -24,6 +24,10 @@
   --radius-card: var(--radius-card);
   --radius-button: var(--radius-button);
   --radius-chip: var(--radius-chip);
+  /* Motion curves (Emil Kowalski's set). Built-in CSS easings are too weak for UI. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 body {
@@ -55,4 +59,221 @@ body {
 .soft-in {
   animation: soft-in 0.8s cubic-bezier(0.32, 0.72, 0, 1) both;
   animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+/* ── Login: the promise, told once ─────────────────────────────────────────────
+   A first-visit screen, so it may spend a little time (the "delight budget"). Everything runs
+   once and rests in its final state, except the "what's broken" rewrite below. Under reduced motion the global rule above
+   collapses durations, so each element lands straight in its end state. */
+
+/* Two agents walk towards the lock from either side, three times, then the terms meet. */
+@keyframes agent-left {
+  0% { transform: translateX(-100%); opacity: 0; }
+  20% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateX(0); opacity: 0; }
+}
+@keyframes agent-right {
+  0% { transform: translateX(100%); opacity: 0; }
+  20% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateX(0); opacity: 0; }
+}
+.agent-left { animation: agent-left 0.9s var(--ease-in-out) 1.6s 3 both; }
+.agent-right { animation: agent-right 0.9s var(--ease-in-out) 1.6s 3 both; }
+
+@keyframes fade-out-scale {
+  to { opacity: 0; transform: scale(0.9); }
+}
+@keyframes fade-in-scale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* 1.6 s start + 3 × 0.9 s of walking: the terms meet at 4.3 s. */
+.meet-out { animation: fade-out-scale 0.25s var(--ease-out) 4.3s both; }
+.meet-in { animation: fade-in-scale 0.35s var(--ease-out) 4.35s both; }
+.meet-ring { animation: fade-in 0.5s var(--ease-out) 4.35s both; }
+
+
+/* "what's broken." rewrites itself, on a 14 s loop the user asked for on purpose. Each 7 s half:
+     type it, caret after each letter (0–0.8 s) → hold → a black "private" bar sweeps over it,
+     left to right (2.4–2.91 s) → hold → an eraser comes in from the right and slowly rubs bar
+     and words out, unevenly (3.4–6.4 s) → a short pause.
+   Two layers share one grid cell and the same 14 s keyframes: plain first, then the italic one
+   7 s later. The eraser loops every 7 s. Percentages are of 14 s (layers) or 7 s (eraser). */
+.rw {
+  display: inline-grid;
+  position: relative;
+  white-space: nowrap;
+}
+.rw-layer {
+  grid-area: 1 / 1;
+  position: relative;
+  animation: rw-erase 14s linear 0.6s infinite both;
+}
+.rw-italic { align-self: center; }
+.rw-italic,
+.rw-italic * { animation-delay: 7.6s; }
+/* Face and size go on the letters, not the layer, so the "private" bar is the same in both halves. */
+.rw-italic .rw-char {
+  font-family: var(--font-script), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.2em;
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  animation-delay: calc(7.6s + var(--c) * 55ms);
+}
+
+/* Letters appear one at a time, each with the caret on its right until the next one lands. */
+.rw-char {
+  position: relative;
+  white-space: pre;
+  animation: rw-type 14s steps(1, end) calc(0.6s + var(--c) * 55ms) infinite both;
+}
+.rw-char::after {
+  content: "";
+  position: absolute;
+  right: -0.03em;
+  top: 0.12em;
+  bottom: 0.08em;
+  width: 0.055em;
+  background: var(--ink);
+  opacity: 0;
+  animation: inherit;
+  animation-name: rw-caret;
+}
+.rw-char:last-child::after { animation-name: rw-caret-last; }
+@keyframes rw-type {
+  0% { opacity: 0; }
+  0.01% { opacity: 1; }
+  45.8%, 100% { opacity: 0; }
+}
+@keyframes rw-caret {
+  0% { opacity: 0; }
+  0.01% { opacity: 1; }
+  0.43%, 100% { opacity: 0; }
+}
+/* The last letter keeps the caret, blinking, until the bar arrives. */
+@keyframes rw-caret-last {
+  0% { opacity: 0; }
+  0.01%, 3.5% { opacity: 1; }
+  3.51%, 7% { opacity: 0; }
+  7.01%, 10.5% { opacity: 1; }
+  10.51%, 14% { opacity: 0; }
+  14.01%, 17% { opacity: 1; }
+  17.01%, 100% { opacity: 0; }
+}
+
+/* The bar: a plain censor's stroke, left to right in 0.51 s on the strong ease-in-out, a hair
+   wider than the text. Its word appears once the stroke is done. */
+.rw-layer::after {
+  content: "private";
+  position: absolute;
+  inset: 0.08em -0.08em 0.02em;
+  display: grid;
+  place-items: center;
+  border-radius: 0.12em;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-sans);
+  font-size: 0.16em;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  clip-path: inset(0 100% 0 0);
+  animation: rw-bar 14s linear 0.6s infinite both;
+}
+.rw-italic::after { animation-delay: 7.6s; }
+@keyframes rw-bar {
+  0%, 17.14% { clip-path: inset(0 100% 0 0); color: transparent; animation-timing-function: var(--ease-in-out); }
+  20.79% { clip-path: inset(0 0 0 0); color: transparent; }
+  21.5%, 45.7% { clip-path: inset(0 0 0 0); color: var(--bg); }
+  45.8%, 100% { clip-path: inset(0 100% 0 0); color: transparent; }
+}
+
+/* Rubbing is uneven: the eraser pushes in, slips back a little, pushes on. The erased edge
+   follows its furthest reach and never comes back. Stops are shared with rw-eraser below:
+   rubbing runs 3.4–6.4 s into each 7 s half, 24.29–45.71% of 14 s, 48.57–91.43% of 7 s. */
+@keyframes rw-erase {
+  0%, 24.29% { clip-path: inset(0 0 0 0); animation-timing-function: ease-in-out; }
+  27.5%, 29.11% { clip-path: inset(0 18% 0 0); animation-timing-function: ease-in-out; }
+  32.86%, 34.47% { clip-path: inset(0 41% 0 0); animation-timing-function: ease-in-out; }
+  38.22%, 39.83% { clip-path: inset(0 67% 0 0); animation-timing-function: ease-in-out; }
+  45.71%, 100% { clip-path: inset(0 100% 0 0); }
+}
+
+/* The eraser rides the right edge of a word-wide carrier: translateX(0) is the last letter,
+   -100% the first. */
+.rw-eraser {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  animation: rw-eraser 7s linear 0.6s infinite both;
+}
+@keyframes rw-eraser {
+  0%, 46.5% { transform: translateX(0); opacity: 0; }
+  48.57% { transform: translateX(0); opacity: 1; animation-timing-function: ease-in-out; }
+  55% { transform: translateX(-18%); animation-timing-function: ease-in-out; }
+  58.21% { transform: translateX(-12%); animation-timing-function: ease-in-out; }
+  65.71% { transform: translateX(-41%); animation-timing-function: ease-in-out; }
+  68.93% { transform: translateX(-34%); animation-timing-function: ease-in-out; }
+  76.43% { transform: translateX(-67%); animation-timing-function: ease-in-out; }
+  79.64% { transform: translateX(-61%); animation-timing-function: ease-in-out; }
+  91.43% { transform: translateX(-100%); opacity: 1; }
+  94%, 100% { transform: translateX(-100%); opacity: 0; }
+}
+
+/* A plain block eraser: two tones, soft corners, no outline. A hand is not a machine, so three
+   shakes with unrelated periods (0.23 s, 0.37 s, 0.17 s) are stacked on nested elements and
+   the combined motion never visibly repeats. */
+.rw-hand {
+  position: absolute;
+  right: -0.26em;
+  top: 50%;
+  width: 0.5em;
+  height: 0.82em;
+  translate: 0 -50%;
+  animation: rw-shake-y 0.23s ease-in-out infinite alternate;
+}
+.rw-hand > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  animation: rw-shake-r 0.37s ease-in-out infinite alternate;
+}
+.rw-hand > span > span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.09em;
+  background: linear-gradient(to bottom, var(--surface-alt) 0 55%, var(--surface) 55% 100%);
+  box-shadow: 0 0 0 0.02em rgb(22 50 58 / 0.12), 0 0.05em 0.1em rgb(22 50 58 / 0.18);
+  animation: rw-shake-x 0.17s ease-in-out infinite alternate;
+}
+@keyframes rw-shake-y {
+  0% { transform: translateY(-0.05em); }
+  60% { transform: translateY(0.03em); }
+  100% { transform: translateY(0.07em); }
+}
+@keyframes rw-shake-r {
+  0% { transform: rotate(-24deg); }
+  45% { transform: rotate(-12deg); }
+  100% { transform: rotate(-19deg); }
+}
+@keyframes rw-shake-x {
+  0% { transform: translateX(-0.04em); }
+  100% { transform: translateX(0.05em); }
+}
+
+/* Reduced motion: the plain words, still. */
+@media (prefers-reduced-motion: reduce) {
+  .rw-italic, .rw-eraser, .rw-layer::after, .rw-char::after { display: none; }
+  .rw-layer, .rw-char { animation: none; opacity: 1; clip-path: none; }
 }

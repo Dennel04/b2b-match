@@ -11,7 +11,8 @@ example. The original is `drafts/design/problem-page.html` (serve it over http, 
 
 Do not invent a second visual language, do not go looking for a direction, and do not write a
 raw hex in a component: every value is a token in `src/styles/tokens.css`. Where code goes is
-`ARCHITECTURE.md`.
+`ARCHITECTURE.md`. The whole system on one page — brand, colour, type, the two densities,
+motion — is `docs/DESIGN_SYSTEM.md`; read it before adding motion or touching the logo.
 
 Read `PLAN.md` (sections 1, 3) and `CLAUDE.md` first. This skill adds only what is specific to
 the interface.
