@@ -16,7 +16,7 @@
  * Two copies at once would still duplicate model calls — the crontab holds a flock for that.
  */
 import { findMatches, negotiate } from '../src/actions/match';
-import { needsNegotiation, staleProblems } from '../src/lib/sweep';
+import { matchableSellers, needsNegotiation, staleProblems } from '../src/lib/sweep';
 import { adminClient } from '../src/lib/supabase';
 import type { Match } from '../src/types';
 
@@ -27,14 +27,16 @@ async function main() {
   const started = Date.now();
 
   const [{ data: sellers }, { data: problems }, { data: candidates }] = await Promise.all([
-    db.from('companies').select('id').in('role', ['seller', 'both']),
+    // profile_json comes along because a vendor without one is not work to do — see
+    // matchableSellers(). The column is the vendor's own storefront, not anyone's problem.
+    db.from('companies').select('id, profile_json').in('role', ['seller', 'both']),
     // Newest first: someone who wrote a problem this morning is matched before a month-old one
     // is re-swept against one new vendor.
     db.from('problems').select('id, company_id, text').order('created_at', { ascending: false }),
     db.from('match_candidates').select('problem_id, seller_company_id'),
   ]);
 
-  const everySeller = (sellers ?? []).map((s) => s.id as string);
+  const everySeller = matchableSellers((sellers ?? []) as { id: string; profile_json: unknown }[]);
   const considered = new Map<string, Set<string>>();
   for (const c of candidates ?? []) {
     const seen = considered.get(c.problem_id as string) ?? new Set<string>();

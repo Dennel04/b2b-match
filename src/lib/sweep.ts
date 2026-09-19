@@ -4,6 +4,18 @@
  * wrong is invisible from the outside — one burns model calls on pairs already judged, the
  * other leaves a problem unmatched for ever.
  */
+/**
+ * The vendors the matcher can actually judge. `findMatches()` skips a company with no profile
+ * — there is nothing to score its services against — and therefore never records it as a
+ * candidate either. Counting one as work to do leaves every problem for ever stale: the
+ * vendor can never appear in `match_candidates`, so the set difference below never empties,
+ * and the cron redoes a full pass over every problem every ten minutes. One junk signup with
+ * an empty profile was enough to do exactly that.
+ */
+export function matchableSellers<T extends { id: string; profile_json: unknown }>(sellers: T[]): string[] {
+  return sellers.filter((s) => s.profile_json).map((s) => s.id);
+}
+
 /** A negotiation stamped more recently than this is another pass still working on it. */
 export const RUNNING_MS = 5 * 60 * 1000;
 
