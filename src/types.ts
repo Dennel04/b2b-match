@@ -182,6 +182,37 @@ export interface AnonymousMatchView {
 
 export type MatchAction = 'interested' | 'accept' | 'decline';
 
+/** One mechanical reason a vendor lost matches, counted across problems. Never names a buyer. */
+export interface BlockedReason {
+  reason: string;
+  count: number;
+}
+
+/**
+ * A company's own funnel. Counts only — the rows behind them say which buyer considered which
+ * vendor, and that never leaves the server (see migration 0004).
+ */
+export interface CompanyStats {
+  seller: {
+    considered: number;          // distinct problems this company was evaluated against
+    cleared_terms: number;       // ... of which passed the mechanical check
+    shown: number;               // ... of which scored high enough to become a match
+    avg_score: number | null;
+    proceed: number;             // agents recommended meeting
+    buyer_interested: number;
+    accepted: number;
+    declined: number;
+    blocked_by: BlockedReason[]; // what to fix to be shown more often
+  };
+  buyer: {
+    problems: number;
+    candidates_evaluated: number;
+    cleared_terms: number;
+    matches: number;
+    accepted: number;
+  };
+}
+
 /**
  * A match as one viewer may see it. Projected server-side by role: the problem text is present
  * only for its owner, and names appear only once both sides have accepted.

@@ -115,6 +115,27 @@ Which buttons to show, from `view.viewer` and `view.status`:
 `viewer: 'both'` (the demo account) shows both columns. The server rejects anything else, so a
 wrong button is a confusing error, not a security hole — but don't rely on that.
 
+## 4a. The company dashboard — `getCompanyStats()`
+
+`getCompanyStats()` (`src/actions/stats.ts`) returns the signed-in company's own funnel. Instant,
+no model calls, safe to await in render. Shape is `CompanyStats` in `src/types.ts`:
+
+- **`seller`** — `considered` (distinct problems this company was evaluated against) →
+  `cleared_terms` (passed the mechanical check) → `shown` (scored high enough to become a match)
+  → `proceed` / `buyer_interested` / `accepted` / `declined`. Plus `avg_score` and `blocked_by`.
+- **`blocked_by`** is the part worth building the screen around: `[{ reason, count }]`, sorted,
+  already phrased from the vendor's side — *"Your minimum deal size was above their ceiling" ×8*,
+  *"You are not ISO 27001 certified" ×3*. It tells a vendor what to change to be shown more
+  often, and it is the one number on this screen that is actionable rather than decorative.
+- **`buyer`** — `problems`, `candidates_evaluated`, `cleared_terms`, `matches`, `accepted`.
+  A company with both roles gets both halves filled; render what is non-zero.
+
+**The one rule for this screen: counts only, never a list.** The rows behind these numbers know
+which buyer considered which vendor, which is exactly what the product promises not to reveal.
+They live in `match_candidates`, which has no RLS policy at all — no client can read it, and the
+action returns aggregates. Do not add a "which problems?" drill-down, and do not show dates or
+per-week series fine enough to let a vendor work out who is currently shopping in its category.
+
 ## 5. Latency and errors — the two things that will bite on stage
 
 - **Never call `negotiate`, `findMatches` or `generateBrief` during page render.** They take
@@ -135,9 +156,8 @@ wrong button is a confusing error, not a security hole — but don't rely on tha
 
 - `.env.local` — ask for it; it holds the Supabase keys, the DeepSeek key and
   `ANTHROPIC_BASE_URL` (the model provider is a deployment setting, see `.env.example`).
-- Migrations: `0001` is applied; **`0002_privacy_fixes.sql` and `0003_negotiation_progress.sql`
-  must be run in the Supabase SQL Editor**, in that order. Until 0002, any signed-in user can
-  read vendors' `seller_terms`; until 0003, `negotiate()` fails on a missing column.
+- Migrations: `0001`–`0003` are applied. **`0004_match_candidates.sql` must be run in the
+  Supabase SQL Editor**, then `npm run backfill:candidates` once, or the dashboard shows zeros.
 - Demo account: the user that owns all seeded companies (the one in `SEED_OWNER_ID`). Sign in as
   it and you see every problem and every match with `viewer: 'both'`. Any other account sees
   only its own rows.

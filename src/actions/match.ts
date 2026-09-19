@@ -79,16 +79,33 @@ export async function findMatches(problemId: string): Promise<Match[]> {
   const buyerTerms: BuyerTerms = problem.buyer_terms ?? EMPTY_BUYER_TERMS;
 
   // Stage 1: mechanical check. Neither side sees the other's figures.
-  const viable = (sellers ?? [])
+  const evaluated = (sellers ?? [])
     .filter((s) => s.profile_json)
     .map((s) => ({
       id: s.id,
       profile: s.profile_json as CompanyProfile,
       compatibility: checkCompatibility(buyerTerms, (s.seller_terms ?? EMPTY_SELLER_TERMS) as SellerTerms),
-    }))
-    .filter((s) => !s.compatibility.hard_fail);
+    }));
+  const viable = evaluated.filter((s) => !s.compatibility.hard_fail);
 
-  if (!viable.length) return [];
+  /** The funnel, including everyone who lost here — a vendor cannot be told why otherwise. */
+  const recordCandidates = (scores: Map<string, number>, matched: Set<string>) =>
+    admin.from('match_candidates').upsert(
+      evaluated.map((s) => ({
+        problem_id: problemId,
+        seller_company_id: s.id,
+        cleared_terms: !s.compatibility.hard_fail,
+        compatibility_json: s.compatibility,
+        score: scores.get(s.id) ?? null,
+        became_match: matched.has(s.id),
+      })),
+      { onConflict: 'problem_id,seller_company_id' },
+    );
+
+  if (!viable.length) {
+    await recordCandidates(new Map(), new Set());
+    return [];
+  }
 
   // Stage 2: semantic scoring of whoever cleared the terms.
   const { results } = await ask(
@@ -104,9 +121,20 @@ export async function findMatches(problemId: string): Promise<Match[]> {
     { effort: 'high' },
   );
 
+  // Running this twice on one problem must not produce a second copy of every match.
+  const { data: existing } = await admin
+    .from('matches').select('seller_company_id').eq('problem_id', problemId);
+  const alreadyMatched = new Set((existing ?? []).map((m) => m.seller_company_id));
+
   const byId = new Map(viable.map((s) => [s.id, s]));
+  const scored = new Map(
+    results.filter((r) => byId.has(r.seller_company_id)).map((r) => [r.seller_company_id, Math.round(r.score)]),
+  );
   const rows = results
-    .filter((r) => r.score >= SCORE_THRESHOLD && byId.has(r.seller_company_id))
+    .filter(
+      (r) =>
+        r.score >= SCORE_THRESHOLD && byId.has(r.seller_company_id) && !alreadyMatched.has(r.seller_company_id),
+    )
     .map((r) => ({
       buyer_company_id: problem.company_id,
       seller_company_id: r.seller_company_id,
@@ -116,6 +144,8 @@ export async function findMatches(problemId: string): Promise<Match[]> {
       compatibility_json: byId.get(r.seller_company_id)!.compatibility,
       status: 'proposed' as const,
     }));
+
+  await recordCandidates(scored, new Set(rows.map((r) => r.seller_company_id)));
   if (!rows.length) return [];
 
   const { data, error } = await admin.from('matches').insert(rows).select();
