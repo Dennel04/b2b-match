@@ -1,9 +1,13 @@
-import { renderProblemScreen } from "../problems/load";
+import { renderProblemsList } from "../problems/load";
 
-export const metadata = { title: "Dashboard — Crossdesk" };
+export const metadata = { title: "Problems — Crossdesk" };
 
-// The main screen is the company's latest problem. `?demo` shows it on fake data, before seeding.
+// The company's problems. `?demo` shows the screen on fake data, before seeding.
 export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
-  const { demo } = await searchParams;
-  return renderProblemScreen({ demo: demo !== undefined });
+  const { demo, by, closed } = await searchParams;
+  return renderProblemsList({
+    demo: demo !== undefined,
+    by: typeof by === "string" ? by : undefined,
+    closed: closed === undefined ? undefined : "",
+  });
 }

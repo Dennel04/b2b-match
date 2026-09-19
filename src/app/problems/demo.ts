@@ -1,4 +1,5 @@
 import type { ProblemScreenData } from "./ProblemScreen";
+import type { ProblemsScreenData } from "./ProblemsScreen";
 
 /** The reference screen's content (drafts/design/problem-page.html), word for word. */
 export const DEMO: ProblemScreenData = {
@@ -18,4 +19,82 @@ export const DEMO: ProblemScreenData = {
     { id: "m-4", name: "Proekspert", place: "Tallinn", logo: "/logos/proekspert.png", area: "Contract format" },
   ],
   declined: 7,
+};
+
+/** The list screen on fake data, before seeding: one company's problems across its departments. */
+export const DEMO_LIST: ProblemsScreenData = {
+  initials: "KM",
+  offers: 2,
+  rows: [
+    {
+      id: "p-1",
+      title: "Customs paperwork by hand across three warehouses",
+      area: "Operations",
+      state: "ready",
+      matched: 2,
+      awaiting: 2,
+      startBy: "2026-11-15",
+      terms: "Ceiling €4,000 / month",
+    },
+    {
+      id: "p-2",
+      title: "Month-end close takes nine working days",
+      area: "Finance",
+      state: "matching",
+      matched: 3,
+      awaiting: 1,
+      startBy: "2026-10-20",
+      terms: "Ceiling €25,000 / project",
+    },
+    {
+      id: "p-3",
+      title: "Two warehouse systems that do not talk to each other",
+      area: "IT",
+      state: "matching",
+      matched: 1,
+      awaiting: 4,
+      startBy: "2027-02-01",
+      terms: "Ceiling €60,000 / project",
+    },
+    {
+      id: "p-4",
+      title: "Supplier contracts reviewed by one lawyer on retainer",
+      area: "Legal",
+      state: "searching",
+      matched: 0,
+      awaiting: 0,
+      startBy: null,
+      terms: "Ceiling €2,000 / month",
+    },
+    {
+      id: "p-5",
+      title: "Drivers rostered in a spreadsheet, overtime found too late",
+      area: "Operations",
+      state: "matching",
+      matched: 2,
+      awaiting: 0,
+      startBy: "2026-12-01",
+      terms: "Ceiling €1,500 / month",
+    },
+    {
+      id: "p-6",
+      title: "No one owns the warehouse safety training record",
+      area: "People",
+      state: "searching",
+      matched: 0,
+      awaiting: 0,
+      startBy: null,
+      terms: "No ceiling set",
+    },
+    {
+      id: "p-7",
+      title: "Pallet labels printed twice for the Finnish route",
+      area: "Operations",
+      state: "closed",
+      matched: 1,
+      awaiting: 0,
+      startBy: "2026-06-01",
+      terms: "Ceiling €800 / month",
+    },
+  ],
 };

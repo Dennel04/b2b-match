@@ -34,8 +34,9 @@ export async function proxy(request: NextRequest) {
     return res;
   };
 
-  // /dashboard?demo renders fake data only, so it may be opened signed out.
-  const demo = path === "/dashboard" && request.nextUrl.searchParams.has("demo");
+  // `?demo` on the problem screens renders fake data only, so they may be opened signed out.
+  const demo =
+    (path === "/dashboard" || path.startsWith("/problems")) && request.nextUrl.searchParams.has("demo");
   if (!signedIn && !demo && (path.startsWith("/dashboard") || path.startsWith("/problems") || path.startsWith("/onboarding"))) {
     return redirectTo("/login");
   }

@@ -5,8 +5,9 @@ import { serverClient } from "@/lib/supabase";
 import type { BuyerTerms, MatchView } from "@/types";
 import { FORMATS, draftFromCompany, readiness } from "../onboarding/fields";
 import { SetupCard } from "./SetupCard";
-import { DEMO } from "./demo";
+import { DEMO, DEMO_LIST } from "./demo";
 import { ProblemScreen, type ProblemScreenData } from "./ProblemScreen";
+import { ProblemsScreen, type ProblemRow, type ProblemsFilter } from "./ProblemsScreen";
 
 /**
  * Renders the problem screen for the signed-in company. `problemId` omitted means its latest
@@ -109,4 +110,49 @@ function splitVerbatim(text: string): [string, string] {
 function firstSentence(s: string) {
   const end = s.search(/[.!?](\s|$)/);
   return end < 0 ? s : s.slice(0, end);
+}
+
+/**
+ * The company's problems as a list. Filters come from the URL, so the screen stays a Server
+ * Component; matches are counted through getMatchView(), never by projecting `matches` here.
+ */
+export async function renderProblemsList(f: ProblemsFilter) {
+  if (f.demo) return <ProblemsScreen d={DEMO_LIST} f={f} />;
+
+  const db = await serverClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: company } = await db.from("companies").select("id, name, website, role, profile_json, seller_terms").eq("owner_id", user.id).limit(1).maybeSingle();
+  if (!company) redirect("/onboarding");
+  const setup = <SetupCard items={readiness(draftFromCompany(company))} />;
+
+  const { data: problems } = await db
+    .from("problems")
+    .select("id, text, buyer_terms, created_at")
+    .eq("company_id", company.id)
+    .order("created_at", { ascending: false });
+
+  const rows: ProblemRow[] = [];
+  for (const p of problems ?? []) {
+    const { data: ids } = await db.from("matches").select("id").eq("problem_id", p.id);
+    const views = await Promise.all((ids ?? []).map((r) => getMatchView(r.id)));
+    const live = views.filter((m) => m.status !== "declined" && m.negotiation?.envelope?.verdict !== "reject");
+    const awaiting = live.filter((m) => m.status === "proposed" && m.negotiation?.envelope?.verdict !== "proceed");
+    const ready = live.length > awaiting.length;
+    const terms = termChips(p.buyer_terms);
+    rows.push({
+      id: p.id,
+      // ponytail: the department is a design-level field until `problems.department` exists.
+      area: null,
+      title: splitVerbatim(p.text)[0],
+      state: ready ? "ready" : live.length > 0 ? "matching" : "searching",
+      matched: live.length - awaiting.length,
+      awaiting: awaiting.length,
+      startBy: p.buyer_terms?.start_by ?? null,
+      terms: terms[0] ?? "",
+    });
+  }
+
+  return <ProblemsScreen d={{ initials: initialsOf(company.name), offers: 0, rows }} f={f} setup={setup} />;
 }
