@@ -65,7 +65,7 @@ export function draftFromCompany(c: Pick<Company, "name" | "website" | "role" | 
     website: c?.website ?? "",
     role: c?.role ?? null,
     industry: p?.industry ?? "",
-    size: p?.size_hint ?? "",
+    size: p?.size_hint ? (sizeBucket(p.size_hint) ?? p.size_hint) : "",
     summary: p?.summary ?? "",
     services: p?.services ?? [],
     keywords: p?.keywords ?? [],
@@ -94,7 +94,7 @@ export function applyAutofill(d: Draft, a: CompanyDraft): Draft {
 }
 
 /** "~40 people" → "11–50". Null when the hint carries no number. */
-function sizeBucket(hint: string): string | null {
+export function sizeBucket(hint: string): string | null {
   const n = Number(hint.replace(/[\s,]/g, "").match(/\d+/)?.[0]);
   if (!n) return null;
   if (n <= 10) return "1–10";

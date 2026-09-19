@@ -52,7 +52,11 @@ Return:
   "unknown" if nothing suggests it.
 - profile.services — 3 to 8 short items, the company's own offering, not marketing slogans.
 - profile.keywords — 5 to 12 lower-case terms a buyer with a matching problem might use.
-- profile.summary — 2-3 plain sentences, safe to show to other companies.
+- profile.summary — 2 or 3 short paragraphs, separated by a blank line, safe to show to other
+  companies. One idea per paragraph, 25 to 45 words each: what the company does, then who it
+  serves or what it is known for, then anything a buyer would weigh (scale, partners, how it
+  sells). Never one long paragraph listing everything with commas — that is unreadable on a
+  profile. Plain sentences, no marketing adjectives, no bullet characters.
 - profile.city / profile.country — where the company is headquartered, as the site states it
   (address, "based in Tallinn", footer). Country in English ("Estonia"). null if not stated.
 - profile.languages — languages the company works or serves clients in, in English

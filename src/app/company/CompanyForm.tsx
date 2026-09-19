@@ -152,7 +152,8 @@ export function CompanyForm({
         from === "site"
           ? await draftCompanyProfile(site)
           : await draftCompanyProfileFromText(pasted);
-      if (!result.ok) return setFill({ state: "error", message: result.message });
+      if (!result.ok)
+        return setFill({ state: "error", message: result.message });
       const draft: CompanyDraft = result.data;
       // The name the person typed stays theirs; the draft fills everything else.
       setD((prev) => ({
@@ -271,38 +272,54 @@ export function CompanyForm({
             <Buttons onSave={save} onCancel={cancel} saving={saving} />
           </section>
         ) : (
-          <section className="flex items-start gap-5 pb-9">
-            <span
-              aria-hidden
-              className="grid h-16 w-16 flex-none place-items-center rounded-[22px] bg-ink text-[20px] font-semibold text-surface"
-            >
-              {monogram(d.name)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <h1 className="truncate text-[28px] font-bold leading-[1.1] tracking-[-0.03em] md:text-[32px]">
-                {d.name || "Your company"}
-              </h1>
-              <p className="mt-1.5 text-[15px] text-ink-soft">
-                {[d.industry, d.size && `${d.size} people`, role?.title]
-                  .filter(Boolean)
-                  .join(" · ") || "Nothing filled in yet"}
-              </p>
-              {d.website && (
-                <a
-                  href={`https://${d.website.replace(/^https?:\/\//, "")}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-[14px] text-ink-soft underline-offset-4 hover:text-ink hover:underline"
-                >
-                  {d.website}
-                </a>
-              )}
-            </div>
-            <Pencil
-              label="Edit company details"
-              onClick={() => setEditing("head")}
-            />
-          </section>
+          <div className="flex flex-col gap-6 pb-9">
+            <section className="flex items-start gap-5">
+              <span
+                aria-hidden
+                className="grid h-16 w-16 flex-none place-items-center rounded-[22px] bg-ink text-[20px] font-semibold text-surface"
+              >
+                {monogram(d.name)}
+              </span>
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate text-[28px] font-bold leading-[1.1] tracking-[-0.03em] md:text-[32px]">
+                  {d.name || "Your company"}
+                </h1>
+                {d.industry && (
+                  <p className="mt-2 max-w-[60ch] text-[16px] leading-snug text-ink-soft">
+                    {d.industry}
+                  </p>
+                )}
+                {!d.industry && !d.size && !d.website && (
+                  <p className="mt-2 text-[15px] text-ink-faint">
+                    Nothing filled in yet
+                  </p>
+                )}
+              </div>
+              <Pencil
+                label="Edit company details"
+                onClick={() => setEditing("head")}
+              />
+            </section>
+            {(d.industry || d.size || d.website) && (
+              <dl className="grid gap-x-8 gap-y-6 border-t border-line pt-6 sm:grid-cols-3">
+                {d.size && (
+                  <Spec label="Size" icon="users">
+                    {headcount(d.size)}
+                  </Spec>
+                )}
+                {role && <Spec label="Here to">{role.title}</Spec>}
+                {d.website && (
+                  <Spec
+                    label="Website"
+                    icon="globe"
+                    href={`https://${d.website.replace(/^https?:\/\//, "")}`}
+                  >
+                    {d.website.replace(/^https?:\/\//, "")}
+                  </Spec>
+                )}
+              </dl>
+            )}
+          </div>
         )}
       </Swap>
 
@@ -402,12 +419,16 @@ export function CompanyForm({
             <Buttons onSave={save} onCancel={cancel} saving={saving} />
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            <p className="max-w-[68ch] text-[15.5px] leading-relaxed text-ink">
-              {d.summary || (
-                <Empty>Say what you do in two or three sentences.</Empty>
-              )}
-            </p>
+          <div className="flex max-w-[68ch] flex-col gap-4">
+            {d.summary ? (
+              paragraphs(d.summary).map((para, i) => (
+                <p key={i} className="text-[15.5px] leading-relaxed text-ink">
+                  {para}
+                </p>
+              ))
+            ) : (
+              <Empty>Add a description</Empty>
+            )}
           </div>
         )}
       </Block>
@@ -474,6 +495,82 @@ export function CompanyForm({
       )}
     </main>
   );
+}
+
+/**
+ * One labelled fact. A value with no label — "on-demand mobility and delivery platform" on its
+ * own — leaves the reader guessing what it answers, so every cell says what it is.
+ */
+function Spec({
+  label,
+  icon,
+  href,
+  children,
+}: {
+  label: string;
+  icon?: "users" | "globe";
+  href?: string;
+  children: React.ReactNode;
+}) {
+  const value = (
+    <>
+      {icon && <Icon name={icon} size={15} />}
+      <span className="min-w-0">{children}</span>
+    </>
+  );
+  return (
+    <div className="min-w-0 sm:border-l sm:border-line sm:pl-5 sm:first:border-l-0 sm:first:pl-0 lg:border-l lg:pl-5 lg:first:border-l-0 lg:first:pl-0">
+      <dt className="text-[12.5px] font-medium uppercase tracking-[0.06em] text-ink-faint">
+        {label}
+      </dt>
+      <dd className="mt-1.5">
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-w-0 items-center gap-2 text-[15px] text-ink underline-offset-4 transition-colors hover:underline"
+          >
+            {value}
+          </a>
+        ) : (
+          <span className="inline-flex min-w-0 items-start gap-2 text-[15px] leading-snug text-ink">
+            {value}
+          </span>
+        )}
+      </dd>
+    </div>
+  );
+}
+
+/**
+ * The description, in paragraphs. New profiles come back as blank-line paragraphs; one written
+ * before that, or pasted as a single block, is cut after every second sentence so it is read
+ * rather than skipped.
+ */
+function paragraphs(text: string): string[] {
+  const written = text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  if (written.length > 1) return written;
+
+  const sentences = text.trim().match(/[^.!?]+[.!?]+(\s|$)/g) ?? [text.trim()];
+  if (sentences.length < 3) return [text.trim()];
+  const out: string[] = [];
+  for (let i = 0; i < sentences.length; i += 2)
+    out.push(
+      sentences
+        .slice(i, i + 2)
+        .join("")
+        .trim(),
+    );
+  return out;
+}
+
+/** "51–200" is a bucket and needs the word; anything a site said in its own words does not. */
+function headcount(size: string) {
+  return /^[\d\s–\-+]+$/.test(size) ? `${size} people` : size;
 }
 
 /** One block of the profile: a heading, its pencil, and whatever it is showing. */
