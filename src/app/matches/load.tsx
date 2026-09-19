@@ -1,14 +1,16 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getMatchView, unseenMatchCount } from "@/actions/match";
 import { initialsOf } from "@/components/layout";
+import { FORMAT_LABELS } from "@/lib/overlap";
 import { currentUser, serverClient } from "@/lib/supabase";
-import type { CompanyRole, MatchStatus, MatchView } from "@/types";
+import type { CompanyRole, MatchStatus, MatchView, SellerTerms } from "@/types";
 // ponytail: these three read a projected match the same way on both screens; they move to lib/
 // the day the backend owner is free to take them.
 import { firstSentence, openArea, splitVerbatim } from "../problems/load";
 import { DEMO_MATCHES } from "./demo";
 import { MarkSeen } from "./MarkSeen";
 import { MatchesScreen, type MatchesScreenData } from "./MatchesScreen";
+import { MatchScreen } from "./MatchScreen";
 
 /**
  * Every match the company is a party to, either side. RLS (`matches_participant`) already limits
@@ -78,4 +80,64 @@ const STATE: Record<MatchStatus, [buyer: string, seller: string]> = {
 /** The double opt-in in one line: the buyer signals first, the seller answers. */
 function isYourMove(m: MatchView) {
   return m.viewer === "seller" ? m.status === "buyer_interested" : m.status === "proposed";
+}
+
+/**
+ * One match. Everything a component may show is decided in getMatchView(): the problem text
+ * reaches only its owner, names only once both sides accepted, terms only as compatibility.
+ */
+export async function renderMatchScreen(matchId: string) {
+  const db = await serverClient();
+  const user = await currentUser();
+  if (!user) redirect("/login");
+
+  const { data: company } = await db.from("companies").select("id, name").eq("owner_id", user.id).limit(1).maybeSingle();
+  if (!company) redirect("/onboarding");
+
+  let m: MatchView;
+  try {
+    m = await getMatchView(matchId);
+  } catch {
+    notFound();
+  }
+
+  const selling = m.viewer === "seller";
+  const counterparty = selling
+    ? (m.buyer.name ?? `A ${m.buyer.industry} company${m.buyer.size_hint ? `, ${m.buyer.size_hint}` : ""}`)
+    : (m.seller.name ?? firstSentence(m.seller.summary));
+
+  // The viewer's own terms, in their own figures. The other side's never reach this screen.
+  const { data: own } = selling
+    ? await db.from("services").select("terms").eq("company_id", company.id).limit(1).maybeSingle()
+    : { data: null };
+
+  return (
+    <>
+      <MatchScreen
+        d={{
+          m,
+          initials: initialsOf(company.name),
+          matches: await unseenMatchCount(),
+          counterparty,
+          problemTitle: m.problem_text ? splitVerbatim(m.problem_text)[0] : null,
+          // ponytail: only the selling side shows its own figures here; the buyer reads theirs
+          // on the problem screen, where the ceiling lives.
+          terms: selling ? sellerChips(own?.terms ?? null) : [],
+          formats: (m.compatibility?.contract_formats ?? []).map((f) => FORMAT_LABELS[f]),
+        }}
+      />
+      <MarkSeen ids={[m.id]} />
+    </>
+  );
+}
+
+function sellerChips(t: SellerTerms | null) {
+  if (!t) return [];
+  const chips: string[] = [];
+  if (t.budget_floor) {
+    const per = t.budget_floor.period === "monthly" ? " / month" : " / project";
+    chips.push(`From €${t.budget_floor.amount.toLocaleString("en-US")}${per}`);
+  }
+  if (t.available_from) chips.push(`Free from ${t.available_from}`);
+  return chips;
 }
