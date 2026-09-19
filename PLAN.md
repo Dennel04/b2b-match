@@ -104,6 +104,10 @@ say "this is just another spam channel".
 - Document upload into the profile (PDF, Notion pasted as text)
 - Calendar export
 - Streaming the agent negotiation live on screen
+- **Landing page at `/`** — what Crossdesk does in one screen (a private problem, two agents
+  behind a wall, people meet with a briefing), the three beats from `docs/JUDGING.md`, and "Log in"
+  / "Get started" buttons. Today `/` redirects straight to `/login`; the login screen then
+  becomes only a form.
 
 ### Explicitly not doing
 - **Manual profile forms as the default** — `draftCompanyProfile()` reads the site behind the
