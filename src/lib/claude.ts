@@ -19,10 +19,21 @@ export const MODEL = process.env.MODEL_ID ?? 'claude-opus-5';
 const ATTEMPTS = 2;
 
 /** Errors worth one more try after the SDK gave up, or that happen mid-stream where it cannot. */
-const isTransient = (e: unknown) =>
-  e instanceof Anthropic.APIConnectionError ||
-  e instanceof Anthropic.RateLimitError ||
-  e instanceof Anthropic.InternalServerError;
+const isTransient = (e: unknown) => {
+  if (
+    e instanceof Anthropic.APIConnectionError ||
+    e instanceof Anthropic.RateLimitError ||
+    e instanceof Anthropic.InternalServerError
+  ) {
+    return true;
+  }
+  // A stream cut in flight surfaces as a bare AnthropicError wrapping ECONNRESET — none of the
+  // typed classes match it, so a long generation died on the first hiccup with no second try.
+  const cause = (e as { cause?: { message?: string } })?.cause?.message ?? '';
+  return /terminated|ECONNRESET|socket hang up|aborted|fetch failed/i.test(
+    `${(e as Error)?.message ?? ''} ${cause}`,
+  );
+};
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 

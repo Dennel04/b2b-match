@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useSyncExternalStore } from "react";
 import { Coin } from "@/components/ui";
 
 /**
@@ -16,25 +16,22 @@ import { Coin } from "@/components/ui";
 
 const Balance = createContext<number | null>(null);
 
+const subscribe = (onChange: () => void) => {
+  window.addEventListener(BALANCE_EVENT, onChange);
+  return () => window.removeEventListener(BALANCE_EVENT, onChange);
+};
+
 export function CreditsProvider({ initial, children }: { initial: number | null; children: React.ReactNode }) {
-  const [credits, setCredits] = useState(initial);
-  const [fromServer, setFromServer] = useState(initial);
+  // Read as an external store rather than in an effect, because of when the publishing happens.
+  // Effects run child first, and this provider sits in the root layout above every page, so a
+  // screen that publishes on mount — the new balance after a Stripe return — fires before an
+  // effect here could have subscribed. A store has no such gap: the value is already there on
+  // the next render, and the pill updates without waiting for a reload.
+  const published = useSyncExternalStore(subscribe, () => lastPublished, () => null);
 
-  // A hard load or a router.refresh() re-runs the layout with a new number: take it as the
-  // truth. Adjusted during render rather than in an effect — React re-renders before painting,
-  // so the pill never shows the old balance for a frame.
-  if (fromServer !== initial) {
-    setFromServer(initial);
-    setCredits(initial);
-  }
-
-  useEffect(() => {
-    const onSpend = (e: Event) => setCredits((e as CustomEvent<number>).detail);
-    window.addEventListener(BALANCE_EVENT, onSpend);
-    return () => window.removeEventListener(BALANCE_EVENT, onSpend);
-  }, []);
-
-  return <Balance.Provider value={credits}>{children}</Balance.Provider>;
+  // Whoever published did so after reading or changing the balance for real, which is newer
+  // than the read this layout did for its own render.
+  return <Balance.Provider value={published ?? initial}>{children}</Balance.Provider>;
 }
 
 /** Null means nobody is signed in, and the coin is not drawn at all. */
@@ -56,9 +53,18 @@ export function Credits({ className = "" }: { className?: string }) {
 
 export const BALANCE_EVENT = "crossdesk:credits";
 
+/**
+ * The last balance anyone published, kept outside React so it outlives the moment it was sent.
+ * The event alone is not enough: a page that publishes on mount does so before the layout above
+ * it has subscribed.
+ */
+let lastPublished: number | null = null;
+
 /** Tell the pill what the balance is now, without a round trip of its own. */
-export const publishBalance = (credits: number) =>
+export const publishBalance = (credits: number) => {
+  lastPublished = credits;
   window.dispatchEvent(new CustomEvent(BALANCE_EVENT, { detail: credits }));
+};
 
 /** A screen that has just read the balance itself, handing it to the pill. */
 export function SyncBalance({ credits }: { credits: number }) {
