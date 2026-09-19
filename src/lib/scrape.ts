@@ -113,7 +113,15 @@ export async function readWebsiteTraced(website: string): Promise<ScrapeTrace> {
   const urls = candidates.length ? candidates : FALLBACK_PATHS.map((p) => origin + p);
   if (!candidates.length) steps.push({ url: origin, outcome: 'no useful links on the home page, trying fallback paths' });
 
-  const rest = await Promise.all(urls.slice(0, MAX_PAGES + 2).map((u) => fetchHtml(u, steps)));
+  // Asked after the home page so one blocked site costs one request, not two.
+  const robots = await RobotsRules.fetch(origin);
+  const permitted = urls.slice(0, MAX_PAGES + 2).filter((u) => {
+    if (robots.allows(u)) return true;
+    steps.push({ url: u, outcome: 'skipped: robots.txt disallows it' });
+    return false;
+  });
+
+  const rest = await Promise.all(permitted.map((u) => fetchHtml(u, steps)));
   // A link can redirect somewhere the link filter would have refused (a blog post, a login).
   const start = enHome ?? home;
   const fetched = [start, ...rest].filter((p): p is Fetched => {
@@ -208,6 +216,71 @@ async function fetchHtml(url: string, steps: ScrapeStep[]): Promise<Fetched | nu
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * What the site allows an automated reader to open, from its own robots.txt.
+ *
+ * A product that sells privacy does not get to ignore this file. It also costs nothing: the
+ * pages that describe a company are allowed nearly everywhere, and the ones robots.txt closes
+ * (baskets, booking flows, search results) were never worth reading.
+ */
+export class RobotsRules {
+  constructor(private readonly rules: { allow: boolean; path: string }[]) {}
+
+  static async fetch(origin: string): Promise<RobotsRules> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    try {
+      const res = await fetch(`${origin}/robots.txt`, { signal: controller.signal, redirect: 'follow' });
+      // No robots.txt, or an error page instead of one, means nothing is disallowed.
+      if (!res.ok) return new RobotsRules([]);
+      return new RobotsRules(RobotsRules.parse(await res.text()));
+    } catch {
+      return new RobotsRules([]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /** Only the `*` group: we are not asking for privileges granted to a named crawler. */
+  static parse(text: string): { allow: boolean; path: string }[] {
+    const rules: { allow: boolean; path: string }[] = [];
+    let applies = false;
+    for (const raw of text.split('\n')) {
+      const line = raw.split('#')[0].trim();
+      const [field, ...rest] = line.split(':');
+      const value = rest.join(':').trim();
+      if (!value && !/^user-agent$/i.test(field)) continue;
+
+      if (/^user-agent$/i.test(field)) applies = value === '*';
+      else if (applies && /^(dis)?allow$/i.test(field)) {
+        rules.push({ allow: /^allow$/i.test(field), path: value });
+      }
+    }
+    return rules;
+  }
+
+  /** Longest matching rule wins; Allow beats Disallow at equal length, as the standard says. */
+  allows(url: string): boolean {
+    const path = new URL(url).pathname + new URL(url).search;
+    let best: { allow: boolean; path: string } | null = null;
+    for (const rule of this.rules) {
+      if (!rule.path || !matchesRobotsPattern(path, rule.path)) continue;
+      if (!best || rule.path.length > best.path.length || (rule.path.length === best.path.length && rule.allow)) {
+        best = rule;
+      }
+    }
+    return best ? best.allow : true;
+  }
+}
+
+/** robots.txt patterns: `*` is any run of characters, a trailing `$` anchors the end. */
+function matchesRobotsPattern(path: string, pattern: string): boolean {
+  const anchored = pattern.endsWith('$');
+  const body = anchored ? pattern.slice(0, -1) : pattern;
+  const re = body.split('*').map((p) => p.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+  return new RegExp(`^${re}${anchored ? '$' : ''}`).test(path);
 }
 
 /** Reads the response body up to MAX_HTML_BYTES, then drops the connection. */

@@ -63,16 +63,20 @@ export function Wizard({ autoSite }: { autoSite: string | null }) {
     setReading(base.website);
     try {
       const result = await draftCompanyProfile(base.website);
-      if (left.current || !result.ok) return;
-      const draft = result.data;
-      await saveCompany({
-        ...base,
-        website: draft.website,
-        profile_json: { ...draft.profile, name: base.name },
-        seller_terms: base.role === "buyer" ? null : draft.seller_terms,
-      });
+      if (left.current) return;
+      // A site we could not read is not a failed sign-up: the company is saved either way, and
+      // /company says why and offers the manual path. Falling through to done() is the point.
+      if (result.ok) {
+        const draft = result.data;
+        await saveCompany({
+          ...base,
+          website: draft.website,
+          profile_json: { ...draft.profile, name: base.name },
+          seller_terms: base.role === "buyer" ? null : draft.seller_terms,
+        });
+      }
     } catch {
-      // Unreadable site or model trouble: the dashboard lists what is still missing.
+      // Model or network trouble: same again, the company is already saved.
     }
     if (!left.current) done();
   }

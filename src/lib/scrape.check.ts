@@ -1,6 +1,6 @@
 /** Self-check for the website reader's two fallbacks. Run: npm run check */
 import assert from 'node:assert/strict';
-import { failureReason, metaSummary } from './scrape';
+import { RobotsRules, failureReason, metaSummary } from './scrape';
 
 // A page drawn by JavaScript: nothing in the body, everything in the head.
 const shell = `<!doctype html><html><head>
@@ -41,5 +41,29 @@ assert.match(reason(['HTTP 404']), /no page at that address/);
 assert.match(reason(['fetched', 'skipped: too little text after removing navigation']), /drawn by JavaScript/);
 // A block beats a 404 when both happened: the block is why the rest failed.
 assert.match(reason(['HTTP 404', 'HTTP 403']), /blocking automated readers/);
+
+// robots.txt decides what may be opened. These rules are finnair.com's own, trimmed.
+const robots = new RobotsRules(
+  RobotsRules.parse(`
+User-agent: *
+Disallow: /*?
+Allow: /*?pageNum=
+Disallow: */booking/flight-selection
+Disallow: /private$
+
+User-agent: ia_archiver
+Disallow: /
+`),
+);
+assert.equal(robots.allows('https://www.finnair.com/en'), true, 'plain pages are allowed');
+assert.equal(robots.allows('https://www.finnair.com/en?lang=fi'), false, 'query strings are closed');
+assert.equal(robots.allows('https://www.finnair.com/x?pageNum=2'), true, 'the longer Allow wins');
+assert.equal(robots.allows('https://www.finnair.com/en/booking/flight-selection'), false);
+assert.equal(robots.allows('https://www.finnair.com/private'), false, '$ anchors the end');
+assert.equal(robots.allows('https://www.finnair.com/private-clients'), true, '... and only the end');
+// A group written for another crawler is not ours to obey or to claim.
+assert.equal(RobotsRules.parse('User-agent: ia_archiver\nDisallow: /').length, 0);
+// No robots.txt at all means nothing is closed.
+assert.equal(new RobotsRules([]).allows('https://x.ee/any'), true);
 
 console.log('scrape: all checks passed');
