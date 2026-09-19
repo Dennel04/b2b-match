@@ -180,6 +180,18 @@ chip, or the button. If something else says it, cut the line.
 - Sentence case, active voice, English.
 - Real content in mocks — real Estonian companies, believable problems. Never lorem ipsum.
 
+## Long lists in the interview
+
+A closed question inside a chat bubble shows what the interviewer suggested, not the whole
+taxonomy — `PillsNarrowed` (`@/components/cloud`) takes the full `options` plus a `suggested`
+subset, draws those, and hides the rest behind one quiet link that counts what is left.
+
+Seventeen chips is half a screen of noise and it makes the chat unreadable by the third
+question. Three is a question. The suggestions come from the model that has just read the
+answer, so the extra click stays rare — and it is always there, because narrowing is a shortcut
+and never a cage. Use the plain `Pills` only where the list is genuinely short (four timings,
+five contract formats seen on the form itself).
+
 ## AI-loading states
 
 The demo lives here. Never a bare spinner: named steps or skeletons in the final layout so

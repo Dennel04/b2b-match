@@ -35,6 +35,14 @@ const RequirementEnum = z.enum([
 export const ServiceInterviewSchema = z.object({
   title: z.string().nullable(),              // short heading for the service, <= 70 chars
   area: z.string().nullable(),               // the part of a buyer's business it fixes, from the list
+  /** Up to two runners-up from the same list. The chat offers these instead of all seventeen. */
+  area_alternatives: z.array(z.string()),
+  /**
+   * Which closed options are worth offering THIS seller. The chat asks about contract formats
+   * and capabilities with buttons and no model call, so without these it offers every one.
+   */
+  suggested_formats: z.array(ContractFormatEnum),
+  suggested_capabilities: z.array(RequirementEnum),
   summary: z.string().nullable(),            // what the service is, as it stands
   floor_amount: z.number().nullable(),       // smallest deal worth taking, EUR
   floor_period: z.enum(['one_off', 'monthly']).nullable(),
@@ -101,8 +109,22 @@ Rules:
   stop. Name it, do not describe it: "Business call centre", never "12-agent call centre in
   Tallinn, inbound and outbound" — the details belong in the summary, and the title is read in
   a list beside a dozen others.
-${areas.length ? `- area: exactly one of ${areas.join(', ')}. This is the part of the BUYER'S business the service fixes, not the seller's own department. A call centre fixes Customer support. Null if it is not clear yet.` : ''}
+${areas.length ? `- area: exactly one of ${areas.join(', ')}. This is the part of the BUYER'S business the service fixes, not the seller's own department. A call centre fixes Customer support. Null if it is not clear yet.
+- area_alternatives: up to TWO more from that same list — the ones you would pick if your first
+  answer is wrong. A service often fixes more than one part of a business, and the person is
+  shown these as buttons instead of the whole list, so they decide whether one tap finishes the
+  question or seventeen options have to be read. Order them best first, never repeat \`area\`,
+  and return an empty array when nothing else is plausible. Guessing wildly here is worse than
+  returning none.` : ''}
 - summary: what the service is, 2-4 sentences. Rewrite it as the answers add to it.
+- suggested_formats and suggested_capabilities: the options the form should put in front of THIS
+  seller, not the ones that exist. They are asked with buttons and no further thinking on your
+  side, so an option you list is an option they are nudged to tick.
+  Judge by what you have actually heard. A service billed by the hour plausibly sells as time
+  and materials; one with an install and a support tail sells as fixed price. A capability is
+  worth offering only if this kind of work usually involves it — a call centre handling customer
+  records plausibly signs a DPA, a small creative job does not need ISO 27001. Two to four
+  formats, zero to three capabilities, and an empty array is a real answer.
 - If they will not name a floor, do not push. Leave floor_amount null and move on.
 - available_from must be an absolute ISO date. Resolve "in a month" against today's date.
 - When you have enough OR you have asked 5 questions: done=true and follow_up null.

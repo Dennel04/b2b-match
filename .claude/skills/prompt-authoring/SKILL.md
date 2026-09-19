@@ -96,6 +96,29 @@ Two rules, measured rather than assumed, and `ServiceInterviewSchema` is the wor
 `InterviewSchema` predates both and still nests under `terms`; leave it unless you are changing
 it for another reason, and bench it if you do.
 
+## A closed question is the model's job too
+
+The interviews answer their closed questions with chips and no model call — cheap, and it cannot
+come back malformed. The trap is that a chip list with no thinking behind it shows **everything**:
+seventeen departments in a chat bubble, and a company hiring a few Minecraft builders for €500
+being asked about ISO 27001 and EU data residency. That reads as a product that was not
+listening, and it is the interview's worst moment.
+
+So the model that just read the answer also says what to put in front of this person:
+
+- `department` / `area` come with `*_alternatives` — up to two runners-up from the same list.
+  The chat shows those three, with the full list one click behind `PillsNarrowed`.
+- `suggested_formats` and `suggested_requirements` / `suggested_capabilities` name the options
+  worth offering **this** deal, judged by its size and nature.
+
+Three rules when writing these:
+- An option you list is an option the person is nudged to tick. Wrong suggestions are worse than
+  none, so say so in the prompt and allow an empty array as a real answer.
+- Never drop the escape hatch. `PillsNarrowed` always keeps "show the rest" — narrowing is a
+  shortcut, never a cage.
+- Bench the judgement, not the shape: a case whose right answer is *few* options is the one that
+  catches a prompt suggesting all of them.
+
 ## Benching a prompt
 
 A prompt change is not done until it has been run on the input it actually gets — second

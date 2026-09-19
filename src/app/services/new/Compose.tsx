@@ -6,9 +6,9 @@ import Link from "next/link";
 import { runServiceInterview, saveService } from "@/actions/service";
 import { Composer, Thinking } from "@/components/Composer";
 import { AppShell } from "@/components/layout";
-import { Pills } from "@/components/cloud";
+import { Pills, PillsNarrowed } from "@/components/cloud";
 import { Button } from "@/components/ui";
-import type { CompanyProfile, InterviewTurn } from "@/types";
+import type { CompanyProfile, ContractFormat, InterviewTurn, Requirement } from "@/types";
 import { FORMATS, PERIODS, type Period } from "../../onboarding/fields";
 import { AREAS, CAPABILITIES, EMPTY, knownLines, sellerTermsFrom, serviceText, type ServiceDraft } from "./fields";
 import { Hero } from "./Hero";
@@ -53,6 +53,11 @@ export function Compose({
   const [saving, setSaving] = useState(false);
   // The availability chip picked in the interview, so the reply can name it rather than a date.
   const [timing, setTiming] = useState<(typeof TIMINGS)[number]["value"] | null>(null);
+  // The runners-up the interviewer named, so the closed question offers three chips, not seventeen.
+  const [alts, setAlts] = useState<string[]>([]);
+  // Which of the closed options are worth putting in front of THIS person, so the form does not
+  // ask a €500 job about ISO 27001.
+  const [offer, setOffer] = useState<{ formats: string[]; second: string[] }>({ formats: [], second: [] });
 
   // A field the person edited by hand. The interviewer fills the rest and never takes one back.
   const mine = useRef(new Set<Key>());
@@ -125,6 +130,8 @@ export function Compose({
         return merged;
       });
 
+      setAlts((r.area_alternatives ?? []).filter((a) => AREAS.includes(a)));
+      setOffer({ formats: r.suggested_formats ?? [], second: r.suggested_capabilities ?? [] });
       setTurns(next);
       if (mode === "ask" && r.follow_up && !r.done && asked.current < OPEN_QUESTIONS) {
         asked.current += 1;
@@ -236,6 +243,8 @@ export function Compose({
             logRef={log}
             gate={gate >= 0 ? GATES[gate].key : null}
             onGate={answerGate}
+            alts={alts}
+            offer={offer}
             draft={draft}
             set={set}
             timing={timing}
@@ -261,6 +270,8 @@ function Interviewer({
   logRef,
   gate,
   onGate,
+  alts,
+  offer,
   draft,
   set,
   timing,
@@ -277,6 +288,10 @@ function Interviewer({
   /** A scripted question is on screen: it is answered with controls, not with a sentence. */
   gate: GateKey | null;
   onGate: () => void;
+  /** What the interviewer suggested besides its first answer. */
+  alts: string[];
+  /** Which closed options the interviewer thinks are worth offering this person. */
+  offer: { formats: string[]; second: string[] };
   draft: ServiceDraft;
   set: <K extends Key>(k: K, v: ServiceDraft[K]) => void;
   timing: (typeof TIMINGS)[number]["value"] | null;
@@ -311,7 +326,7 @@ function Interviewer({
       </div>
 
       {gate ? (
-        <Gate which={gate} draft={draft} set={set} onDone={onGate} timing={timing} onTiming={onTiming} />
+        <Gate which={gate} draft={draft} set={set} onDone={onGate} alts={alts} offer={offer} timing={timing} onTiming={onTiming} />
       ) : done ? null : (
         <Composer input={input} onInput={onInput} onSend={onSend} onNote={onNote} busy={thinking} />
       )}
@@ -328,6 +343,8 @@ function Gate({
   draft,
   set,
   onDone,
+  alts,
+  offer,
   timing,
   onTiming,
 }: {
@@ -335,6 +352,8 @@ function Gate({
   draft: ServiceDraft;
   set: <K extends Key>(k: K, v: ServiceDraft[K]) => void;
   onDone: () => void;
+  alts: string[];
+  offer: { formats: string[]; second: string[] };
   timing: (typeof TIMINGS)[number]["value"] | null;
   onTiming: (v: (typeof TIMINGS)[number]["value"] | null) => void;
 }) {
@@ -348,10 +367,12 @@ function Gate({
   return (
     <div className="flex max-h-[46%] flex-col gap-3 overflow-y-auto border-t border-line p-3">
       {which === "area" && (
-        <Pills
+        <PillsNarrowed
           options={AREAS.map((a) => ({ value: a, label: a }))}
+          suggested={[...(draft.area ? [draft.area] : []), ...alts]}
           value={draft.area ? [draft.area] : []}
           onChange={(v) => set("area", v.find((x) => x !== draft.area) ?? "")}
+          more="Another part of the business"
         />
       )}
 
@@ -398,10 +419,24 @@ function Gate({
         </div>
       )}
 
-      {which === "formats" && <Pills options={FORMATS} value={draft.formats} onChange={(v) => set("formats", v)} />}
+      {which === "formats" && (
+        <PillsNarrowed
+          options={FORMATS}
+          suggested={offer.formats as ContractFormat[]}
+          value={draft.formats}
+          onChange={(v) => set("formats", v)}
+          more="Other ways of buying"
+        />
+      )}
 
       {which === "capabilities" && (
-        <Pills options={CAPABILITIES} value={draft.capabilities} onChange={(v) => set("capabilities", v)} />
+        <PillsNarrowed
+          options={CAPABILITIES}
+          suggested={offer.second as Requirement[]}
+          value={draft.capabilities}
+          onChange={(v) => set("capabilities", v)}
+          more="Other things a company must satisfy"
+        />
       )}
 
       <Button className="self-end" variant={empty ? "ghost" : "solid"} onClick={onDone}>

@@ -49,7 +49,9 @@ async function run() {
     total += ms;
     console.log(`\n· ${c.first.slice(0, 48)}…  (${(ms / 1000).toFixed(1)}s for ${c.answers.length + 1} calls)`);
     console.log(`  title:    ${out!.title}`);
-    console.log(`  area:     ${out!.area}${out!.area && !AREAS.includes(out!.area) ? "   <-- NOT IN THE LIST" : ""}`);
+    console.log(`  area:     ${out!.area}${out!.area && !AREAS.includes(out!.area) ? "   <-- NOT IN THE LIST" : ""}   (also: ${out!.area_alternatives.join(", ") || "—"})`);
+    console.log(`  offer fmt: ${out!.suggested_formats.join(", ") || "—"}`);
+    console.log(`  offer cap: ${out!.suggested_capabilities.join(", ") || "—"}`);
     console.log(`  summary:  ${out!.summary}`);
     console.log(`  floor:    ${out!.floor_amount ?? "—"} ${out!.floor_period ?? ""}`);
     console.log(`  from:     ${out!.available_from ?? "—"}`);

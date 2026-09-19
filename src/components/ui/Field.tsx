@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Icon } from "./Icon";
 
 export const inputClass =
   "h-11 w-full rounded-[8px] border border-line-strong bg-surface px-3.5 text-[15px] text-ink outline-none transition-[border-color,box-shadow] placeholder:text-ink-faint focus:border-ink-soft focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ink)_9%,transparent)]";
@@ -129,16 +130,22 @@ export function TagInput({
       {value.map((t) => (
         <span
           key={t}
-          className="inline-flex items-center gap-1.5 rounded-[7px] bg-surface-alt py-1 pl-2.5 pr-1.5 text-[13px]"
+          className="inline-flex items-center gap-1 rounded-[7px] bg-surface-alt py-1 pl-2.5 pr-1.5 text-[13px]"
         >
           {t}
+          {/*
+            * The chip is already the shape; the remove control is a mark on it, not a second box
+            * inside it. The 20px square is hit area only — it darkens the mark, it does not draw
+            * a plate. The glyph is the icon set's `x`, not the "×" character: that one is centred
+            * on the maths axis, which sits above the middle of a line, so it always read high.
+            */}
           <button
             type="button"
             aria-label={`Remove ${t}`}
             onClick={() => onChange(value.filter((v) => v !== t))}
-            className="grid h-5 w-5 cursor-pointer place-items-center rounded-[5px] text-ink-faint hover:bg-surface hover:text-ink"
+            className="grid h-5 w-5 cursor-pointer place-items-center rounded-[5px] text-ink-faint transition-colors duration-200 ease-out hover:text-ink"
           >
-            ×
+            <Icon name="x" size={12} />
           </button>
         </span>
       ))}
