@@ -110,8 +110,8 @@ say "this is just another spam channel".
 - Streaming the agent negotiation live on screen
 - **Landing page at `/`** — what Crossdesk does in one screen (a private problem, two agents
   behind a wall, people meet with a briefing), the three beats from `docs/JUDGING.md`, and "Log in"
-  / "Get started" buttons. Today `/` redirects straight to `/login`; the login screen then
-  becomes only a form.
+  / "Get started" buttons. Built: `src/app/page.tsx`, with a looping negotiation card; signed-in
+  visitors skip it for `/dashboard`.
 
 ### Explicitly not doing
 - **Manual profile forms as the default** — `draftCompanyProfile()` reads the site behind the
