@@ -14,6 +14,9 @@ import type { AgentDialogueLine, BuyerTerms, DealEnvelope, SellerTerms } from '.
 const EMAIL = 'admin@super.com';
 const PASSWORD = 'password123';
 
+/** `npm run seed:demo -- --password` — only then is the password written. See below for why. */
+const RESET_PASSWORD = process.argv.includes('--password');
+
 /** What the demo account starts with, so an unlock can be shown twice and still have change. */
 const START_CREDITS = 30;
 
@@ -263,10 +266,15 @@ async function main() {
     if (error) throw error;
     userId = data.user.id;
     console.log(`  + user ${EMAIL}`);
-  } else {
-    // Regeneration resets the password too, so the demo credentials always work.
+  } else if (RESET_PASSWORD) {
+    // Writing the password revokes every refresh token the account has, so a browser that was
+    // signed in is signed out mid-session: its next request fails, the screen half-renders, and
+    // the only way out is Log out and back in. A regeneration is meant to change the data, not
+    // the session — so this happens only when it is asked for: npm run seed:demo -- --password
     await db.auth.admin.updateUserById(userId, { password: PASSWORD, email_confirm: true });
-    console.log(`  = user ${EMAIL}`);
+    console.log(`  = user ${EMAIL} (password reset — sign in again)`);
+  } else {
+    console.log(`  = user ${EMAIL} (signed-in sessions kept)`);
   }
 
   // 2. Wipe what the previous run made. Services, problems and matches hang off the company by
