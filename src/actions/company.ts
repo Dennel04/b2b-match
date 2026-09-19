@@ -1,7 +1,7 @@
 'use server';
 
 import { ask } from '@/lib/claude';
-import { domainFromEmail, normaliseWebsite, readWebsiteTraced, type ScrapeTrace, type SitePage } from '@/lib/scrape';
+import { domainFromEmail, failureReason, normaliseWebsite, readWebsiteTraced, type ScrapeTrace, type SitePage } from '@/lib/scrape';
 import { serverClient } from '@/lib/supabase';
 import { ProfileDraftSchema, profileDraftPrompt } from '@/prompts/profile';
 import type { ActionResult, CompanyDraft, CompanyProfile, SellerTerms } from '@/types';
@@ -28,7 +28,8 @@ export async function draftCompanyProfile(website?: string): Promise<ActionResul
   const trace = await readWebsiteTraced(site);
   logScrape(site, trace);
   if (!trace.pages.length) {
-    return { ok: false, message: `Could not read ${site} — paste a description instead, or write it yourself` };
+    // The screen already offers the two ways out, so the message only has to say what went wrong.
+    return { ok: false, message: `${failureReason(site, trace.steps)}.` };
   }
 
   return { ok: true, data: await draftFrom(site, trace.pages, trace.logo) };

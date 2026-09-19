@@ -25,7 +25,13 @@ const SKIP_LINK = /login|sign-?in|sign-?up|register|account|cart|checkout|privac
 const MAX_PAGES = 6;
 const PER_PAGE_CHARS = 3500;
 const TOTAL_CHARS = 16000;
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 12000;
+/**
+ * Stop reading a page here. A single-page app can ship megabytes of inlined state (finnair.com
+ * serves 2.3 MB of it), and pulling all of that down is the fastest way to spend the timeout on
+ * bytes nobody reads. A megabyte is past the prose on every site tried so far.
+ */
+const MAX_HTML_BYTES = 1_000_000;
 
 const FREEMAIL = new Set([
   'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'yahoo.com',
@@ -61,6 +67,25 @@ export interface ScrapeTrace {
   ms: number;
   /** The company's own logo or app icon, read off the home page. Null when none was found. */
   logo: string | null;
+}
+
+/**
+ * Why nothing came back, in the words the person needs to act on. A site that blocks us and a
+ * site that does not exist are different problems, and "could not read it" hides which is which.
+ */
+export function failureReason(site: string, steps: ScrapeStep[]): string {
+  const host = site.replace(/^https?:\/\//, '');
+  const outcomes = steps.map((s) => s.outcome);
+  const any = (re: RegExp) => outcomes.some((o) => re.test(o));
+
+  if (any(/HTTP (401|403|429)/)) {
+    return `${host} is blocking automated readers, so we could not open it`;
+  }
+  if (any(/timeout/)) return `${host} did not answer in time`;
+  if (any(/failed: /) && !any(/^fetched/)) return `We could not reach ${host} — check the address`;
+  if (any(/HTTP 404/) && !any(/^fetched/)) return `${host} has no page at that address`;
+  if (any(/^fetched/)) return `${host} opened, but its pages are drawn by JavaScript and carry no readable text`;
+  return `We could not read ${host}`;
 }
 
 /** Fetches the home page, then the pages its links point to. Returns whatever had real content. */
@@ -110,7 +135,11 @@ export async function readWebsiteTraced(website: string): Promise<ScrapeTrace> {
   }
 
   // Lines that repeat on several pages are navigation and footers, not content.
-  const texts = [...byPath.values()].map((p) => ({ url: p.url, lines: contentLines(htmlToText(p.html)) }));
+  const texts = [...byPath.values()].map((p) => ({
+    url: p.url,
+    lines: contentLines(htmlToText(p.html)),
+    meta: metaSummary(p.html),
+  }));
   const seenOn = new Map<string, number>();
   for (const t of texts) for (const l of new Set(t.lines)) seenOn.set(l, (seenOn.get(l) ?? 0) + 1);
   const shared = texts.length > 2 ? 2 : Infinity;
@@ -119,15 +148,24 @@ export async function readWebsiteTraced(website: string): Promise<ScrapeTrace> {
   const seenText = new Set<string>();
   let budget = TOTAL_CHARS;
   for (const t of texts.slice(0, MAX_PAGES)) {
-    const text = t.lines.filter((l, i) => i === 0 || (seenOn.get(l) ?? 0) < shared).join('\n').slice(0, Math.min(PER_PAGE_CHARS, budget));
-    if (text.length < 200 || budget <= 0 || seenText.has(text.slice(0, 300))) {
-      steps.push({ url: t.url, outcome: text.length < 200 ? 'skipped: too little text after removing navigation' : 'skipped: duplicate or over budget', chars: text.length });
+    const body = t.lines.filter((l, i) => i === 0 || (seenOn.get(l) ?? 0) < shared).join('\n');
+    // A page drawn by JavaScript arrives as an empty shell, but its head still describes the
+    // company. Falling back to that is the difference between a draft and "could not read".
+    const fromMeta = body.length < 200 && t.meta.length >= 120;
+    const text = (fromMeta ? t.meta : body).slice(0, Math.min(PER_PAGE_CHARS, budget));
+
+    if (text.length < 120 || budget <= 0 || seenText.has(text.slice(0, 300))) {
+      steps.push({
+        url: t.url,
+        outcome: text.length < 120 ? 'skipped: too little text after removing navigation' : 'skipped: duplicate or over budget',
+        chars: text.length,
+      });
       continue;
     }
     seenText.add(text.slice(0, 300));
     budget -= text.length;
     pages.push({ url: t.url, text });
-    steps.push({ url: t.url, outcome: 'used', chars: text.length });
+    steps.push({ url: t.url, outcome: fromMeta ? 'used (head only — the body is drawn by JavaScript)' : 'used', chars: text.length });
   }
 
   const logo = home ? findLogo(home.html, home.url) : null;
@@ -157,8 +195,12 @@ async function fetchHtml(url: string, steps: ScrapeStep[]): Promise<Fetched | nu
       steps.push({ url, outcome: `HTTP ${res.status}${type.includes('text/html') ? '' : ` (${type || 'no type'})`}` });
       return null;
     }
-    const html = await res.text();
-    steps.push({ url: res.url === url ? url : `${url} → ${res.url}`, outcome: 'fetched', chars: html.length });
+    const html = await readCapped(res);
+    steps.push({
+      url: res.url === url ? url : `${url} → ${res.url}`,
+      outcome: html.length >= MAX_HTML_BYTES ? `fetched (first ${MAX_HTML_BYTES / 1000}KB)` : 'fetched',
+      chars: html.length,
+    });
     return { url: res.url, html };
   } catch (e) {
     steps.push({ url, outcome: controller.signal.aborted ? `timeout after ${TIMEOUT_MS / 1000}s` : `failed: ${(e as Error).message}` });
@@ -166,6 +208,80 @@ async function fetchHtml(url: string, steps: ScrapeStep[]): Promise<Fetched | nu
   } finally {
     clearTimeout(timer);
   }
+}
+
+/** Reads the response body up to MAX_HTML_BYTES, then drops the connection. */
+async function readCapped(res: Response): Promise<string> {
+  if (!res.body) return res.text();
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let out = '';
+  try {
+    while (out.length < MAX_HTML_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      out += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    await reader.cancel().catch(() => {});
+  }
+  return out.slice(0, MAX_HTML_BYTES);
+}
+
+/**
+ * What a page says about itself in its head: title, description, OpenGraph, and any JSON-LD
+ * Organization. This is the floor under a site whose body is drawn by JavaScript — the shell
+ * still carries these tags, and on a single-page app they are often the only prose there is.
+ */
+export function metaSummary(html: string): string {
+  const head = html.slice(0, MAX_HTML_BYTES);
+  const out: string[] = [];
+  const push = (s?: string | null) => {
+    const t = s?.replace(/\s+/g, ' ').trim();
+    if (t && t.length > 2 && !out.includes(t)) out.push(t);
+  };
+  const tag = (key: 'name' | 'property', value: string) =>
+    head.match(new RegExp(`<meta[^>]+${key}=["']${value}["'][^>]+content=["']([^"']+)["']`, 'i'))?.[1] ??
+    head.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+${key}=["']${value}["']`, 'i'))?.[1];
+
+  push(head.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]);
+  push(tag('property', 'og:site_name'));
+  push(tag('property', 'og:title'));
+  push(tag('name', 'description'));
+  push(tag('property', 'og:description'));
+
+  for (const org of structuredOrganisations(head)) {
+    push(str(org.name));
+    push(str(org.legalName));
+    push(str(org.slogan));
+    push(str(org.description));
+    const address = org.address as Record<string, unknown> | undefined;
+    if (address) push([str(address.addressLocality), str(address.addressCountry)].filter(Boolean).join(', '));
+  }
+  return out.join('\n');
+}
+
+const str = (v: unknown): string | null => (typeof v === 'string' ? v : null);
+
+/** Every JSON-LD node that describes a company, including inside @graph and arrays. */
+function structuredOrganisations(html: string): Record<string, unknown>[] {
+  const found: Record<string, unknown>[] = [];
+  const visit = (node: unknown) => {
+    if (Array.isArray(node)) return node.forEach(visit);
+    if (!node || typeof node !== 'object') return;
+    const obj = node as Record<string, unknown>;
+    const type = [obj['@type']].flat().filter((t): t is string => typeof t === 'string').join(' ');
+    if (/organization|corporation|localbusiness|company/i.test(type)) found.push(obj);
+    Object.values(obj).forEach(visit);
+  };
+  for (const m of html.matchAll(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/gi)) {
+    try {
+      visit(JSON.parse(m[1].trim()));
+    } catch {
+      // A malformed block is common and never worth failing the whole read for.
+    }
+  }
+  return found;
 }
 
 /** Same-site links, scored by how likely they are to say what the company does. */
