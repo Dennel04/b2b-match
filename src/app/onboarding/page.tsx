@@ -19,7 +19,18 @@ export default async function OnboardingPage() {
 
   return (
     <div className={`${premiumFont} flex min-h-dvh flex-col bg-bg text-ink`}>
-      <SiteHeader />
+      {/* Every signed-in screen redirects here until a company exists, so this is the only way out. */}
+      <SiteHeader>
+        <span className="hidden text-[13px] text-ink-faint sm:inline">{user.email}</span>
+        <form action="/auth/signout" method="post">
+          <button
+            type="submit"
+            className="cursor-pointer rounded-full px-4 py-2 text-[13.5px] font-semibold text-ink-soft ring-1 ring-ink/10 transition-colors hover:bg-surface hover:text-ink"
+          >
+            Log out
+          </button>
+        </form>
+      </SiteHeader>
       <Wizard autoSite={user.email ? domainFromEmail(user.email) : null} />
     </div>
   );

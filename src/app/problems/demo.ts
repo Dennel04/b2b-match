@@ -39,7 +39,7 @@ export const DEMO_LIST: ProblemsScreenData = {
     {
       id: "p-2",
       title: "Month-end close takes nine working days",
-      area: "Finance",
+      area: "Finance & accounting",
       state: "matching",
       matched: 3,
       awaiting: 1,

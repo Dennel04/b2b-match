@@ -3,20 +3,26 @@ import type { Period } from "../../onboarding/fields";
 
 /**
  * The parts of the business a problem can sit in. One list for the whole product: the interviewer
- * picks from it, the form offers it, and the problems list groups by it. Kept short on purpose —
- * a longer list makes the grouping useless, and "Other" catches the rest.
+ * guesses from it, the interview asks the person to confirm with a chip, the form offers it, and
+ * the problems list groups by it. Broad enough that "Other" is rare, short enough to scan.
  */
 export const DEPARTMENTS = [
   "Operations",
   "Sales",
-  "Marketing",
-  "Finance",
-  "IT & software",
-  "People & hiring",
-  "Logistics & supply",
-  "Production",
+  "Marketing & brand",
   "Customer support",
+  "Finance & accounting",
   "Legal & compliance",
+  "People & hiring",
+  "IT & software",
+  "Data & analytics",
+  "Cybersecurity",
+  "Product & R&D",
+  "Production & manufacturing",
+  "Logistics & supply chain",
+  "Procurement",
+  "Facilities & office",
+  "Sustainability & ESG",
   "Other",
 ];
 

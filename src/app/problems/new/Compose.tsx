@@ -24,7 +24,7 @@ import {
 import { Hero } from "./Hero";
 import { ProblemForm } from "./ProblemForm";
 import { Pills } from "@/components/cloud";
-import { GATES, OPEN_QUESTIONS, SCRIPTED_NOTE, type GateKey } from "./script";
+import { GATES, OPEN_QUESTIONS, SCRIPTED_NOTE, TIMINGS, type GateKey } from "./script";
 
 type Message = { from: "agent" | "you"; text: string };
 type Key = keyof ProblemDraft;
@@ -58,6 +58,8 @@ export function Compose({
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // The deadline chip picked in the interview, so the reply can name it rather than a date.
+  const [timing, setTiming] = useState<(typeof TIMINGS)[number]["value"] | null>(null);
 
   // A field the person edited by hand. The interviewer fills the rest and never takes one back.
   const mine = useRef(new Set<Key>());
@@ -89,10 +91,10 @@ export function Compose({
 
   /** One interview round: ask, merge what came back, show the next question. */
   /** The scripted half: a closed question costs no model call, it just shows its own control. */
-  function openGate(i: number, from: ProblemDraft) {
-    if (i >= GATES.length) return void turn([...turns], null, from, "digest");
+  function openGate(i: number, from: ProblemDraft, history: InterviewTurn[] = turns) {
+    if (i >= GATES.length) return void turn(history, null, from, "digest");
     setGate(i);
-    setMessages((m) => [...m, { from: "agent", text: GATES[i].question }]);
+    setMessages((m) => [...m, { from: "agent", text: GATES[i].question(from.department) }]);
   }
 
   async function turn(
@@ -177,7 +179,7 @@ export function Compose({
           { from: "agent", text: r.follow_up as string },
         ]);
       } else if (mode === "ask") {
-        openGate(0, from);
+        openGate(0, from, next);
       } else {
         setDone(true);
         setMessages((m) => [
@@ -197,9 +199,25 @@ export function Compose({
     }
   }
 
+  /**
+   * A scripted answer is said back in the chat as the person's own reply and kept as an interview
+   * turn — otherwise the questions pile up with nothing between them and the chat reads as spam.
+   */
   const answerGate = () => {
+    const g = GATES[gate];
+    const reply = gateReply(g.key, draft, timing);
+    const history = [...turns, { question: g.question(draft.department), answer: reply }];
+    setMessages((m) => [...m, { from: "you", text: reply }]);
+    setTurns(history);
     setGate(-1);
-    openGate(gate + 1, draft);
+    openGate(gate + 1, draft, history);
+  };
+
+  const pickTiming = (v: (typeof TIMINGS)[number]["value"] | null) => {
+    setTiming(v);
+    const t = TIMINGS.find((x) => x.value === v);
+    set("startBy", t?.days ? new Date(Date.now() + t.days * 86_400_000).toISOString().slice(0, 10) : "");
+    if (t) set("urgency", t.urgency);
   };
 
   const send = () => {
@@ -264,7 +282,7 @@ export function Compose({
           </p>
         </section>
 
-        <section className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 pb-12 pt-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] md:px-9">
+        <section className="mx-auto grid w-full max-w-[1440px] gap-8 px-4 pb-12 pt-6 lg:grid-cols-[minmax(0,500px)_minmax(0,1fr)] md:px-9">
           <Interviewer
             messages={messages}
             thinking={thinking}
@@ -278,6 +296,8 @@ export function Compose({
             onGate={answerGate}
             draft={draft}
             set={set}
+            timing={timing}
+            onTiming={pickTiming}
           />
 
           {form}
@@ -301,6 +321,8 @@ function Interviewer({
   onGate,
   draft,
   set,
+  timing,
+  onTiming,
 }: {
   messages: Message[];
   thinking: boolean;
@@ -315,6 +337,8 @@ function Interviewer({
   onGate: () => void;
   draft: ProblemDraft;
   set: <K extends Key>(k: K, v: ProblemDraft[K]) => void;
+  timing: (typeof TIMINGS)[number]["value"] | null;
+  onTiming: (v: (typeof TIMINGS)[number]["value"] | null) => void;
 }) {
   return (
     <div className="soft-in flex h-[min(76vh,760px)] flex-col overflow-hidden rounded-[24px] border border-line bg-surface">
@@ -350,7 +374,7 @@ function Interviewer({
       </div>
 
       {gate ? (
-        <Gate which={gate} draft={draft} set={set} onDone={onGate} />
+        <Gate which={gate} draft={draft} set={set} onDone={onGate} timing={timing} onTiming={onTiming} />
       ) : (
         <Composer
           input={input}
@@ -373,14 +397,40 @@ function Gate({
   draft,
   set,
   onDone,
+  timing,
+  onTiming,
 }: {
   which: GateKey;
   draft: ProblemDraft;
   set: <K extends Key>(k: K, v: ProblemDraft[K]) => void;
   onDone: () => void;
+  timing: (typeof TIMINGS)[number]["value"] | null;
+  onTiming: (v: (typeof TIMINGS)[number]["value"] | null) => void;
 }) {
+  const empty =
+    (which === "department" && !draft.department) ||
+    (which === "timing" && !timing) ||
+    (which === "budget" && !Number(draft.ceilingAmount)) ||
+    (which === "formats" && !draft.formats.length) ||
+    (which === "requirements" && !draft.requirements.length);
   return (
-    <div className="flex flex-col gap-3 border-t border-line p-3">
+    <div className="flex max-h-[46%] flex-col gap-3 overflow-y-auto border-t border-line p-3">
+      {which === "department" && (
+        <Pills
+          options={DEPARTMENTS.map((d) => ({ value: d, label: d }))}
+          value={draft.department ? [draft.department] : []}
+          onChange={(v) => set("department", v.find((x) => x !== draft.department) ?? "")}
+        />
+      )}
+
+      {which === "timing" && (
+        <Pills
+          options={TIMINGS.map((t) => ({ value: t.value, label: t.label }))}
+          value={timing ? [timing] : []}
+          onChange={(v) => onTiming(v.find((x) => x !== timing) ?? null)}
+        />
+      )}
+
       {which === "budget" && (
         <div className="flex items-center gap-2">
           <span
@@ -446,11 +496,34 @@ function Gate({
         />
       )}
 
-      <Button className="self-end" onClick={onDone}>
-        Continue
+      <Button className="self-end" variant={empty ? "ghost" : "solid"} onClick={onDone}>
+        {empty ? "Skip" : "Continue"}
       </Button>
     </div>
   );
+}
+
+/** The person's reply to a scripted question, in their voice, as it appears in the chat. */
+function gateReply(
+  which: GateKey,
+  d: ProblemDraft,
+  timing: (typeof TIMINGS)[number]["value"] | null,
+): string {
+  const list = (xs: string[]) => xs.join(", ");
+  switch (which) {
+    case "department":
+      return d.department || "Not sure yet";
+    case "timing":
+      return TIMINGS.find((t) => t.value === timing)?.label ?? "No fixed date";
+    case "budget":
+      return Number(d.ceilingAmount)
+        ? `Up to €${Number(d.ceilingAmount).toLocaleString("en-US").replace(/,/g, " ")} ${d.ceilingPeriod === "monthly" ? "per month" : "for the project"}`
+        : "I would rather not say";
+    case "formats":
+      return d.formats.length ? list(d.formats.map((f) => FORMATS.find((x) => x.value === f)?.label ?? f)) : "Any format is fine";
+    case "requirements":
+      return d.requirements.length ? list(d.requirements.map((r) => REQUIREMENTS.find((x) => x.value === r)?.label ?? r)) : "Nothing specific";
+  }
 }
 
 /** Named, not a spinner: the screen says what it is doing while the model is out. */
