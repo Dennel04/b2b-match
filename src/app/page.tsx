@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Bezel, Eyebrow, PillLink } from "@/components/premium";
 import { SiteHeader } from "@/components/SiteHeader";
 import { script } from "./fonts";
@@ -123,7 +124,10 @@ export default function Landing() {
       </main>
 
       <footer className="mx-auto w-full max-w-[1200px] px-4 pb-6 text-[12px] text-ink-faint md:px-8">
-        © 2026 Crossdesk
+        © 2026 Crossdesk ·{" "}
+        <Link href="/terms" className="underline-offset-4 hover:text-ink hover:underline">
+          Terms of service
+        </Link>
       </footer>
     </div>
   );

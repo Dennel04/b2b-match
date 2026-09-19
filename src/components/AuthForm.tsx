@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -170,6 +171,15 @@ export function AuthForm({ initialError, initialMode = "login" }: { initialError
         <PillButton type="submit" disabled={busy !== null} className="mt-1 w-full justify-between">
           {busy === "email" ? "One moment…" : copy.cta}
         </PillButton>
+        {mode === "signup" && (
+          <p className="text-center text-[12.5px] text-ink-faint">
+            By creating an account you agree to the{" "}
+            <Link href="/terms" className="font-semibold text-ink-soft underline-offset-4 hover:text-ink hover:underline">
+              Terms of service
+            </Link>
+            .
+          </p>
+        )}
       </form>
     </Bezel>
   );
