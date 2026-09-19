@@ -12,7 +12,7 @@ const READ_STEPS = [
   { at: 0, label: "Opening the site" },
   { at: 3, label: "Reading about and services pages" },
   { at: 8, label: "Drafting your company profile" },
-  { at: 20, label: "Almost there" },
+  { at: 25, label: "Almost there" },
 ];
 
 /**
@@ -84,7 +84,7 @@ export function Wizard({ autoSite }: { autoSite: string | null }) {
           <div>
             <h1 className="text-[26px] font-extrabold leading-[1.1] tracking-[-0.03em]">Reading {reading}</h1>
             <p className="mt-2 text-[14.5px] leading-relaxed text-ink-soft">
-              We are drafting your profile from your website so you don&rsquo;t have to type it. Up to half a minute.
+              We are drafting your profile from your website so you don&rsquo;t have to type it. Up to a minute.
             </p>
           </div>
           <ol aria-live="polite" className="flex flex-col gap-2.5 text-[14px]">

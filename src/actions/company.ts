@@ -1,7 +1,7 @@
 'use server';
 
 import { ask } from '@/lib/claude';
-import { domainFromEmail, normaliseWebsite, readWebsite, type SitePage } from '@/lib/scrape';
+import { domainFromEmail, normaliseWebsite, readWebsiteTraced, type ScrapeTrace, type SitePage } from '@/lib/scrape';
 import { serverClient } from '@/lib/supabase';
 import { ProfileDraftSchema, profileDraftPrompt } from '@/prompts/profile';
 import type { CompanyDraft, CompanyProfile, SellerTerms } from '@/types';
@@ -22,10 +22,41 @@ export async function draftCompanyProfile(website?: string): Promise<CompanyDraf
   }
   site = normaliseWebsite(site);
 
-  const pages = await readWebsite(site);
-  if (!pages.length) throw new Error(`Could not read ${site} — fill the profile by hand`);
+  const trace = await readWebsiteTraced(site);
+  logScrape(site, trace);
+  if (!trace.pages.length) throw new Error(`Could not read ${site} — fill the profile by hand`);
 
-  return draftFrom(site, pages);
+  return draftFrom(site, trace.pages);
+}
+
+/** One line per step in the server log (terminal locally, Vercel → Logs in production). */
+function logScrape(site: string, t: ScrapeTrace) {
+  console.log(`[scrape] ${site}: ${t.pages.length} pages, ${t.pages.reduce((n, p) => n + p.text.length, 0)} chars, ${t.ms} ms`);
+  for (const s of t.steps) console.log(`[scrape]   ${s.outcome} — ${s.url}${s.chars ? ` (${s.chars})` : ''}`);
+}
+
+/**
+ * Development only: everything behind one autofill, for /dev/scrape. Signed-in users only, since
+ * each call spends a model request.
+ */
+export async function debugScrape(website: string) {
+  const db = await serverClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) throw new Error('Sign in to use the scrape debugger');
+
+  const site = normaliseWebsite(website);
+  const trace = await readWebsiteTraced(site);
+  logScrape(site, trace);
+  if (!trace.pages.length) return { site, trace, prompt: null, draft: null, error: 'No page had usable text', modelMs: 0 };
+
+  const prompt = profileDraftPrompt(site, trace.pages);
+  const started = Date.now();
+  try {
+    const draft = await ask(ProfileDraftSchema, prompt, { effort: 'medium' });
+    return { site, trace, prompt, draft, error: null, modelMs: Date.now() - started };
+  } catch (e) {
+    return { site, trace, prompt, draft: null, error: e instanceof Error ? e.message : String(e), modelMs: Date.now() - started };
+  }
 }
 
 /**
@@ -39,7 +70,9 @@ export async function draftCompanyProfileFromText(text: string): Promise<Company
 }
 
 async function draftFrom(site: string, pages: SitePage[]): Promise<CompanyDraft> {
+  const started = Date.now();
   const draft = await ask(ProfileDraftSchema, profileDraftPrompt(site || 'not given', pages), { effort: 'medium' });
+  console.log(`[scrape] ${site || 'pasted text'}: model ${Date.now() - started} ms →`, JSON.stringify({ ...draft.profile, role: draft.role_guess, capabilities: draft.capabilities }));
 
   return {
     website: site,
