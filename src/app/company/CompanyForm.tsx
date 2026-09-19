@@ -208,6 +208,7 @@ export function CompanyForm({
       await saveCompany(next);
       setKept(d);
       setEditing(null);
+      if (!running) setFill({ state: "idle" });
       router.refresh();
     } catch (e) {
       setNote(
@@ -224,11 +225,64 @@ export function CompanyForm({
     setD(kept);
     setEditing(null);
     setNote(null);
+    if (!running) setFill({ state: "idle" });
   };
 
   const elapsed =
     fill.state === "running" ? Math.max(0, (now - fill.started) / 1000) : 0;
   const role = ROLES.find((r) => r.value === d.role);
+
+  // Without a website there is nothing to read: the button opens the field to add one.
+  const readSite = () => {
+    if (!d.website.trim()) return setEditing("head");
+    setSource("site");
+    void autofill("site");
+  };
+
+  // Named steps while it runs, then what it read or why it failed. Shown under the header, and
+  // inside About when that block is open, so the result is visible wherever the read started.
+  const progress = (
+    <>
+      {fill.state === "running" && (
+        <ol aria-live="polite" className="flex flex-col gap-2 text-[13.5px]">
+          {RUN_STEPS[fill.source]
+            .filter((s) => s.at <= elapsed)
+            .map((s, i, shown) => {
+              const current = i === shown.length - 1;
+              return (
+                <li
+                  key={s.label}
+                  className={`flex items-center gap-2.5 ${
+                    current ? "font-semibold text-ink" : "text-ink-soft"
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      current ? "animate-pulse bg-ink" : "bg-accent"
+                    }`}
+                  />
+                  {s.label}
+                </li>
+              );
+            })}
+        </ol>
+      )}
+      {fill.state === "done" && (
+        <p role="status" className="text-[13.5px] text-ink-soft">
+          Filled from {fill.from}. Check it before you save.
+        </p>
+      )}
+      {fill.state === "error" && (
+        <p
+          role="alert"
+          className="rounded-[18px] bg-gold-soft px-4 py-3 text-[13.5px] text-ink"
+        >
+          {fill.message} Paste a description instead, or write it yourself.
+        </p>
+      )}
+    </>
+  );
 
   return (
     <main className="flex w-full flex-col px-5 pb-24 pt-8 md:px-12 lg:px-16">
@@ -312,6 +366,18 @@ export function CompanyForm({
                   </p>
                 )}
               </div>
+              <Button
+                variant="ghost"
+                onClick={readSite}
+                disabled={running}
+                aria-label="Read my website"
+                className="flex-none"
+              >
+                <Icon name="globe" size={15} />
+                <span className="hidden sm:inline">
+                  {running ? "Reading…" : "Read my website"}
+                </span>
+              </Button>
               <Pencil
                 label="Edit company details"
                 onClick={() => setEditing("head")}
@@ -320,11 +386,11 @@ export function CompanyForm({
             {(d.industry || d.size || d.website) && (
               <dl className="grid gap-x-8 gap-y-6 border-t border-line pt-6 sm:grid-cols-3">
                 {d.size && (
-                  <Spec label="Size" icon="users">
+                  <Spec label="Company size" icon="users">
                     {headcount(d.size)}
                   </Spec>
                 )}
-                {role && <Spec label="Here to">{role.title}</Spec>}
+                {role && <Spec label="What brings you here?">{role.title}</Spec>}
                 {d.website && (
                   <Spec
                     label="Website"
@@ -340,6 +406,16 @@ export function CompanyForm({
         )}
       </Swap>
 
+      {/* A read started from the header: its steps, then Save or Cancel for what it filled. */}
+      {fill.state !== "idle" && editing !== "about" && (
+        <section className="-mt-3 flex flex-col gap-3 pb-9">
+          {progress}
+          {fill.state === "done" && (
+            <Buttons onSave={save} onCancel={cancel} saving={saving} />
+          )}
+        </section>
+      )}
+
       <Block
         title="About"
         editing={editing === "about"}
@@ -347,7 +423,7 @@ export function CompanyForm({
       >
         {editing === "about" ? (
           <div className="flex flex-col gap-5">
-            <Cloud span label="What you do">
+            <Cloud span label="About">
               <textarea
                 value={d.summary}
                 onChange={(e) => set("summary", e.target.value)}
@@ -390,48 +466,7 @@ export function CompanyForm({
                   className={`${bare} rounded-[20px] bg-surface px-4 py-3 leading-relaxed ring-1 ring-ink/[0.08]`}
                 />
               )}
-              {fill.state === "running" && (
-                <ol
-                  aria-live="polite"
-                  className="flex flex-col gap-2 text-[13.5px]"
-                >
-                  {RUN_STEPS[fill.source]
-                    .filter((s) => s.at <= elapsed)
-                    .map((s, i, shown) => {
-                      const current = i === shown.length - 1;
-                      return (
-                        <li
-                          key={s.label}
-                          className={`flex items-center gap-2.5 ${
-                            current ? "font-semibold text-ink" : "text-ink-soft"
-                          }`}
-                        >
-                          <span
-                            aria-hidden
-                            className={`h-1.5 w-1.5 rounded-full ${
-                              current ? "animate-pulse bg-ink" : "bg-accent"
-                            }`}
-                          />
-                          {s.label}
-                        </li>
-                      );
-                    })}
-                </ol>
-              )}
-              {fill.state === "done" && (
-                <p role="status" className="text-[13.5px] text-ink-soft">
-                  Filled from {fill.from}. Check it before you save.
-                </p>
-              )}
-              {fill.state === "error" && (
-                <p
-                  role="alert"
-                  className="rounded-[18px] bg-gold-soft px-4 py-3 text-[13.5px] text-ink"
-                >
-                  {fill.message} Paste a description instead, or write it
-                  yourself.
-                </p>
-              )}
+              {progress}
             </div>
             <Buttons onSave={save} onCancel={cancel} saving={saving} />
           </div>
@@ -452,7 +487,7 @@ export function CompanyForm({
 
       {sells(d.role) && (
         <Block
-          title="What you offer"
+          title="Services"
           editing={editing === "offer"}
           onEdit={() => setEditing("offer")}
         >
