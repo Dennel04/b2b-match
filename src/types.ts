@@ -208,6 +208,9 @@ export interface Match {
   agent_dialogue_json: AgentDialogueLine[] | null;   // grows line by line while negotiate() runs
   deal_envelope_json: DealEnvelope | null;           // set only when the negotiation finished
   negotiation_started_at: string | null;
+  /** When each side last had this match on screen. Null means it has never seen it. */
+  buyer_seen_at: string | null;
+  seller_seen_at: string | null;
   status: MatchStatus;
   brief_md: string | null;
   created_at: string;
@@ -285,5 +288,7 @@ export interface MatchView {
   /** Lines appear one at a time while `negotiating`; `envelope` arrives last. */
   negotiation: { lines: AgentDialogueLine[]; envelope: DealEnvelope | null } | null;
   negotiating: boolean;                      // poll getMatchView() every 2-3 s while true
+  /** True until this viewer's side has had the match on screen — the sidebar badge counts these. */
+  unseen: boolean;
   brief_md: string | null;
 }

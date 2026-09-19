@@ -63,6 +63,11 @@ const EMPTY_SELLER_TERMS: SellerTerms = {
  *   1. Mechanical terms check — free, filters out anyone incompatible on money, timing,
  *      contract format or requirements.
  *   2. Claude scores only the survivors.
+ *
+ * Safe to call over and over on the same problem, which is what `scripts/sweep.ts` does: stage 1
+ * is redone for everyone because it is free and vendors move their terms, while stage 2 sees
+ * only vendors nobody has priced for this problem yet. A sweep that finds nobody new is two
+ * queries and an upsert.
  */
 export async function findMatches(problemId: string): Promise<Match[]> {
   const admin = adminClient();
@@ -79,7 +84,24 @@ export async function findMatches(problemId: string): Promise<Match[]> {
 
   const buyerTerms: BuyerTerms = problem.buyer_terms ?? EMPTY_BUYER_TERMS;
 
-  // Stage 1: mechanical check. Neither side sees the other's figures.
+  // What this problem has already been through. The sweep calls this again every time a new
+  // vendor appears, so without it the model would re-price every pair it has already judged.
+  const [{ data: priorCandidates }, { data: existing }] = await Promise.all([
+    admin.from('match_candidates').select('seller_company_id, score').eq('problem_id', problemId),
+    admin.from('matches').select('seller_company_id').eq('problem_id', problemId),
+  ]);
+  /** Seller → the score it already has. Carried forward so an upsert never erases one. */
+  const scored = new Map<string, number>(
+    (priorCandidates ?? [])
+      .filter((c) => c.score !== null)
+      .map((c) => [c.seller_company_id as string, c.score as number]),
+  );
+  // Running this twice on one problem must not produce a second copy of every match.
+  const alreadyMatched = new Set((existing ?? []).map((m) => m.seller_company_id as string));
+
+  // Stage 1: mechanical check. Neither side sees the other's figures. Re-run for everyone on
+  // every sweep, scored or not: it is free, and a vendor that named its floor last week is
+  // compared on that floor today.
   const evaluated = (sellers ?? [])
     .filter((s) => s.profile_json)
     .map((s) => ({
@@ -88,32 +110,36 @@ export async function findMatches(problemId: string): Promise<Match[]> {
       compatibility: checkCompatibility(buyerTerms, (s.seller_terms ?? EMPTY_SELLER_TERMS) as SellerTerms),
     }));
   const viable = evaluated.filter((s) => !s.compatibility.hard_fail);
+  /** Only these reach the model: cleared the terms, and nobody has priced them for this problem yet. */
+  const fresh = viable.filter((s) => !scored.has(s.id));
 
   /** The funnel, including everyone who lost here — a vendor cannot be told why otherwise. */
-  const recordCandidates = (scores: Map<string, number>, matched: Set<string>) =>
+  const recordCandidates = (matched: Set<string>) =>
     admin.from('match_candidates').upsert(
       evaluated.map((s) => ({
         problem_id: problemId,
         seller_company_id: s.id,
         cleared_terms: !s.compatibility.hard_fail,
         compatibility_json: s.compatibility,
-        score: scores.get(s.id) ?? null,
+        score: scored.get(s.id) ?? null,
         became_match: matched.has(s.id),
       })),
       { onConflict: 'problem_id,seller_company_id' },
     );
 
-  if (!viable.length) {
-    await recordCandidates(new Map(), new Set());
+  // Nobody new to judge. The compatibility written above is still worth storing — a vendor's
+  // terms may have moved since the last sweep — but there is nothing to ask the model.
+  if (!fresh.length) {
+    await recordCandidates(alreadyMatched);
     return [];
   }
 
-  // Stage 2: semantic scoring of whoever cleared the terms.
+  // Stage 2: semantic scoring of whoever cleared the terms and has not been scored before.
   const { results } = await ask(
     MatchScoresSchema,
     matchPrompt(
       problem.text,
-      viable.map((s) => ({
+      fresh.map((s) => ({
         id: s.id,
         summary: s.profile.summary,
         services: s.profile.services,
@@ -122,15 +148,10 @@ export async function findMatches(problemId: string): Promise<Match[]> {
     { effort: 'high' },
   );
 
-  // Running this twice on one problem must not produce a second copy of every match.
-  const { data: existing } = await admin
-    .from('matches').select('seller_company_id').eq('problem_id', problemId);
-  const alreadyMatched = new Set((existing ?? []).map((m) => m.seller_company_id));
-
-  const byId = new Map(viable.map((s) => [s.id, s]));
-  const scored = new Map(
-    results.filter((r) => byId.has(r.seller_company_id)).map((r) => [r.seller_company_id, Math.round(r.score)]),
-  );
+  const byId = new Map(fresh.map((s) => [s.id, s]));
+  for (const r of results) {
+    if (byId.has(r.seller_company_id)) scored.set(r.seller_company_id, Math.round(r.score));
+  }
   const rows = results
     .filter(
       (r) =>
@@ -146,7 +167,7 @@ export async function findMatches(problemId: string): Promise<Match[]> {
       status: 'proposed' as const,
     }));
 
-  await recordCandidates(scored, new Set(rows.map((r) => r.seller_company_id)));
+  await recordCandidates(new Set([...alreadyMatched, ...rows.map((r) => r.seller_company_id)]));
   if (!rows.length) return [];
 
   const { data, error } = await admin.from('matches').insert(rows).select();
@@ -369,6 +390,8 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
 
   const accepted = row.status === 'accepted';
   const negotiating = isRunning(row.negotiation_started_at, row.deal_envelope_json);
+  // On the demo account one owner holds both companies; the buying side is the one it reads.
+  const seenAt = isBuyer ? row.buyer_seen_at : row.seller_seen_at;
   const negotiation: MatchView['negotiation'] =
     row.agent_dialogue_json && (row.deal_envelope_json || negotiating)
       ? { lines: row.agent_dialogue_json, envelope: row.deal_envelope_json }
@@ -393,8 +416,64 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
     compatibility: row.compatibility_json,
     negotiation,
     negotiating,
+    unseen: !seenAt,
     brief_md: accepted ? row.brief_md : null,
   };
+}
+
+/**
+ * The companies this user owns. Both `seen` calls below take ids from the browser, so neither
+ * may trust them: what the user owns is read here, and the writes are limited to it.
+ */
+async function ownedCompanyIds(): Promise<string[]> {
+  const user = await currentUser();
+  if (!user) return [];
+  const { data } = await adminClient().from('companies').select('id').eq('owner_id', user.id);
+  return (data ?? []).map((c) => c.id as string);
+}
+
+/**
+ * The sidebar badge. Matching runs in the background now, so a match arrives while nobody is
+ * on the screen — this is the number that says so. Declined matches are not news.
+ */
+export async function unseenMatchCount(): Promise<number> {
+  const mine = await ownedCompanyIds();
+  if (!mine.length) return 0;
+
+  const list = mine.join(',');
+  const { data } = await adminClient()
+    .from('matches')
+    .select('buyer_company_id, seller_company_id, buyer_seen_at, seller_seen_at')
+    .neq('status', 'declined')
+    .or(`buyer_company_id.in.(${list}),seller_company_id.in.(${list})`);
+
+  const owns = new Set(mine);
+  // Counted per row, not per side: the demo account owns both companies of every match and
+  // must still see one notification, not two.
+  return (data ?? []).filter(
+    (m) =>
+      (owns.has(m.buyer_company_id as string) && !m.buyer_seen_at) ||
+      (owns.has(m.seller_company_id as string) && !m.seller_seen_at),
+  ).length;
+}
+
+/**
+ * These matches have now been on screen, so they stop being news. Called from the matches
+ * screen after it has mounted — not while it renders, or prefetching the route from the
+ * sidebar would clear the badge for someone who never opened it.
+ */
+export async function markMatchesSeen(matchIds: string[]): Promise<void> {
+  const mine = await ownedCompanyIds();
+  if (!matchIds.length || !mine.length) return;
+
+  const admin = adminClient();
+  const at = new Date().toISOString();
+  await Promise.all([
+    admin.from('matches').update({ buyer_seen_at: at })
+      .in('id', matchIds).in('buyer_company_id', mine).is('buyer_seen_at', null),
+    admin.from('matches').update({ seller_seen_at: at })
+      .in('id', matchIds).in('seller_company_id', mine).is('seller_seen_at', null),
+  ]);
 }
 
 /** The opt-in order itself. Every refusal here is a message the person is meant to read. */

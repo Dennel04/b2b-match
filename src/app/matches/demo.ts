@@ -7,6 +7,7 @@ import type { MatchesScreenData } from "./MatchesScreen";
  */
 export const DEMO_MATCHES: MatchesScreenData = {
   initials: "KM",
+  unseen: 2,
   role: "both",
   matched: [
     {

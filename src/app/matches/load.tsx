@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getMatchView } from "@/actions/match";
+import { getMatchView, unseenMatchCount } from "@/actions/match";
 import { initialsOf } from "@/components/layout";
 import { currentUser, serverClient } from "@/lib/supabase";
 import type { CompanyRole, MatchStatus, MatchView } from "@/types";
@@ -7,6 +7,7 @@ import type { CompanyRole, MatchStatus, MatchView } from "@/types";
 // the day the backend owner is free to take them.
 import { firstSentence, openArea, splitVerbatim } from "../problems/load";
 import { DEMO_MATCHES } from "./demo";
+import { MarkSeen } from "./MarkSeen";
 import { MatchesScreen, type MatchesScreenData } from "./MatchesScreen";
 
 /**
@@ -31,6 +32,9 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
   // leaves null for the selling side. A seller row therefore cannot carry one.
   const d: MatchesScreenData = {
     initials: initialsOf(company.name),
+    // Counted before the rows below are marked as read, so the screen you arrive on still
+    // shows what was new when you arrived.
+    unseen: await unseenMatchCount(),
     role: company.role as CompanyRole,
     matched: [],
     awaiting: [],
@@ -55,7 +59,12 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     else d.awaiting.push({ ...party, context, area: openArea(m) });
   }
 
-  return <MatchesScreen d={d} />;
+  return (
+    <>
+      <MatchesScreen d={d} />
+      <MarkSeen ids={views.map((m) => m.id)} />
+    </>
+  );
 }
 
 /** One name per state, read from the viewer's own side: [buyer, seller]. */

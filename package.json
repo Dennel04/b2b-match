@@ -11,8 +11,9 @@
     "warm": "tsx --env-file=.env.local scripts/warm.ts",
     "directory": "tsx --env-file=.env.local scripts/directory.ts",
     "backfill:candidates": "tsx --env-file=.env.local scripts/backfill-candidates.ts",
-    "check": "next typegen && tsc --noEmit && tsx src/lib/overlap.check.ts && tsx src/lib/leak.check.ts && tsx src/actions/result.check.ts && tsx src/lib/scrape.check.ts && tsx src/app/problems/new/fields.check.ts && tsx src/app/services/new/fields.check.ts",
-    "read:site": "tsx scripts/read-site.ts"
+    "check": "next typegen && tsc --noEmit && tsx src/lib/overlap.check.ts && tsx src/lib/leak.check.ts && tsx src/lib/sweep.check.ts && tsx src/actions/result.check.ts && tsx src/lib/scrape.check.ts && tsx src/app/problems/new/fields.check.ts && tsx src/app/services/new/fields.check.ts",
+    "read:site": "tsx scripts/read-site.ts",
+    "sweep": "tsx --env-file=.env.local scripts/sweep.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.127.0",

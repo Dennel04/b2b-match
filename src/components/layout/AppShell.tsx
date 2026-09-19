@@ -26,6 +26,7 @@ export function AppShell({
   active?: "company" | "problems" | "services" | "matches" | "directory" | "dashboard";
   /** Signed-out demo browsing: the nav keeps `?demo`, or every link lands on the login screen. */
   demo?: boolean;
+  /** The badge on Matches: counterparties that arrived while nobody was looking, not a total. */
   matches?: number;
   initials: string;
   /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */

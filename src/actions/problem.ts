@@ -1,8 +1,10 @@
 'use server';
 
+import { after } from 'next/server';
 import { ask } from '@/lib/claude';
 import { currentUser, serverClient } from '@/lib/supabase';
 import { InterviewSchema, interviewPrompt } from '@/prompts/interview';
+import { findMatches } from './match';
 import type { ActionResult, CompanyProfile, InterviewTurn, Problem, ProblemInput } from '@/types';
 import { writeFailed } from './result';
 
@@ -33,6 +35,10 @@ export async function runInterview(
 /**
  * Write the problem down. RLS (`problems_owner`) already limits the insert to a company the
  * caller owns; the check below is the readable error, not the guard.
+ *
+ * Matching starts on its own from here. There is no "find matches" button: the screen says
+ * "Searching" and means it, and `scripts/sweep.ts` keeps that promise afterwards as new vendors
+ * arrive. This first pass exists only so the wait is seconds rather than a cron interval.
  */
 export async function saveProblem(input: ProblemInput): Promise<ActionResult<Problem>> {
   const user = await currentUser();
@@ -48,5 +54,19 @@ export async function saveProblem(input: ProblemInput): Promise<ActionResult<Pro
   const db = await serverClient();
   const { data, error } = await db.from('problems').insert(input).select().single();
   if (error) return writeFailed('saveProblem', error, 'problem');
-  return { ok: true, data: data as Problem };
+
+  const problem = data as Problem;
+  // Scoring only, no negotiation: findMatches is 7-25 s and fits inside any plan's function
+  // budget, where four agent rounds per match would not. The sweep does the talking.
+  after(async () => {
+    try {
+      await findMatches(problem.id);
+    } catch (e) {
+      // The sweep comes back to it. A failure here must not lose the problem the person just
+      // wrote, which is committed above either way.
+      console.error(`[match] first pass on ${problem.id} failed: ${(e as Error).message}`);
+    }
+  });
+
+  return { ok: true, data: problem };
 }
