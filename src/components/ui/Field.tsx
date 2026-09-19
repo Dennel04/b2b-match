@@ -143,7 +143,7 @@ export function TagInput({
             type="button"
             aria-label={`Remove ${t}`}
             onClick={() => onChange(value.filter((v) => v !== t))}
-            className="grid h-5 w-5 cursor-pointer place-items-center rounded-[5px] text-ink-faint transition-colors duration-200 ease-out hover:text-ink"
+            className="grid h-5 w-5 cursor-pointer place-items-center text-ink-faint transition-colors duration-200 ease-out hover:text-ink"
           >
             <Icon name="x" size={12} />
           </button>

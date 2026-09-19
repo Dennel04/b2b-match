@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Icon } from "./ui/Icon";
 
 /**
  * Building blocks in the high-end-visual-design language (the /lab/f direction), drawn with
@@ -214,16 +215,17 @@ export function TagInput({
       {value.map((t) => (
         <span
           key={t}
-          className="inline-flex items-center gap-1.5 rounded-full bg-surface py-1 pl-3 pr-1.5 text-[13px] shadow-[0_1px_2px_rgba(23,47,69,0.08)]"
+          className="inline-flex items-center gap-1 rounded-full bg-surface py-1 pl-3 pr-1.5 text-[13px] shadow-[0_1px_2px_rgba(23,47,69,0.08)]"
         >
           {t}
+          {/* Same mark as the dense TagInput, at this density: hit area only, no plate of its own. */}
           <button
             type="button"
             aria-label={`Remove ${t}`}
             onClick={() => onChange(value.filter((v) => v !== t))}
-            className="grid h-5 w-5 cursor-pointer place-items-center rounded-full text-ink-faint hover:bg-surface-alt hover:text-ink"
+            className="grid h-5 w-5 cursor-pointer place-items-center text-ink-faint transition-colors duration-200 ease-out hover:text-ink"
           >
-            ×
+            <Icon name="x" size={12} />
           </button>
         </span>
       ))}
