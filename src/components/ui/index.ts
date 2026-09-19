@@ -4,4 +4,3 @@ export { Button } from "./Button";
 export { Chip, Pill, Sealed } from "./Chip";
 export { Field, FieldGroup, Chips, TagInput, inputClass } from "./Field";
 export { Icon, type IconName } from "./Icon";
-export { ThemeToggle } from "./ThemeToggle";

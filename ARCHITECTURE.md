@@ -11,7 +11,7 @@ Supabase (Postgres + auth + RLS), Claude API. Deployed on Vercel.
 ```
 src/
   app/                    routes only — a folder is a URL segment
-    layout.tsx            root shell: fonts, theme, <body>
+    layout.tsx            root shell: fonts, <body>
     globals.css           Tailwind import, token bridge, quality floor
     fonts.ts              the one typeface
     login/ signup/        signed-out screens — no app chrome
@@ -57,7 +57,7 @@ Mutations go through Server Actions in `src/actions/`. Never write to Supabase f
 
 Three layers, and they do not mix:
 
-1. **Tokens — `src/styles/tokens.css`.** Every colour, radius and shape value. Light and dark.
+1. **Tokens — `src/styles/tokens.css`.** Every colour, radius and shape value. Light only.
    Adding a value to the product means adding it here first.
 2. **Bridge — `globals.css`.** `@theme inline` exposes the tokens to Tailwind as `bg-surface`,
    `text-ink-soft`, `border-line`. Also the quality floor: focus rings, reduced motion.

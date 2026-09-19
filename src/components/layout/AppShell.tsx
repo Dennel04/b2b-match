@@ -41,7 +41,7 @@ export function AppShell({
       <aside className="hidden w-[224px] flex-none flex-col border-r border-line bg-surface md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-line px-4">
           <span aria-hidden className="h-2.5 w-2.5 rounded-[3px] bg-accent" />
-          <span className="text-[14.5px] font-semibold tracking-[-0.01em]">B2B Match</span>
+          <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Crossdesk</span>
         </div>
         <nav aria-label="Main" className="flex flex-col gap-1 px-3 py-4">
           {nav.map((item) => (
@@ -80,7 +80,7 @@ export function AppShell({
           /* Bare screen: the sidebar is hidden on phones, so brand and log-out still need a row there. */
           <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
             <span aria-hidden className="h-2.5 w-2.5 rounded-[3px] bg-accent" />
-            <span className="text-[14.5px] font-semibold tracking-[-0.01em]">B2B Match</span>
+            <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Crossdesk</span>
             <div className="ml-auto flex items-center gap-3">
               <Avatar initials={initials} />
               <MobileSignOut />
@@ -92,7 +92,7 @@ export function AppShell({
 
         <footer className="mt-auto border-t border-line bg-surface">
           <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-5 px-4 py-[18px] text-[12px] md:px-9">
-            <span className="text-ink-faint">B2B Match — Tallinn</span>
+            <span className="text-ink-faint">Crossdesk — Tallinn</span>
             <span className="ml-auto flex gap-5 text-ink-soft">
               <Link href="/privacy" className="hover:text-accent">Privacy</Link>
               <Link href="/security" className="hover:text-accent">Security</Link>

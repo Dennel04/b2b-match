@@ -1,5 +1,4 @@
 import { AuthForm } from "@/components/AuthForm";
-import { Eyebrow } from "@/components/premium";
 import { SiteHeader } from "@/components/SiteHeader";
 import { premiumFont } from "../fonts";
 
@@ -8,10 +7,9 @@ export function AuthScreen({ mode, error }: { mode: "login" | "signup"; error?: 
   return (
     <div className={`${premiumFont} flex min-h-dvh flex-col bg-bg text-ink`}>
       <SiteHeader />
-      <main className="mx-auto grid w-full max-w-[1200px] flex-1 items-center gap-14 px-4 pb-16 pt-6 md:px-8 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
+      <main className="mx-auto grid w-full max-w-[1200px] flex-1 items-start gap-14 px-4 pb-16 pt-6 md:px-8 lg:grid-cols-[1.1fr_1fr] lg:gap-20">
         <section className="soft-in max-w-[560px]">
-          <Eyebrow>Private by design</Eyebrow>
-          <h2 className="mt-6 text-[clamp(2.4rem,5vw,4.2rem)] font-extrabold leading-[1.02] tracking-[-0.045em]">
+          <h2 className="text-[clamp(2.4rem,5vw,4.2rem)] font-extrabold leading-[1.02] tracking-[-0.045em]">
             Say what&rsquo;s broken. Only the right company hears about it.
           </h2>
           <p className="mt-6 max-w-[46ch] text-[17px] leading-relaxed text-ink-soft">

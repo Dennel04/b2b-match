@@ -7,7 +7,7 @@ import { Wizard, type StepId } from "./Wizard";
 
 const STEP_IDS: StepId[] = ["company", "offer", "terms", "buying", "ready"];
 
-export const metadata = { title: "Set up your company — B2B Match" };
+export const metadata = { title: "Set up your company — Crossdesk" };
 
 /** Company setup. Every step is optional and skippable; answers prefill from a saved company. */
 export default async function OnboardingPage({ searchParams }: PageProps<"/onboarding">) {

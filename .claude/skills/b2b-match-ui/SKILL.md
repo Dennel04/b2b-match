@@ -1,9 +1,9 @@
 ---
 name: b2b-match-ui
-description: The settled UI for B2B Match — layout, tokens, group vocabulary, privacy rules and copy. Use whenever building or changing any screen, component or copy in src/app or src/components. The visual direction is decided; this skill is the direction, not a starting point for finding one.
+description: The settled UI for Crossdesk — layout, tokens, group vocabulary, privacy rules and copy. Use whenever building or changing any screen, component or copy in src/app or src/components. The visual direction is decided; this skill is the direction, not a starting point for finding one.
 ---
 
-# B2B Match — UI
+# Crossdesk — UI
 
 The direction is settled and already built. Compose screens from `@/components/ui` and wrap them
 in `<AppShell>` from `@/components/layout` — `src/app/problems/ProblemScreen.tsx` is the worked
@@ -41,7 +41,11 @@ Two columns. A fixed 216px sidebar on the left, everything else in a flex column
   `margin-left:auto`: page-level controls, then the privacy marker, then the avatar. On phones
   a bare screen still shows a slim row with the product name, avatar and log-out, because the
   sidebar is hidden there.
-- **Theme** — follows the system. No theme switch inside the app chrome.
+- **Theme** — light only. No dark theme, no theme switch.
+- **Button arrow** — a button with a trailing arrow uses `PillButton` from
+  `src/components/premium.tsx`. The arrow points right at rest; on hover it turns 45°
+  counter-clockwise, smoothly (500 ms, the shared ease). The circle around it never scales or
+  moves. Do not hand-roll another arrow button.
 - **Content** — `max-width:1240px`, `padding:0 32px`, centred. Top padding is 32px under a top
   bar, 24px on a bare screen — the page starts high, and the rhythm comes from the gaps between
   sections, not from empty space at the top. The sidebar already gives the

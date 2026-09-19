@@ -4,7 +4,7 @@ import { useState } from "react";
 
 /**
  * Building blocks in the high-end-visual-design language (the /lab/f direction), drawn with
- * the project's colour tokens so they follow light and dark themes.
+ * the project's colour tokens so they follow the design tokens.
  * Double-bezel cards, pill buttons with a nested icon, eyebrow pills, soft inputs, chips.
  */
 
@@ -41,13 +41,22 @@ export function Eyebrow({ children }: { children: React.ReactNode }) {
 
 function Arrow() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-      <path d="M7 17 17 7M9 7h8v8" />
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      aria-hidden
+      className={`transition-transform duration-500 ${EASE} group-hover:-rotate-45 motion-reduce:transition-none`}
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   );
 }
 
-/** Pill button; the trailing icon sits in its own circle and moves on hover. */
+/** Pill button; the trailing arrow points right and turns 45° counter-clockwise on hover. */
 export function PillButton({
   children,
   variant = "dark",
@@ -66,7 +75,7 @@ export function PillButton({
       <span className={icon ? "" : "py-1.5"}>{children}</span>
       {icon && (
         <span
-          className={`grid h-8 w-8 place-items-center rounded-full transition-transform duration-500 ${EASE} group-hover:-translate-y-px group-hover:translate-x-0.5 group-hover:scale-105 ${
+          className={`grid h-8 w-8 place-items-center rounded-full ${
             dark ? "bg-surface/15" : "bg-surface"
           }`}
         >

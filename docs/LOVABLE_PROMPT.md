@@ -13,7 +13,7 @@ Next.js. Treat the result as a visual prototype we port by hand.
 
 ---
 
-Design and build a clickable prototype of a product called **B2B Match**. Work out for yourself
+Design and build a clickable prototype of a product called **Crossdesk**. Work out for yourself
 what screens it needs and how it should look. Use hardcoded data throughout — no backend, no
 database, no authentication, no API calls. Below is the idea and the rules it has to obey.
 

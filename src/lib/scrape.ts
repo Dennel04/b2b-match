@@ -56,7 +56,7 @@ async function fetchText(url: string): Promise<SitePage | null> {
     const res = await fetch(url, {
       signal: controller.signal,
       redirect: 'follow',
-      headers: { 'user-agent': 'Mozilla/5.0 (compatible; b2b-match/0.1; +profile-draft)', accept: 'text/html' },
+      headers: { 'user-agent': 'Mozilla/5.0 (compatible; crossdesk/0.1; +profile-draft)', accept: 'text/html' },
     });
     if (!res.ok || !(res.headers.get('content-type') ?? '').includes('text/html')) return null;
     const text = htmlToText(await res.text());

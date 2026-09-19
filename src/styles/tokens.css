@@ -38,23 +38,3 @@
 
   color-scheme: light;
 }
-
-/* Dark is opt-in only: the toggle sets data-theme. The system preference must not
-   flip the product on stage, and the reference screen is a light one. */
-:root[data-theme="dark"] {
-  --bg: #101a1d;
-  --surface: #17242a;
-  --surface-alt: #1e2e34;
-  --ink: #e6edef;
-  --ink-soft: #a0b1b5;
-  --ink-faint: #6f8085;
-  --border: #253840;
-  --border-strong: #334a53;
-  --accent: #5fa583;
-  --accent-strong: #7cbf9e;
-  --accent-soft: #172e26;
-  --seal: #c9a464;
-  --seal-soft: #2e2617;
-  --danger: #d98872;
-  color-scheme: dark;
-}

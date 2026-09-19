@@ -1,4 +1,4 @@
-# B2B Match — "connect the problem to the solution, without the spam"
+# Crossdesk — "connect the problem to the solution, without the spam"
 
 Hackathon 18–19 September 2026, Business track. Goal: **a working MVP in 24 hours**, not a
 pitch about the future.

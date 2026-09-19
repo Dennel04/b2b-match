@@ -1,4 +1,4 @@
-# B2B Match
+# Crossdesk
 
 A dark pool for business problems. Companies describe their services publicly and their
 problems privately. Two AI agents negotiate behind a wall — the vendor's agent is a separate

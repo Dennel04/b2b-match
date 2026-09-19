@@ -32,7 +32,7 @@ falls back on recognisable AI design patterns — its own team says so.
 
 ## 2. What this product is
 
-B2B Match is a dark pool for business problems.
+Crossdesk is a dark pool for business problems.
 
 A company writes down a problem it has right now — a real one, with numbers. That text is never
 published and never shown to another company. On the other side, vendors describe what they

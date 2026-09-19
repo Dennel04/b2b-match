@@ -1,5 +1,4 @@
 import { Logo } from "./Logo";
-import { ThemeToggle } from "./ui/ThemeToggle";
 
 export function SiteHeader({ children }: { children?: React.ReactNode }) {
   return (
@@ -7,7 +6,6 @@ export function SiteHeader({ children }: { children?: React.ReactNode }) {
       <Logo />
       <div className="flex items-center gap-3">
         {children}
-        <ThemeToggle />
       </div>
     </header>
   );

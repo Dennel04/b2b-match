@@ -7,7 +7,7 @@ export function Logo({ href = "/" }: { href?: string }) {
         <circle cx="9" cy="9" r="7" stroke="var(--accent)" strokeWidth="1.75" />
         <circle cx="15" cy="15" r="7" stroke="var(--seal)" strokeWidth="1.75" />
       </svg>
-      <span className="font-serif text-[19px] font-semibold text-ink">B2B Match</span>
+      <span className="font-serif text-[19px] font-semibold text-ink">Crossdesk</span>
     </Link>
   );
 }
