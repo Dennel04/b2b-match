@@ -207,7 +207,15 @@ function Blank({ role }: { role: CompanyRole }) {
   );
 }
 
-/** Which problem a row belongs to. Quiet: it explains the row, it is not the point of it. */
+/**
+ * What this pair was made through — the service they came to, or the problem they answer. It is
+ * the first thing asked of a row ("which of mine is this about?"), so it is readable rather than
+ * faint, and it survives down to a tablet.
+ */
 function Context({ children }: { children: React.ReactNode }) {
-  return <span className="hidden w-[210px] flex-none truncate text-right text-[12.5px] text-ink-faint lg:block">{children}</span>;
+  return (
+    <span className="hidden w-[230px] flex-none truncate text-right text-[12.5px] text-ink-soft md:block">
+      {children}
+    </span>
+  );
 }

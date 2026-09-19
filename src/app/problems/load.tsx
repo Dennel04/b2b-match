@@ -115,7 +115,10 @@ export function splitVerbatim(text: string): [string, string] {
  * a sentence in the title slot reads as a paragraph and says nothing at a glance.
  */
 export function anonymousName({ industry, size_hint }: { industry: string; size_hint: string }) {
-  return size_hint ? `${industry}, ${size_hint}` : industry;
+  // The headcount, and nothing after it: a size_hint written as "~90 people, 180 lockers" turned
+  // the one line that names a counterparty into a specification of it.
+  const size = size_hint.split(",")[0].trim();
+  return size ? `${industry}, ${size}` : industry;
 }
 
 export function firstSentence(s: string) {

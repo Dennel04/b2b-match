@@ -286,6 +286,11 @@ export interface MatchView {
   /** `industry` and `size_hint` are what a row calls them before that — short, and no one. */
   seller: { name: string | null; logo: string | null; industry: string; size_hint: string; summary: string };
   problem_text: string | null;
+  /**
+   * The seller's own service this pair was made through (migration 0007). Its own storefront,
+   * so it is named in full on both sides; null for a match made before services existed.
+   */
+  service: { id: string; title: string } | null;
   compatibility: Compatibility | null;
   /** Lines appear one at a time while `negotiating`; `envelope` arrives last. */
   negotiation: { lines: AgentDialogueLine[]; envelope: DealEnvelope | null } | null;

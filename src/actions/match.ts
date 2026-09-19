@@ -370,7 +370,7 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
   const { data: m } = await adminClient()
     .from('matches')
     .select(
-      `*, problems(text),
+      `*, problems(text), services(id, title),
        buyer:companies!matches_buyer_company_id_fkey(name, owner_id, profile_json),
        seller:companies!matches_seller_company_id_fkey(name, owner_id, profile_json)`,
     )
@@ -380,6 +380,7 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
 
   const row = m as unknown as Match & {
     problems: { text: string };
+    services: { id: string; title: string } | null;
     buyer: { name: string; owner_id: string; profile_json: CompanyProfile | null };
     seller: { name: string; owner_id: string; profile_json: CompanyProfile | null };
   };
@@ -420,6 +421,7 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
       summary: row.seller.profile_json?.summary ?? '',
     },
     problem_text: isBuyer ? row.problems.text : null,
+    service: row.services,
     compatibility: row.compatibility_json,
     negotiation,
     negotiating,

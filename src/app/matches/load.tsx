@@ -60,7 +60,9 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
       anon: selling ? !m.buyer.name : !m.seller.name,
       blurred: locked,
     };
-    const context = selling ? "They came to you" : m.problem_text ? splitVerbatim(m.problem_text)[0] : "";
+    // Which of this company's own things the pair was made through: the service a buyer came to,
+    // or the problem a vendor answers. Without it a row is a company and no reason.
+    const context = selling ? (m.service?.title ?? "They came to you") : m.problem_text ? splitVerbatim(m.problem_text)[0] : "";
 
     const side = selling ? "selling" : "buying";
 
