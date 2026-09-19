@@ -17,7 +17,7 @@ export function NavLink({ item }: { item: NavItem }) {
       aria-current={item.active ? "page" : undefined}
       className={`relative isolate flex items-center gap-2.5 rounded-[9px] px-3 py-2 text-[13.5px] transition-colors duration-200 ease-out ${
         item.active
-          ? "nav-mark bg-surface-alt font-semibold text-ink before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:rounded-r before:bg-accent"
+          ? "nav-mark bg-surface-alt font-semibold text-ink before:absolute before:inset-y-2 before:-left-3 before:w-[3px] before:rounded-r before:bg-brand"
           : "text-ink-soft hover:bg-surface-alt/60 hover:text-ink"
       }`}
     >
