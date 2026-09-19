@@ -40,7 +40,8 @@ export function AppShell({
     <div className="flex min-h-dvh bg-bg text-ink">
       <aside className="hidden w-[224px] flex-none flex-col border-r border-line bg-surface md:flex">
         <div className="flex h-16 items-center gap-2 border-b border-line px-4">
-          <span aria-hidden className="h-2.5 w-2.5 rounded-[3px] bg-accent" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
+          <img src="/crossdesk-icon.svg" alt="" width={20} height={20} className="h-5 w-5" />
           <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Crossdesk</span>
         </div>
         <nav aria-label="Main" className="flex flex-col gap-1 px-3 py-4">
@@ -79,7 +80,8 @@ export function AppShell({
         ) : (
           /* Bare screen: the sidebar is hidden on phones, so brand and log-out still need a row there. */
           <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
-            <span aria-hidden className="h-2.5 w-2.5 rounded-[3px] bg-accent" />
+            {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
+          <img src="/crossdesk-icon.svg" alt="" width={20} height={20} className="h-5 w-5" />
             <span className="text-[14.5px] font-semibold tracking-[-0.01em]">Crossdesk</span>
             <div className="ml-auto flex items-center gap-3">
               <Avatar initials={initials} />
