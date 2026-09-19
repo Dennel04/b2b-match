@@ -7,6 +7,8 @@
  * stays as a fallback for sites whose navigation is drawn by JavaScript.
  */
 
+import { readWithTavily, tavilyConfigured } from './tavily';
+
 /** Fallback paths. Estonian: meist = about us, teenused = services. */
 const FALLBACK_PATHS = ['/about', '/about-us', '/services', '/en', '/en/about', '/en/services', '/meist', '/teenused'];
 
@@ -174,6 +176,16 @@ export async function readWebsiteTraced(website: string): Promise<ScrapeTrace> {
     budget -= text.length;
     pages.push({ url: t.url, text });
     steps.push({ url: t.url, outcome: fromMeta ? 'used (head only — the body is drawn by JavaScript)' : 'used', chars: text.length });
+  }
+
+  // Last resort: a site that renders in the browser, or one whose bot protection refuses us.
+  if (!pages.length && tavilyConfigured()) {
+    const viaTavily = await readWithTavily([base, ...permitted]);
+    for (const p of viaTavily) {
+      steps.push({ url: p.url, outcome: 'read by Tavily after our own fetch found nothing', chars: p.text.length });
+      pages.push({ url: p.url, text: p.text.slice(0, PER_PAGE_CHARS) });
+    }
+    if (!viaTavily.length) steps.push({ url: base, outcome: 'Tavily could not read it either' });
   }
 
   const logo = home ? findLogo(home.html, home.url) : null;
