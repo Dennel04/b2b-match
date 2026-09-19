@@ -1,6 +1,6 @@
 /** Self-check for the transcript leak guard. Run: npm run check */
 import assert from 'node:assert/strict';
-import { findLeaks } from './leak';
+import { describeLeaks, findLeaks } from './leak';
 import type { AgentDialogueLine } from '@/types';
 
 const problem = `We're still doing customs paperwork by hand across three warehouses. It eats
@@ -42,5 +42,13 @@ const multi = findLeaks(problem, [
 ]);
 assert.equal(multi.length, 1);
 assert.equal(multi[0].line, 1);
+
+// What gets logged must never carry the fragment: a server log is a weaker place than the row
+// the text came from, and this line is the only one that ever handled both.
+const caught = findLeaks(problem, [line('They are still doing customs paperwork by hand across three warehouses.')]);
+const described = describeLeaks(caught);
+assert.match(described, /line 0 \(phrase\)/);
+assert.doesNotMatch(described, /customs|paperwork|warehouses/i, 'the leaked wording must not reach a log');
+assert.doesNotMatch(describeLeaks(findLeaks(problem, [line('It costs them roughly 60 hours every month.')])), /60/);
 
 console.log('leak: all checks passed');

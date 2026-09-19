@@ -71,5 +71,17 @@ export function findLeaks(problemText: string, lines: AgentDialogueLine[]): Leak
   return leaks;
 }
 
+/**
+ * Safe to log: where and what kind, never the fragment itself.
+ *
+ * The fragment is by definition a piece of the problem text — the one thing the product
+ * promises never leaves the server. Printing it into a server log moved it from a row nobody
+ * can read into Vercel's log retention, which is a weaker place, and turned the guard that
+ * exists to stop a leak into the only thing that caused one.
+ *
+ * `fragment` stays on the Leak object: it is fed straight back into the buyer agent's prompt so
+ * the line can be rewritten, in memory and never printed. Diagnosing a failure needs the line
+ * number and the kind; the wording is already in the prompt, which is where the fix belongs.
+ */
 export const describeLeaks = (leaks: Leak[]) =>
-  leaks.map((l) => `line ${l.line} (${l.kind}: "${l.fragment}")`).join(', ');
+  leaks.map((l) => `line ${l.line} (${l.kind})`).join(', ');

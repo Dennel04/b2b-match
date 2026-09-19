@@ -134,10 +134,9 @@ const SECTIONS: LegalSection[] = [
       <p>
         To see what is slow or broken, the server writes short lines to its log: which AI step ran,
         how long it took and how many tokens it used; which pages of a website were read and the
-        profile drafted from them; how many turns an interview had. They hold no problem text, with
-        one exception: when the privacy check stops a transcript, the log names the few words that
-        would have leaked, so the cause can be fixed. Vercel keeps logs for a limited time and then
-        deletes them.
+        profile drafted from them; how many turns an interview had. They hold no problem text. When
+        the privacy check stops a transcript, the log records which line failed and why, never the
+        words themselves. Vercel keeps logs for a limited time and then deletes them.
       </p>
     ),
   },
