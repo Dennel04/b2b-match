@@ -412,6 +412,8 @@ export async function getMatchView(matchId: string): Promise<MatchView> {
     seller: {
       name: accepted || isSeller ? row.seller.name : null,
       logo: accepted || isSeller ? (row.seller.profile_json?.logo_url ?? null) : null,
+      industry: row.seller.profile_json?.industry ?? 'undisclosed industry',
+      size_hint: row.seller.profile_json?.size_hint ?? '',
       summary: row.seller.profile_json?.summary ?? '',
     },
     problem_text: isBuyer ? row.problems.text : null,

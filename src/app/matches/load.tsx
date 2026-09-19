@@ -6,7 +6,7 @@ import { currentUser, serverClient } from "@/lib/supabase";
 import type { CompanyRole, MatchStatus, MatchView, SellerTerms } from "@/types";
 // ponytail: these three read a projected match the same way on both screens; they move to lib/
 // the day the backend owner is free to take them.
-import { firstSentence, openArea, splitVerbatim } from "../problems/load";
+import { anonymousName, firstSentence, openArea, splitVerbatim } from "../problems/load";
 import { DEMO_MATCHES } from "./demo";
 import { MarkSeen } from "./MarkSeen";
 import { MatchesScreen, type MatchesScreenData } from "./MatchesScreen";
@@ -48,9 +48,7 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     const party = {
       id: m.id,
       // Anonymous until both sides accept: getMatchView() leaves the name null before that.
-      name: selling
-        ? (m.buyer.name ?? `A ${m.buyer.industry} company${m.buyer.size_hint ? `, ${m.buyer.size_hint}` : ""}`)
-        : (m.seller.name ?? firstSentence(m.seller.summary)),
+      name: selling ? (m.buyer.name ?? anonymousName(m.buyer)) : (m.seller.name ?? anonymousName(m.seller)),
       // The reason, not the reasoning: a row is read in a glance, the match screen is read.
       place: firstSentence(m.reasoning_public),
       logo: selling ? m.buyer.logo : m.seller.logo,
@@ -105,9 +103,7 @@ export async function renderMatchScreen(matchId: string) {
   }
 
   const selling = m.viewer === "seller";
-  const counterparty = selling
-    ? (m.buyer.name ?? `A ${m.buyer.industry} company${m.buyer.size_hint ? `, ${m.buyer.size_hint}` : ""}`)
-    : (m.seller.name ?? firstSentence(m.seller.summary));
+  const counterparty = selling ? (m.buyer.name ?? anonymousName(m.buyer)) : (m.seller.name ?? anonymousName(m.seller));
 
   // The viewer's own terms, in their own figures. The other side's never reach this screen.
   const { data: own } = selling

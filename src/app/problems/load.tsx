@@ -52,7 +52,7 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
     // on the match screen, where there is room for it.
     const party = {
       id: m.id,
-      name: m.seller.name ?? firstSentence(m.seller.summary),
+      name: m.seller.name ?? anonymousName(m.seller),
       place: firstSentence(m.reasoning_public),
       logo: m.seller.logo,
       anon: !m.seller.name,
@@ -108,6 +108,15 @@ export function splitVerbatim(text: string): [string, string] {
   const end = t.search(/[.!?](\s|$)/);
   if (end < 0 || end > 110) return [t, ""];
   return [t.slice(0, end + 1), t.slice(end + 1).trim()];
+}
+
+/**
+ * A row's title is a name. Until both sides accept there is none, so it is what they do —
+ * the industry and, where a profile states one, the size. Never the first line of a summary:
+ * a sentence in the title slot reads as a paragraph and says nothing at a glance.
+ */
+export function anonymousName({ industry, size_hint }: { industry: string; size_hint: string }) {
+  return size_hint ? `${industry}, ${size_hint}` : industry;
 }
 
 export function firstSentence(s: string) {

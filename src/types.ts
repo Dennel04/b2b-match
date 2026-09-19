@@ -283,7 +283,8 @@ export interface MatchView {
   viewer: 'buyer' | 'seller' | 'both';
   /** `logo` follows `name` exactly: both appear only once the match is accepted. */
   buyer: { name: string | null; logo: string | null; industry: string; size_hint: string };
-  seller: { name: string | null; logo: string | null; summary: string };
+  /** `industry` and `size_hint` are what a row calls them before that — short, and no one. */
+  seller: { name: string | null; logo: string | null; industry: string; size_hint: string; summary: string };
   problem_text: string | null;
   compatibility: Compatibility | null;
   /** Lines appear one at a time while `negotiating`; `envelope` arrives last. */
