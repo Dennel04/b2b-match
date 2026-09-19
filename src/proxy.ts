@@ -37,7 +37,7 @@ export async function proxy(request: NextRequest) {
   // `?demo` on the problem screens renders fake data only, so they may be opened signed out.
   const demo =
     (path === "/dashboard" || path.startsWith("/problems")) && request.nextUrl.searchParams.has("demo");
-  if (!signedIn && !demo && (path.startsWith("/dashboard") || path.startsWith("/problems") || path.startsWith("/onboarding") || path.startsWith("/company"))) {
+  if (!signedIn && !demo && (path.startsWith("/dashboard") || path.startsWith("/problems") || path.startsWith("/onboarding") || path.startsWith("/company") || path.startsWith("/account"))) {
     return redirectTo("/login");
   }
   if (signedIn && (path === "/" || path === "/login" || path === "/signup")) return redirectTo("/dashboard");

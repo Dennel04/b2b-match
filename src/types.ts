@@ -66,6 +66,17 @@ export interface CompanyProfile {
   services: string[];
   keywords: string[];
   summary: string;            // 2-3 sentences, safe to show the other side
+  // Read off the company's own website by draftCompanyProfile(); all optional, so profiles
+  // saved before these existed stay valid. Location, languages, industries and size are safe
+  // before a match is accepted; the logo identifies the company and is shown only after.
+  logo_url?: string | null;   // absolute URL on the company's own site
+  city?: string | null;
+  country?: string | null;
+  languages?: string[];       // languages the company works in, in English: "Estonian", "English"
+  industries_served?: string[];
+  employees?: number | null;  // headcount the site states or clearly implies
+  founded?: number | null;    // year
+  certifications?: string[];  // as named on the site: "ISO 27001", "SOC 2", "AWS Partner"
 }
 
 /**

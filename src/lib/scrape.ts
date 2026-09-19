@@ -59,6 +59,8 @@ export interface ScrapeTrace {
   pages: SitePage[];
   steps: ScrapeStep[];
   ms: number;
+  /** The company's own logo or app icon, read off the home page. Null when none was found. */
+  logo: string | null;
 }
 
 /** Fetches the home page, then the pages its links point to. Returns whatever had real content. */
@@ -128,7 +130,8 @@ export async function readWebsiteTraced(website: string): Promise<ScrapeTrace> {
     steps.push({ url: t.url, outcome: 'used', chars: text.length });
   }
 
-  return { pages, steps, ms: Date.now() - started };
+  const logo = home ? findLogo(home.html, home.url) : null;
+  return { pages, steps, ms: Date.now() - started, logo };
 }
 
 interface Fetched {
@@ -250,4 +253,42 @@ export function htmlToText(html: string): string {
     .replace(/[ \t\r]+/g, ' ')
     .replace(/\n\s*\n+/g, '\n')
     .trim();
+}
+
+/**
+ * The company's mark, from its own home page. A square app icon first (it reads well on a white
+ * card at any size), then an SVG favicon, then an <img> the page itself calls "logo", then the
+ * largest declared icon, then /favicon.ico. Social-share images come last: they are banners.
+ */
+export function findLogo(html: string, pageUrl: string): string | null {
+  const abs = (href: string | undefined) => {
+    if (!href) return null;
+    try {
+      return new URL(href.replace(/&amp;/g, '&'), pageUrl).href;
+    } catch {
+      return null;
+    }
+  };
+  const links = [...html.matchAll(/<link\b[^>]*>/gi)].map((m) => m[0]);
+  const attr = (tag: string, name: string) => tag.match(new RegExp(`${name}=["']([^"']+)["']`, 'i'))?.[1];
+
+  const touch = links.find((l) => /rel=["'][^"']*apple-touch-icon/i.test(l));
+  if (touch) return abs(attr(touch, 'href'));
+
+  const icons = links.filter((l) => /rel=["'][^"']*\bicon\b/i.test(l));
+  const svg = icons.find((l) => /\.svg(\?|["'])/i.test(l) || /image\/svg/i.test(l));
+  if (svg) return abs(attr(svg, 'href'));
+
+  const img = [...html.matchAll(/<img\b[^>]*>/gi)]
+    .map((m) => m[0])
+    .find((t) => /logo/i.test(`${attr(t, 'src') ?? ''} ${attr(t, 'alt') ?? ''} ${attr(t, 'class') ?? ''}`) && !/data:/i.test(attr(t, 'src') ?? ''));
+  if (img) return abs(attr(img, 'src'));
+
+  const sized = icons
+    .map((l) => ({ href: attr(l, 'href'), size: Number(attr(l, 'sizes')?.split('x')[0]) || 0 }))
+    .sort((a, b) => b.size - a.size)[0];
+  if (sized?.href) return abs(sized.href);
+
+  const og = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)?.[1];
+  return abs(og) ?? abs('/favicon.ico');
 }

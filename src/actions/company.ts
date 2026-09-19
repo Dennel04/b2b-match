@@ -26,7 +26,7 @@ export async function draftCompanyProfile(website?: string): Promise<CompanyDraf
   logScrape(site, trace);
   if (!trace.pages.length) throw new Error(`Could not read ${site} — fill the profile by hand`);
 
-  return draftFrom(site, trace.pages);
+  return draftFrom(site, trace.pages, trace.logo);
 }
 
 /** One line per step in the server log (terminal locally, Vercel → Logs in production). */
@@ -69,7 +69,7 @@ export async function draftCompanyProfileFromText(text: string): Promise<Company
   return draftFrom('', [{ url: 'pasted text', text: body }]);
 }
 
-async function draftFrom(site: string, pages: SitePage[]): Promise<CompanyDraft> {
+async function draftFrom(site: string, pages: SitePage[], logo: string | null = null): Promise<CompanyDraft> {
   const started = Date.now();
   const draft = await ask(ProfileDraftSchema, profileDraftPrompt(site || 'not given', pages), { effort: 'medium' });
   console.log(`[scrape] ${site || 'pasted text'}: model ${Date.now() - started} ms →`, JSON.stringify({ ...draft.profile, role: draft.role_guess, capabilities: draft.capabilities }));
@@ -77,7 +77,7 @@ async function draftFrom(site: string, pages: SitePage[]): Promise<CompanyDraft>
   return {
     website: site,
     role: draft.role_guess,
-    profile: draft.profile,
+    profile: { ...draft.profile, logo_url: logo },
     seller_terms: {
       budget_floor: null,
       contract_formats: [],
@@ -112,4 +112,72 @@ export async function saveCompany(input: {
   const { data, error } = await write.select().single();
   if (error) throw error;
   return data;
+}
+
+export interface CompanyStats {
+  /** Every match this company is part of, by the side it is on. */
+  asSeller: { matched: number; last30: number; negotiated: number; proceed: number; interested: number; meetings: number; declined: number; avgScore: number | null };
+  asBuyer: { problems: number; matched: number; meetings: number };
+  /** Matches created per week, oldest first, the last 8 weeks. `start` is the Monday, ISO date. */
+  weekly: { start: string; count: number }[];
+}
+
+/**
+ * Counts for the account dashboard. Reads through RLS (a party sees its own matches) and only
+ * status-level columns — no transcript, no problem text, no other company's fields.
+ */
+export async function getCompanyStats(): Promise<CompanyStats> {
+  const db = await serverClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data: companies } = await db.from('companies').select('id').eq('owner_id', user.id);
+  const mine = new Set((companies ?? []).map((c) => c.id));
+
+  const { data: rows } = await db
+    .from('matches')
+    .select('status, score, created_at, buyer_company_id, seller_company_id, negotiation_started_at, verdict:deal_envelope_json->>verdict');
+  const { count: problems } = await db.from('problems').select('id', { count: 'exact', head: true });
+
+  const all = rows ?? [];
+  const sold = all.filter((m) => mine.has(m.seller_company_id));
+  const bought = all.filter((m) => mine.has(m.buyer_company_id));
+  const since = Date.now() - 30 * 86_400_000;
+
+  const monday = (d: Date) => {
+    const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+    return x;
+  };
+  const thisWeek = monday(new Date());
+  const weekly = Array.from({ length: 8 }, (_, i) => {
+    const start = new Date(thisWeek);
+    start.setUTCDate(start.getUTCDate() - (7 - i) * 7);
+    const end = new Date(start);
+    end.setUTCDate(end.getUTCDate() + 7);
+    const count = all.filter((m) => {
+      const t = new Date(m.created_at).getTime();
+      return t >= start.getTime() && t < end.getTime();
+    }).length;
+    return { start: start.toISOString().slice(0, 10), count };
+  });
+
+  return {
+    asSeller: {
+      matched: sold.length,
+      last30: sold.filter((m) => new Date(m.created_at).getTime() >= since).length,
+      negotiated: sold.filter((m) => m.negotiation_started_at || m.verdict).length,
+      proceed: sold.filter((m) => m.verdict === 'proceed').length,
+      interested: sold.filter((m) => m.status === 'buyer_interested' || m.status === 'accepted').length,
+      meetings: sold.filter((m) => m.status === 'accepted').length,
+      declined: sold.filter((m) => m.status === 'declined' || m.verdict === 'reject').length,
+      avgScore: sold.length ? Math.round(sold.reduce((n, m) => n + m.score, 0) / sold.length) : null,
+    },
+    asBuyer: {
+      problems: problems ?? 0,
+      matched: bought.length,
+      meetings: bought.filter((m) => m.status === 'accepted').length,
+    },
+    weekly,
+  };
 }

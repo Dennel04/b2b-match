@@ -21,7 +21,7 @@ export function AppShell({
   barRight,
   children,
 }: {
-  active: "company" | "problems" | "offers";
+  active?: "company" | "problems" | "offers" | "account";
   offers?: number;
   initials: string;
   /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */
@@ -39,18 +39,19 @@ export function AppShell({
   return (
     <div className="flex min-h-dvh bg-bg text-ink">
       <aside className="hidden w-[224px] flex-none flex-col border-r border-line bg-surface md:flex">
-        <div className="flex h-16 items-center gap-2 border-b border-line px-4">
+        {/* The brand opens the company profile: info, activity, a few settings. */}
+        <Link href="/account" aria-current={active === "account" ? "page" : undefined} className="flex h-16 items-center gap-2 border-b border-line px-4 transition-colors hover:bg-surface-alt/60">
           {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
           <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
           <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
-        </div>
+        </Link>
         <nav aria-label="Main" className="flex flex-col gap-1 px-3 py-4">
           {nav.map((item) => (
             <NavLink key={item.href} item={item} />
           ))}
         </nav>
         <div className="mt-auto flex flex-col gap-1 border-t border-line px-3 py-4">
-          <NavLink item={{ href: "/settings", label: "Settings", icon: "settings" }} />
+          <NavLink item={{ href: "/account?tab=profile", label: "Settings", icon: "settings" }} />
           <form action="/auth/signout" method="post">
             <button
               type="submit"
@@ -80,9 +81,11 @@ export function AppShell({
         ) : (
           /* Bare screen: the sidebar is hidden on phones, so brand and log-out still need a row there. */
           <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
-          <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
-            <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
+            <Link href="/account" className="flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
+              <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
+              <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
+            </Link>
             <div className="ml-auto flex items-center gap-3">
               <Avatar initials={initials} />
               <MobileSignOut />
