@@ -36,6 +36,17 @@ body {
   color: var(--ink);
 }
 
+/*
+ * No rubber band at the edges of the page. The overscroll area is painted by the browser outside
+ * the document, so nothing in the layout can fill it — a fixed sidebar and a footer simply end
+ * and the canvas shows through. Chrome and Firefox drop the bounce here; Safari keeps a shorter
+ * one, and the canvas under it is the page ground, which is the least wrong colour to land on.
+ */
+html {
+  overscroll-behavior-y: none;
+  background: var(--bg);
+}
+
 /* Quality floor. Applies everywhere, never announced in the UI. */
 :where(a, button, [role="tab"], summary):focus-visible {
   outline: 2px solid var(--ink);

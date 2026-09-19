@@ -46,8 +46,12 @@ export function AppShell({
 
   return (
     <div className="flex min-h-dvh bg-bg text-ink">
-      {/* Pinned to the viewport: the sidebar is as tall as the screen, not as the page, so Log out stays in reach. */}
-      <aside className="sticky top-0 hidden h-dvh w-[224px] flex-none flex-col self-start overflow-y-auto border-r border-line bg-surface md:flex">
+      {/*
+        * Taken out of the flow, not stuck to it. A sticky sidebar still belongs to the document,
+        * so a rubber-band scroll drags it along and the page ground shows above and below it.
+        * Fixed, it never moves; the column beside it is inset by the same width.
+        */}
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[224px] flex-col overflow-y-auto overscroll-contain border-r border-line bg-surface md:flex">
         {/* The brand opens the company dashboard: how matching is going. Company details live in Company. */}
         <Link href="/account" aria-current={active === "account" ? "page" : undefined} className="flex h-16 items-center gap-2 border-b border-line px-4 transition-colors hover:bg-surface-alt/60">
           {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
@@ -72,7 +76,7 @@ export function AppShell({
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col md:pl-[224px]">
         {bar ? (
           <header className="flex h-16 items-center gap-3 border-b border-line bg-surface px-4 md:px-9">
             {bar}
