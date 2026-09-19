@@ -1,48 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { draftCompanyProfile, saveCompany } from "@/actions/company";
+import { saveCompany } from "@/actions/company";
 import { Bezel, Field, FieldGroup, PillButton, inputClass } from "@/components/premium";
 import type { CompanyRole } from "@/types";
 import { ROLES } from "./fields";
 
-/** Named steps instead of a spinner; each shows once its time has passed. */
-const READ_STEPS = [
-  { at: 0, label: "Opening the site" },
-  { at: 3, label: "Reading about and services pages" },
-  { at: 8, label: "Drafting your company profile" },
-  { at: 25, label: "Almost there" },
-];
-
 /**
- * Sign-up asks three things: which side you are on, your name, your website. The site is then
- * read once to draft the rest of the profile; everything else is filled in later, on /company.
+ * Sign-up asks three things: which side you are on, your name, your website. It does not wait
+ * for the site to be read — that happens on /company, where the profile itself shows whether it
+ * is still reading, already filled, or could not be read and why. A screen that only waits has
+ * nowhere to put that last case.
  */
 export function Wizard({ autoSite }: { autoSite: string | null }) {
   const router = useRouter();
   const [role, setRole] = useState<CompanyRole | null>(null);
   const [name, setName] = useState("");
   const [website, setWebsite] = useState(autoSite ?? "");
-  const [reading, setReading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const left = useRef(false);
-
-  useEffect(() => {
-    if (!reading) return;
-    const started = Date.now();
-    const t = setInterval(() => setElapsed((Date.now() - started) / 1000), 500);
-    return () => clearInterval(t);
-  }, [reading]);
-
-  function done() {
-    left.current = true;
-    // Land on the profile: it lists what the website did not say and matching would use.
-    router.push("/company?welcome");
-    router.refresh();
-  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,67 +35,16 @@ export function Wizard({ autoSite }: { autoSite: string | null }) {
       setBusy(false);
       return setError(`Could not save: ${err instanceof Error ? err.message : "unknown error"}.`);
     }
-    if (!base.website) return done();
-
-    // One attempt at reading the site. Whatever happens, the company is already saved.
-    setReading(base.website);
-    try {
-      const result = await draftCompanyProfile(base.website);
-      if (left.current) return;
-      // A site we could not read is not a failed sign-up: the company is saved either way, and
-      // /company says why and offers the manual path. Falling through to done() is the point.
-      if (result.ok) {
-        const draft = result.data;
-        await saveCompany({
-          ...base,
-          website: draft.website,
-          profile_json: { ...draft.profile, name: base.name },
-          seller_terms: base.role === "buyer" ? null : draft.seller_terms,
-        });
-      }
-    } catch {
-      // Model or network trouble: same again, the company is already saved.
-    }
-    if (!left.current) done();
-  }
-
-  if (reading) {
-    const steps = READ_STEPS.filter((s) => s.at <= elapsed);
-    return (
-      <div className="mx-auto flex w-full max-w-[560px] flex-col gap-6 px-4 pb-24 pt-10">
-        <Bezel className="soft-in" inner="flex flex-col gap-6 p-7 sm:p-9">
-          <div>
-            <h1 className="text-[26px] font-extrabold leading-[1.1] tracking-[-0.03em]">Reading {reading}</h1>
-            <p className="mt-2 text-[14.5px] leading-relaxed text-ink-soft">
-              We are drafting your profile from your website so you don&rsquo;t have to type it. Up to a minute.
-            </p>
-          </div>
-          <ol aria-live="polite" className="flex flex-col gap-2.5 text-[14px]">
-            {steps.map((s, i) => {
-              const current = i === steps.length - 1;
-              return (
-                <li key={s.label} className={`flex items-center gap-3 ${current ? "font-semibold text-ink" : "text-ink-soft"}`}>
-                  <span aria-hidden className={`h-2 w-2 rounded-full ${current ? "animate-pulse bg-ink" : "bg-accent"}`} />
-                  {s.label}
-                </li>
-              );
-            })}
-          </ol>
-        </Bezel>
-        <p className="text-center text-[13px] text-ink-faint">
-          <button type="button" onClick={done} className="cursor-pointer underline-offset-4 hover:text-ink hover:underline">
-            Skip and fill it in later
-          </button>
-        </p>
-      </div>
-    );
+    // Land on the profile: it reads the site, and lists what the site did not say.
+    router.push("/company?welcome");
+    router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="mx-auto flex w-full max-w-[720px] flex-col gap-6 px-4 pb-24 pt-4 md:px-8">
       <header className="soft-in">
         <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[1.02] tracking-[-0.04em]">Set up your company</h1>
-        <p className="mt-4 text-[16px] leading-relaxed text-ink-soft">Three answers. We read the rest from your website.</p>
+        <p className="mt-4 text-[16px] leading-relaxed text-ink-soft">Three answers. We read the rest from your website on the next screen.</p>
       </header>
 
       <Bezel className="soft-in" inner="flex flex-col gap-7 p-6 sm:p-8">

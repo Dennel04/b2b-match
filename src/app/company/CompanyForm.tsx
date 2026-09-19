@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   draftCompanyProfile,
@@ -146,6 +146,19 @@ export function CompanyForm({
     const t = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(t);
   }, [running]);
+
+  // Straight from sign-up the profile is empty and the website is the only thing known, so the
+  // read starts itself here rather than behind a button nobody was told to press. Everything it
+  // can do next — the steps, the filled profile, the reason it failed — is already on this page.
+  const started = useRef(false);
+  useEffect(() => {
+    const blank = !initial.industry && !initial.summary && !initial.services.length;
+    if (demo || started.current || !blank || !initial.website.trim()) return;
+    started.current = true;
+    void autofill("site");
+    // Runs once, on the first render after sign-up.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function autofill(from: Source) {
     if (running) return;
