@@ -123,8 +123,7 @@ export function AppShell({
             <span className="text-ink-faint">Crossdesk — Tallinn</span>
             <span className="ml-auto flex gap-5 text-ink-soft">
               <Link href="/privacy" className="hover:text-ink">Privacy</Link>
-              <Link href="/security" className="hover:text-ink">Security</Link>
-              <Link href="/help" className="hover:text-ink">Help</Link>
+              <Link href="/terms" className="hover:text-ink">Terms of service</Link>
             </span>
           </div>
         </footer>

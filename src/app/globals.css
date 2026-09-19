@@ -536,8 +536,8 @@ input[type="date"].bare {
   .land-keep { box-shadow: 0 0 0 2px var(--ink); }
 }
 
-/* Terms of service: running text built from plain elements, so it gets its own list and emphasis. */
-.terms-body ul { display: flex; flex-direction: column; gap: 0.5rem; padding-left: 1.1rem; list-style: disc; }
-.terms-body li::marker { color: var(--ink-faint); }
-.terms-body strong { font-weight: 600; color: var(--ink); }
-.terms-body code { font-size: 0.9em; color: var(--ink); }
+/* Terms and privacy: running text built from plain elements, so it gets its own list and emphasis. */
+.legal-body ul { display: flex; flex-direction: column; gap: 0.5rem; padding-left: 1.1rem; list-style: disc; }
+.legal-body li::marker { color: var(--ink-faint); }
+.legal-body strong { font-weight: 600; color: var(--ink); }
+.legal-body code { font-size: 0.9em; color: var(--ink); }

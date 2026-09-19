@@ -1,5 +1,4 @@
-import { Eyebrow, PillLink } from "@/components/premium";
-import { SiteHeader } from "@/components/SiteHeader";
+import { LegalPage, type LegalSection } from "@/components/LegalPage";
 
 export const metadata = { title: "Terms of service — Crossdesk" };
 
@@ -11,7 +10,7 @@ const UPDATED = "19 September 2026";
  * company cannot see it, never that nobody can. A draft for a prototype, not legal advice —
  * a lawyer reads it before a real company relies on it.
  */
-const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
+const SECTIONS: LegalSection[] = [
   {
     id: "service",
     title: "What Crossdesk is",
@@ -208,57 +207,12 @@ const SECTIONS: { id: string; title: string; body: React.ReactNode }[] = [
 
 export default function TermsPage() {
   return (
-    <div className="flex min-h-dvh flex-col bg-bg text-ink">
-      <SiteHeader>
-        <PillLink href="/login" variant="soft" icon={false}>
-          Log in
-        </PillLink>
-      </SiteHeader>
-
-      <main className="mx-auto grid w-full max-w-[1200px] flex-1 gap-10 px-4 pb-16 pt-6 md:px-8 lg:grid-cols-[240px_1fr] lg:gap-16">
-        <aside className="soft-in lg:sticky lg:top-8 lg:self-start">
-          <Eyebrow>Terms of service</Eyebrow>
-          <p className="mt-4 text-[12.5px] text-ink-faint">Last updated {UPDATED}</p>
-          <nav aria-label="Sections" className="mt-6 max-lg:hidden">
-            <ol className="flex flex-col gap-0.5 border-l border-line">
-              {SECTIONS.map((s) => (
-                <li key={s.id}>
-                  <a
-                    href={`#${s.id}`}
-                    className="-ml-px block border-l border-transparent py-1.5 pl-4 text-[13px] text-ink-soft transition-colors duration-200 hover:border-ink hover:text-ink"
-                  >
-                    {s.title}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        </aside>
-
-        <article className="soft-in max-w-[720px]" style={{ ["--i" as string]: 1 }}>
-          <h1 className="text-[clamp(2rem,4vw,3rem)] font-extrabold leading-[1.05] tracking-[-0.04em]">
-            The rules both sides agree to.
-          </h1>
-          <p className="mt-5 text-[17px] leading-relaxed text-ink-soft">
-            In short: your problem stays with you and the platform, figures are compared and never
-            shown, agents recommend and people decide.
-          </p>
-
-          <div className="mt-12 flex flex-col gap-12">
-            {SECTIONS.map((s, i) => (
-              <section key={s.id} id={s.id} aria-labelledby={`${s.id}-h`} className="scroll-mt-8">
-                <h2 id={`${s.id}-h`} className="flex items-baseline gap-3 text-[20px] font-bold tracking-[-0.02em]">
-                  <span className="text-[12px] font-semibold tabular-nums text-ink-faint">{String(i + 1).padStart(2, "0")}</span>
-                  {s.title}
-                </h2>
-                <div className="terms-body mt-3 flex flex-col gap-3 text-[15px] leading-relaxed text-ink-soft">{s.body}</div>
-              </section>
-            ))}
-          </div>
-
-          <p className="mt-16 border-t border-line pt-6 text-[13px] text-ink-faint">A draft for a prototype. It is read by a lawyer before Crossdesk is offered to companies for real.</p>
-        </article>
-      </main>
-    </div>
+    <LegalPage
+      doc="/terms"
+      title="The rules both sides agree to."
+      lead="In short: your problem stays with you and the platform, figures are compared and never shown, agents recommend and people decide."
+      updated={UPDATED}
+      sections={SECTIONS}
+    />
   );
 }
