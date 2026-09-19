@@ -410,7 +410,7 @@ function Blank({
       </div>
       <Link
         href={href}
-        className="inline-flex items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+        className="inline-flex items-center gap-2 rounded-[8px] bg-brand px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-brand-strong"
       >
         <Icon name="plus" size={15} />
         {action}
