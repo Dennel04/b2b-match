@@ -156,8 +156,9 @@ per-week series fine enough to let a vendor work out who is currently shopping i
 
 - `.env.local` — ask for it; it holds the Supabase keys, the DeepSeek key and
   `ANTHROPIC_BASE_URL` (the model provider is a deployment setting, see `.env.example`).
-- Migrations: `0001`–`0003` are applied. **`0004_match_candidates.sql` must be run in the
-  Supabase SQL Editor**, then `npm run backfill:candidates` once, or the dashboard shows zeros.
+- Migrations: apply every file in `supabase/migrations/` in number order. `0001`–`0003` are
+  already applied; **`0006_match_candidates.sql` must be run in the Supabase SQL Editor**, then
+  `npm run backfill:candidates` once, or the dashboard shows zeros.
 - Demo account: the user that owns all seeded companies (the one in `SEED_OWNER_ID`). Sign in as
   it and you see every problem and every match with `viewer: 'both'`. Any other account sees
   only its own rows.

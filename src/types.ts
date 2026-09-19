@@ -190,7 +190,7 @@ export interface BlockedReason {
 
 /**
  * A company's own funnel. Counts only — the rows behind them say which buyer considered which
- * vendor, and that never leaves the server (see migration 0004).
+ * vendor, and that never leaves the server (see migration 0006).
  */
 export interface CompanyStats {
   seller: {

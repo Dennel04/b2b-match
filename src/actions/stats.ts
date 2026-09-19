@@ -7,7 +7,7 @@ import type { BlockedReason, Compatibility, CompanyStats, Requirement } from '@/
  * The company's own funnel, for its dashboard.
  *
  * Reads with the service role because `match_candidates` is closed to every client (migration
- * 0004): those rows know which buyer considered which vendor. What comes back here is counts
+ * 0006): those rows know which buyer considered which vendor. What comes back here is counts
  * about the caller's own company and nothing else — no problem ids, no buyer names, no dates
  * that would let a vendor work out who is currently shopping in its category.
  */

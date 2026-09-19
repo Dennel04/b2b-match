@@ -1,6 +1,6 @@
 /**
- * Fills match_candidates for problems that were matched before migration 0004 existed.
- * Run once, after applying 0004: npm run backfill:candidates
+ * Fills match_candidates for problems that were matched before migration 0006 existed.
+ * Run once, after applying 0006: npm run backfill:candidates
  *
  * Recomputes the mechanical stage only — checkCompatibility() is pure and free — so this costs
  * no model calls and creates no matches. Scores come from the matches that were actually

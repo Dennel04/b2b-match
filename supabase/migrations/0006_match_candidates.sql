@@ -1,4 +1,4 @@
--- Forward-only. Run after 0003.
+-- Forward-only. Run after 0005.
 --
 -- Every vendor findMatches() evaluates, not only the ones that became a match. Without this
 -- the funnel is lost: sellers filtered out on terms, and sellers the model scored below the
