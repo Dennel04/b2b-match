@@ -483,3 +483,55 @@ input[type="date"].bare {
   animation: swap-in 220ms var(--ease-out) both;
 }
 
+
+/* ── Landing ───────────────────────────────────────────────────────────────────
+   Sections rise in as they scroll into view, on the same soft-in as the hero. Scroll-driven, so
+   a browser without animation-timeline simply shows them in place. */
+@supports (animation-timeline: view()) {
+  .reveal {
+    animation: soft-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 55%;
+  }
+}
+
+/* Step 01: the lines of a problem are blacked out one after another, on a 6 s loop. */
+@keyframes land-redact {
+  0%, 12% { transform: scaleX(0); }
+  30%, 88% { transform: scaleX(1); }
+  100% { transform: scaleX(0); }
+}
+.land-redact {
+  transform-origin: left;
+  animation: land-redact 6s var(--ease-in-out) infinite both;
+  animation-delay: calc(var(--n, 0) * 0.25s);
+}
+
+/* Step 02: vendors who miss on terms fade out; the one left is ringed. */
+@keyframes land-drop {
+  0%, 20% { opacity: 1; transform: none; }
+  38%, 82% { opacity: 0.22; transform: scale(0.82); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes land-keep {
+  0%, 30% { box-shadow: 0 0 0 0 transparent; }
+  42%, 82% { box-shadow: 0 0 0 2px var(--ink); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+.land-filter { animation: land-drop 6s var(--ease-out) infinite both; animation-delay: calc(var(--n, 0) * 60ms); }
+.land-filter.land-keep { animation: land-keep 6s var(--ease-out) infinite both; }
+
+/* Step 03: the three statuses light up in order, as the double opt-in moves. */
+@keyframes land-status {
+  0%, 8% { opacity: 0.3; transform: translateY(3px); }
+  20%, 86% { opacity: 1; transform: none; }
+  100% { opacity: 0.3; transform: translateY(3px); }
+}
+.land-status { animation: land-status 6s var(--ease-out) infinite both; animation-delay: calc(var(--n, 0) * 0.9s); }
+
+/* Reduced motion: every picture shows its outcome, still. */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .land-redact, .land-filter, .land-status { animation: none; }
+  .land-filter:not(.land-keep) { opacity: 0.22; }
+  .land-keep { box-shadow: 0 0 0 2px var(--ink); }
+}

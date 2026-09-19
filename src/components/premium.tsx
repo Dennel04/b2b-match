@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { Icon } from "./ui/Icon";
 
@@ -89,6 +90,38 @@ export function PillButton({
         </span>
       )}
     </button>
+  );
+}
+
+/** PillButton's twin for navigation: the same shape and arrow, drawn as a link. */
+export function PillLink({
+  href,
+  children,
+  variant = "dark",
+  icon = true,
+  className = "",
+}: {
+  href: string;
+  children: React.ReactNode;
+  variant?: "dark" | "soft";
+  icon?: boolean;
+  className?: string;
+}) {
+  const dark = variant === "dark";
+  return (
+    <Link
+      href={href}
+      className={`group inline-flex items-center justify-center gap-3 rounded-full py-2 text-[14.5px] font-semibold transition-[transform,background-color] duration-500 ${EASE} active:scale-[0.98] ${
+        icon ? "pl-5 pr-2" : "px-5"
+      } ${dark ? "bg-brand text-surface hover:bg-brand-strong" : "bg-ink/[0.06] text-ink hover:bg-ink/[0.09]"} ${className}`}
+    >
+      <span className={icon ? "" : "py-1.5"}>{children}</span>
+      {icon && (
+        <span className={`grid h-8 w-8 place-items-center rounded-full ${dark ? "bg-surface/15" : "bg-surface"}`}>
+          <Arrow />
+        </span>
+      )}
+    </Link>
   );
 }
 
