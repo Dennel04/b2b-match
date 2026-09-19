@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { claimCheckout, myCredits } from "@/actions/credits";
+import { openMatchCount } from "@/actions/match";
 import { AppShell, initialsOf } from "@/components/layout";
 import { Coin, Icon } from "@/components/ui";
 import { PACKS, UNLOCK_COST, euros } from "@/lib/credits";
@@ -29,7 +30,7 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
   const credits = claim?.ok ? claim.data : ((await myCredits()) ?? 0);
 
   return (
-    <AppShell initials={initialsOf(company.name)}>
+    <AppShell matches={await openMatchCount()} initials={initialsOf(company.name)}>
       <main className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-9 md:pt-8">
         <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Credits</h1>
         <p className="mt-2 max-w-[62ch] text-[14px] text-ink-soft">

@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout";
 import { Icon } from "@/components/ui";
 import type { CompanyRole } from "@/types";
 import { sells } from "../onboarding/fields";
+import { Unlock } from "./Unlock";
 
 /**
  * One counterparty across every problem. `context` is what the viewer is allowed to know about
@@ -16,12 +17,16 @@ export interface MatchLine extends Party {
   /** The next move is the viewer's: they are the one holding the double opt-in up. */
   yours: boolean;
   score: number;
+  /** A buyer who arrived at this company's service, not yet paid for. Blurred until they are. */
+  locked?: boolean;
 }
 
 export interface MatchesScreenData {
   initials: string;
-  /** Counterparties that arrived while nobody was looking. The sidebar badge, nothing else. */
+  /** Counterparties that arrived while nobody was looking. The line under the title, nothing else. */
   unseen: number;
+  /** Open on either side. The sidebar badge, which reads the same from every screen. */
+  open: number;
   /** Decides what an empty screen invites: a buyer writes a problem, a seller can only be findable. */
   role: CompanyRole;
   matched: MatchLine[];
@@ -40,7 +45,7 @@ export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolea
   const matched = [...d.matched].sort((a, b) => Number(b.yours) - Number(a.yours) || b.score - a.score);
 
   return (
-    <AppShell active="matches" demo={demo} matches={d.unseen} initials={d.initials}>
+    <AppShell active="matches" demo={demo} matches={d.open} initials={d.initials}>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-1 pt-6 md:px-9 md:pt-8">
           <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Matches</h1>
@@ -59,7 +64,16 @@ export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolea
           <Blank role={d.role} />
         ) : (
           <div className="pt-4">
-            <Group label="Matched" count={matched.length} fact="Every term cleared">
+            <Group
+              label="Matched"
+              count={matched.length}
+              fact="Every term cleared"
+              note={
+                matched.some((m) => m.locked)
+                  ? "A buyer came to you through one of your services. Opening one costs 10 credits; the match itself was free."
+                  : undefined
+              }
+            >
               {matched.length === 0 ? (
                 <Empty>Nothing has cleared every term yet.</Empty>
               ) : (
@@ -68,15 +82,20 @@ export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolea
                     <Context>{m.context}</Context>
                     <span className={`hidden flex-none text-[12px] font-medium sm:block ${m.yours ? "text-accent-strong" : "text-ink-soft"}`}>
                       {m.yours && <span aria-hidden className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-accent align-middle -translate-y-[0.09em]" />}
-                      {m.state}
+                      {m.locked ? "Waiting to be opened" : m.state}
                     </span>
+                    {/* The score is never blurred: it is the reason to spend the credit. */}
                     <span className="flex flex-none items-center gap-1.5 rounded-[7px] bg-surface-alt px-2.5 py-1 text-[12px] font-semibold tabular-nums">
                       <Icon name="gauge" size={14} />
                       {m.score}
                     </span>
-                    <RowButton href={`/matches/${m.id}`} primary={m.yours}>
-                      Open
-                    </RowButton>
+                    {m.locked ? (
+                      <Unlock id={m.id} />
+                    ) : (
+                      <RowButton href={`/matches/${m.id}`} primary={m.yours}>
+                        Open
+                      </RowButton>
+                    )}
                   </PartyRow>
                 ))
               )}

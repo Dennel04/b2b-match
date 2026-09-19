@@ -27,8 +27,12 @@ export function AppShell({
   active?: "company" | "problems" | "services" | "matches" | "directory" | "dashboard";
   /** Signed-out demo browsing: the nav keeps `?demo`, or every link lands on the login screen. */
   demo?: boolean;
-  /** The badge on Matches: counterparties that arrived while nobody was looking, not a total. */
-  matches?: number;
+  /**
+   * The badge on Matches: how many are open, on every screen alike. Required on purpose — a
+   * screen that forgot it used to blank the badge, so the count seemed to come and go with
+   * whichever section you were in.
+   */
+  matches: number | null;
   initials: string;
   /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */
   bar?: React.ReactNode;
@@ -42,7 +46,7 @@ export function AppShell({
     { href: "/company", label: "Company", icon: "building-2", active: active === "company" },
     { href: keep("/problems"), label: "Problems", icon: "file-text", active: active === "problems" },
     { href: keep("/services"), label: "Services", icon: "package", active: active === "services" },
-    { href: keep("/matches"), label: "Matches", icon: "handshake", count: matches, active: active === "matches" },
+    { href: keep("/matches"), label: "Matches", icon: "handshake", count: matches ?? undefined, active: active === "matches" },
     { href: "/directory", label: "Directory", icon: "globe", active: active === "directory" },
   ];
 
@@ -55,14 +59,14 @@ export function AppShell({
         */}
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-[224px] flex-col overflow-y-auto overscroll-contain border-r border-line bg-surface md:flex">
         {/* The brand opens the company dashboard: how matching is going. Company details live in Company. */}
-        <Link href="/dashboard" aria-current={active === "dashboard" ? "page" : undefined} className="flex h-16 items-center gap-2 border-b border-line px-4 transition-colors hover:bg-surface-alt/60">
-          {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
-          <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
-          <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
-        </Link>
-        {/* Above the nav, because it is spent on what the nav leads to. */}
-        <div className="px-3 pt-4">
-          <Credits className="w-full justify-start bg-surface" />
+        <div className="flex h-16 items-center gap-2 border-b border-line pl-4 pr-2.5">
+          <Link href="/dashboard" aria-current={active === "dashboard" ? "page" : undefined} className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-70">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
+            <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
+            <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
+          </Link>
+          {/* Beside the mark, on the one row that is on every screen: it is the account's, not a section's. */}
+          <Credits className="ml-auto" />
         </div>
         <nav aria-label="Main" className="flex flex-col gap-1 px-3 py-4">
           {nav.map((item) => (

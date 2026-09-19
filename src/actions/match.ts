@@ -465,6 +465,24 @@ export async function unseenMatchCount(): Promise<number> {
 }
 
 /**
+ * The sidebar badge: how many counterparties this company has open, on either side. It is a
+ * standing count, not news — it reads the same from every screen and does not empty itself the
+ * moment the matches screen has been visited.
+ */
+export async function openMatchCount(): Promise<number> {
+  const mine = await ownedCompanyIds();
+  if (!mine.length) return 0;
+
+  const list = mine.join(',');
+  const { count } = await adminClient()
+    .from('matches')
+    .select('id', { count: 'exact', head: true })
+    .neq('status', 'declined')
+    .or(`buyer_company_id.in.(${list}),seller_company_id.in.(${list})`);
+  return count ?? 0;
+}
+
+/**
  * These matches have now been on screen, so they stop being news. Called from the matches
  * screen after it has mounted — not while it renders, or prefetching the route from the
  * sidebar would clear the badge for someone who never opened it.

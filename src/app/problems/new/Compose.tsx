@@ -41,10 +41,13 @@ export function Compose({
   companyId,
   profile,
   initials,
+  matches,
 }: {
   companyId: string;
   profile: CompanyProfile | null;
   initials: string;
+  /** The sidebar badge, read on the server: this screen has no session of its own. */
+  matches: number;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<ProblemDraft>(EMPTY);
@@ -271,7 +274,7 @@ export function Compose({
   if (!started) return <Hero onStart={begin} form={form} />;
 
   return (
-    <AppShell active="problems" initials={initials}>
+    <AppShell active="problems" initials={initials} matches={matches}>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1440px] px-4 pt-6 md:px-9 md:pt-8">
           <nav aria-label="Breadcrumb" className="text-[12.5px] text-ink-soft">

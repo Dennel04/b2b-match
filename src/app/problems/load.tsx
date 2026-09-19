@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getMatchView, unseenMatchCount } from "@/actions/match";
+import { getMatchView, openMatchCount } from "@/actions/match";
 import { initialsOf } from "@/components/layout";
 import { currentUser, serverClient } from "@/lib/supabase";
 import type { BuyerTerms, MatchView } from "@/types";
@@ -37,7 +37,7 @@ export async function renderProblemScreen({ problemId, demo }: { problemId?: str
     status: "searching",
     caseRef: `PRB-${problem.id.slice(0, 4)}`,
     initials: initialsOf(company.name),
-    matches: await unseenMatchCount(),
+    matches: await openMatchCount(),
     title,
     summary,
     terms: termChips(problem.buyer_terms),
@@ -177,5 +177,5 @@ export async function renderProblemsList(f: ProblemsFilter) {
     });
   }
 
-  return <ProblemsScreen d={{ initials: initialsOf(company.name), matches: await unseenMatchCount(), rows }} f={f} />;
+  return <ProblemsScreen d={{ initials: initialsOf(company.name), matches: await openMatchCount(), rows }} f={f} />;
 }

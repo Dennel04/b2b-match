@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
-import { getMatchView, unseenMatchCount } from "@/actions/match";
+import { unlockedMatchIds } from "@/actions/credits";
+import { getMatchView, openMatchCount, unseenMatchCount } from "@/actions/match";
 import { initialsOf } from "@/components/layout";
 import { FORMAT_LABELS } from "@/lib/overlap";
 import { currentUser, serverClient } from "@/lib/supabase";
@@ -29,6 +30,9 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
 
   const { data: ids } = await db.from("matches").select("id").order("created_at", { ascending: false });
   const views = await Promise.all((ids ?? []).map((r) => getMatchView(r.id)));
+  // A buyer who arrived at this company's service is the thing worth paying for, so a selling
+  // row stays blurred until a credit is spent on it. The buying side pays nothing, ever.
+  const unlocked = new Set(await unlockedMatchIds());
 
   // The problem title is only ever read off the viewer's own problem_text, which getMatchView()
   // leaves null for the selling side. A seller row therefore cannot carry one.
@@ -37,6 +41,7 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     // Counted before the rows below are marked as read, so the screen you arrive on still
     // shows what was new when you arrived.
     unseen: await unseenMatchCount(),
+    open: await openMatchCount(),
     role: company.role as CompanyRole,
     matched: [],
     awaiting: [],
@@ -45,6 +50,7 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
 
   for (const m of views) {
     const selling = m.viewer === "seller";
+    const locked = selling && !unlocked.has(m.id);
     const party = {
       id: m.id,
       // Anonymous until both sides accept: getMatchView() leaves the name null before that.
@@ -53,12 +59,13 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
       place: firstSentence(m.reasoning_public),
       logo: selling ? m.buyer.logo : m.seller.logo,
       anon: selling ? !m.buyer.name : !m.seller.name,
+      blurred: locked,
     };
     const context = selling ? "They came to you" : m.problem_text ? splitVerbatim(m.problem_text)[0] : "";
 
     if (m.status === "declined" || m.negotiation?.envelope?.verdict === "reject") d.declined++;
     else if (m.status !== "proposed" || m.negotiation?.envelope?.verdict === "proceed")
-      d.matched.push({ ...party, context, state: STATE[m.status][selling ? 1 : 0], yours: isYourMove(m), score: m.score });
+      d.matched.push({ ...party, context, state: STATE[m.status][selling ? 1 : 0], yours: isYourMove(m), score: m.score, locked });
     else d.awaiting.push({ ...party, context, area: openArea(m) });
   }
 
@@ -102,6 +109,10 @@ export async function renderMatchScreen(matchId: string) {
     notFound();
   }
 
+  // The credit buys this screen: the negotiation, the brief, and the name once both sides
+  // accept. A locked match has no screen to show, so it goes back to the row that sells it.
+  if (m.viewer === "seller" && !(await unlockedMatchIds()).includes(m.id)) redirect("/matches");
+
   const selling = m.viewer === "seller";
   const counterparty = selling ? (m.buyer.name ?? anonymousName(m.buyer)) : (m.seller.name ?? anonymousName(m.seller));
 
@@ -116,7 +127,7 @@ export async function renderMatchScreen(matchId: string) {
         d={{
           m,
           initials: initialsOf(company.name),
-          matches: await unseenMatchCount(),
+          matches: await openMatchCount(),
           counterparty,
           problemTitle: m.problem_text ? splitVerbatim(m.problem_text)[0] : null,
           logo: selling ? m.buyer.logo : m.seller.logo,

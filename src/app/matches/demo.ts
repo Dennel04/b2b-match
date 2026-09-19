@@ -7,6 +7,7 @@ import type { MatchesScreenData } from "./MatchesScreen";
  */
 export const DEMO_MATCHES: MatchesScreenData = {
   initials: "KM",
+  open: 4,
   unseen: 2,
   role: "both",
   matched: [
@@ -28,6 +29,9 @@ export const DEMO_MATCHES: MatchesScreenData = {
       state: "Interest received",
       yours: true,
       score: 88,
+      // The stage needs one row that has not been paid for: blurred, with the coin beside it.
+      locked: true,
+      blurred: true,
     },
     {
       id: "m-2",
