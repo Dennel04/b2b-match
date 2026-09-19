@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCompanyStats } from "@/actions/stats";
-import { RemoteLogo } from "@/components/RemoteLogo";
 import { AppShell, initialsOf } from "@/components/layout";
 import { Card, Chip } from "@/components/ui";
 import { serverClient } from "@/lib/supabase";
-import type { CompanyProfile, CompanyStats } from "@/types";
+import type { CompanyStats } from "@/types";
 
 export const metadata = { title: "Dashboard — Crossdesk" };
 
@@ -24,13 +23,13 @@ export default async function AccountPage() {
   // Owner-only read (RLS companies_read_own).
   const { data: company } = await db
     .from("companies")
-    .select("name, website, role, profile_json")
+    .select("name, role")
     .eq("owner_id", user.id)
     .limit(1)
     .maybeSingle();
   if (!company) redirect("/onboarding");
 
-  const p: Partial<CompanyProfile> = company.profile_json ?? {};
+
   const stats = await getCompanyStats();
   const s = stats.seller;
   const b = stats.buyer;
@@ -40,7 +39,7 @@ export default async function AccountPage() {
   return (
     <AppShell active="account" initials={initialsOf(company.name)}>
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-9 px-4 pb-16 pt-6 md:px-9 md:pt-8">
-        <Header name={company.name} website={company.website} p={p} />
+        <Header />
 
         {showSeller && (
           <Section title="As a vendor" fact="Buyers' problems you were checked against">
@@ -86,29 +85,19 @@ export default async function AccountPage() {
   );
 }
 
-function Header({ name, website, p }: { name: string; website: string | null; p: Partial<CompanyProfile> }) {
-  const place = [p.city, p.country].filter(Boolean).join(", ");
-  const size = p.employees ? `${p.employees.toLocaleString("en-US")} people` : p.size_hint && p.size_hint !== "unknown" ? p.size_hint : null;
-  const facts = [p.industry, place, size].filter(Boolean);
+function Header() {
   return (
-    <header className="flex flex-col gap-5 md:flex-row md:items-center">
-      <span className="grid h-16 w-16 flex-none place-items-center overflow-hidden rounded-[14px] border border-line bg-surface">
-        <RemoteLogo url={p.logo_url} name={name} className="p-2" />
-      </span>
-      <div className="min-w-0 flex-1">
-        <h1 className="truncate text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">{name}</h1>
-        <p className="mt-1.5 flex flex-wrap items-center gap-x-2 text-[14px] text-ink-soft">
-          {[...facts, website ? website.replace(/^https?:\/\/(www\.)?/, "") : null].filter(Boolean).map((f, i) => (
-            <span key={i} className="flex items-center gap-2">
-              {i > 0 && <span aria-hidden className="text-ink-faint">·</span>}
-              {f}
-            </span>
-          ))}
+    <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="min-w-0">
+        <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Dashboard</h1>
+        <p className="mt-2 max-w-[60ch] text-[14px] leading-relaxed text-ink-soft">
+          How your company is doing behind the wall: how often you are considered, how far you get, and what
+          stops you. Only you see these numbers.
         </p>
       </div>
       <Link
         href="/company"
-        className="inline-flex flex-none items-center rounded-[9px] border border-line-strong bg-surface px-4 py-2 text-[13px] font-semibold transition-colors hover:bg-surface-alt"
+        className="inline-flex flex-none items-center self-start rounded-[9px] border border-line-strong bg-surface px-4 py-2 text-[13px] font-semibold transition-colors hover:bg-surface-alt md:self-auto"
       >
         Company details
       </Link>

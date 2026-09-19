@@ -139,13 +139,16 @@ function Company({ c }: { c: Listed }) {
   const facts = [c.employees ? `${c.employees.toLocaleString("en-US")} people` : null, c.founded ? `Since ${c.founded}` : null].filter(Boolean);
   const certs = c.certifications.slice(0, 3);
   return (
-    <Card className="flex h-full flex-col gap-4 p-5">
+    <Card className="relative flex h-full flex-col gap-4 p-5 transition-colors hover:border-line-strong">
       <div className="flex items-start gap-3">
         <span className="grid h-11 w-11 flex-none place-items-center overflow-hidden rounded-[10px] border border-line bg-surface">
           <RemoteLogo url={c.logo_url} name={c.name} className="p-1.5" />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">{c.name}</p>
+          {/* The name stretches over the whole card, so the card opens the company page. */}
+          <Link href={`/directory/${encodeURIComponent(c.domain)}`} className="block truncate text-[15px] font-semibold tracking-[-0.01em] after:absolute after:inset-0 after:rounded-[10px]">
+            {c.name}
+          </Link>
           <p className="truncate text-[12.5px] text-ink-soft">{[c.industry, place].filter(Boolean).join(" · ")}</p>
         </div>
       </div>
@@ -174,7 +177,7 @@ function Company({ c }: { c: Listed }) {
           href={c.website}
           target="_blank"
           rel="noreferrer"
-          className="flex items-center justify-between border-t border-line pt-3 text-[13px] font-semibold transition-colors hover:text-ink-soft"
+          className="relative z-10 flex items-center justify-between border-t border-line pt-3 text-[13px] font-semibold transition-colors hover:text-ink-soft"
         >
           {c.domain}
           <Icon name="arrow-up-right" size={15} />
