@@ -50,7 +50,16 @@ Return:
 - profile.industry — one short phrase ("IT outsourcing", "road freight logistics").
 - profile.size_hint — what the site suggests ("~40 people", "small agency", "multi-site retailer");
   "unknown" if nothing suggests it.
-- profile.services — 3 to 8 short items, the company's own offering, not marketing slogans.
+- profile.services — 3 to 8 short items: **what another company could buy from this one**.
+  This is a B2B platform, so the test for every item is "could a business put this on a
+  purchase order?". Write them at the altitude a buyer would describe a need at — the level of
+  "air freight" or "corporate travel management", not the level of a single feature.
+  Consumer-facing sites are the trap: an airline's site is mostly about passengers, so
+  "baggage allowance", "seat selection" and "in-flight Wi-Fi" are passenger features, not its
+  offer to companies (which is cargo, charter, corporate agreements, maintenance). Read past
+  the consumer storefront for what the business sells to businesses. If the site genuinely
+  sells nothing to companies, say what it does in 3-5 broad items and set role_guess to 'buyer'.
+  Never marketing slogans.
 - profile.keywords — 5 to 12 lower-case terms a buyer with a matching problem might use.
 - profile.summary — 2 or 3 short paragraphs, separated by a blank line, safe to show to other
   companies. One idea per paragraph, 25 to 45 words each: what the company does, then who it

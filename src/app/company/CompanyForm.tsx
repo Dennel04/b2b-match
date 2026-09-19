@@ -118,6 +118,15 @@ export function CompanyForm({
     initial.website ? "site" : "text",
   );
   const [pasted, setPasted] = useState("");
+  /**
+   * Services in this company's own words, kept apart from the standard list. Held in state so
+   * that switching one off does not delete the option — otherwise a wrong-looking line read off
+   * the site could be turned off once and never turned back on.
+   */
+  const [ownOptions, setOwnOptions] = useState<string[]>(
+    initial.services.filter((x) => !SUGGESTED.includes(x)),
+  );
+  const [ownFromSite, setOwnFromSite] = useState(false);
   const [fill, setFill] = useState<Autofill>({ state: "idle" });
   const [evidence, setEvidence] = useState<
     Partial<Record<Requirement, string>>
@@ -179,6 +188,13 @@ export function CompanyForm({
           ]),
         ),
       );
+      // Whatever the draft called its services in the company's own words stays its own group,
+      // so the person checks those rather than hunting for them among 26 stock categories.
+      const drafted = draft.profile.services.filter((x) => !SUGGESTED.includes(x));
+      if (drafted.length) {
+        setOwnOptions((prev) => [...new Set([...prev, ...drafted])]);
+        setOwnFromSite(from === "site");
+      }
       setFill({
         state: "done",
         from:
@@ -227,6 +243,12 @@ export function CompanyForm({
     setNote(null);
     if (!running) setFill({ state: "idle" });
   };
+
+  // Options keep every own-words service ever seen, selected or not, so one can be switched
+  // back on after being switched off.
+  const ownServices = [
+    ...new Set([...ownOptions, ...d.services.filter((x) => !SUGGESTED.includes(x))]),
+  ];
 
   const elapsed =
     fill.state === "running" ? Math.max(0, (now - fill.started) / 1000) : 0;
@@ -493,16 +515,27 @@ export function CompanyForm({
         >
           {editing === "offer" ? (
             <div className="flex flex-col gap-6">
-              <Pills
-                options={[...new Set([...SUGGESTED, ...d.services])].map(
-                  (x) => ({
-                    value: x,
-                    label: x,
-                  }),
-                )}
-                value={d.services}
-                onChange={(v) => set("services", v)}
-              />
+              {/* Read from the site, in the company's own words: a different altitude from the
+                  stock categories, so it reads as a separate thing to confirm. */}
+              {ownServices.length > 0 && (
+                <Cloud
+                  span
+                  label={ownFromSite ? "From your website — check these" : "In your own words"}
+                >
+                  <Pills
+                    options={ownServices.map((x) => ({ value: x, label: x }))}
+                    value={d.services}
+                    onChange={(v) => set("services", v)}
+                  />
+                </Cloud>
+              )}
+              <Cloud span label="Categories buyers search by">
+                <Pills
+                  options={SUGGESTED.map((x) => ({ value: x, label: x }))}
+                  value={d.services}
+                  onChange={(v) => set("services", v)}
+                />
+              </Cloud>
               <Cloud span label="Something else">
                 <TagInput
                   shape=""
