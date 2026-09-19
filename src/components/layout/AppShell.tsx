@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Credits } from "./Credits";
 import { NavLink } from "./NavLink";
@@ -14,39 +15,31 @@ export interface NavItem {
   active?: boolean;
 }
 
+/** The sections that get the frame. Everything else — landing, auth, onboarding — is bare. */
+const SECTIONS = ["/company", "/problems", "/services", "/matches", "/directory", "/dashboard", "/credits"];
+
 /**
  * The working-screen frame from drafts/design/problem-page.html: sidebar, top bar whose bottom
  * border lines up with the sidebar header's, content, and a one-row footer.
+ *
+ * Rendered ONCE, in the root layout, around every screen. It used to be rendered by each screen
+ * and again by each loading skeleton, so one click mounted three sidebars in a row: the brand
+ * mark and the active item's blue rule animated in twice before the page arrived, and every
+ * navigation paid for a frame nobody had asked to rebuild. A layout above the changing segment
+ * is not re-run by a client navigation — so now it simply stays.
  */
-export function AppShell({
-  active,
-  demo,
-  matches,
-  initials,
-  bar,
-  barRight,
-  children,
-}: {
-  active?: "company" | "problems" | "services" | "matches" | "directory" | "dashboard";
-  /** Signed-out demo browsing: the nav keeps `?demo`, or every link lands on the login screen. */
-  demo?: boolean;
-  /**
-   * The badge on Matches and the avatar come from the frame's own state, read once in the root
-   * layout. A screen passes them only to say something different — the signed-out demo does.
-   */
-  matches?: number | null;
-  initials?: string;
-  /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */
-  bar?: React.ReactNode;
-  /** Page-level controls, placed before the privacy marker. */
-  barRight?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  // Only the signed-in screens have fake data, so only their links carry the flag onwards.
-  // The frame's own state, unless this screen said otherwise.
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname() ?? "/";
   const frame = useShell();
-  const count = matches === undefined ? frame.matches : matches;
-  const mark = initials ?? frame.initials;
+  // Signed-out browsing is the demo, and only it needs `?demo` carried onwards. Read from the
+  // frame rather than from the query: useSearchParams() would push this subtree — which is the
+  // whole page — out of the server render, and the screen would arrive a beat later.
+  const demo = frame.matches === null;
+  const count = frame.matches;
+  const mark = frame.initials;
+
+  const section = SECTIONS.find((s) => pathname === s || pathname.startsWith(`${s}/`));
+  const active = section?.slice(1);
 
   const keep = (href: string) => (demo && /^\/(problems|services|matches)/.test(href) ? `${href}?demo` : href);
   const nav: NavItem[] = [
@@ -56,6 +49,8 @@ export function AppShell({
     { href: keep("/matches"), label: "Matches", icon: "handshake", count: count ?? undefined, active: active === "matches" },
     { href: "/directory", label: "Directory", icon: "globe", active: active === "directory" },
   ];
+
+  if (!section) return <>{children}</>;
 
   return (
     <div className="flex min-h-dvh bg-bg text-ink">
@@ -94,34 +89,19 @@ export function AppShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col md:pl-[224px]">
-        {bar ? (
-          <header className="flex h-16 items-center gap-3 border-b border-line bg-surface px-4 md:px-9">
-            {bar}
-            <div className="ml-auto flex items-center gap-4">
-              {barRight}
-              <span className="hidden items-center gap-1.5 text-[12.5px] text-ink-soft sm:flex">
-                <Icon name="lock" size={13} />
-                Private to you
-              </span>
-              <Avatar initials={mark} />
-              <MobileSignOut />
-            </div>
-          </header>
-        ) : (
-          /* Bare screen: the sidebar is hidden on phones, so brand and log-out still need a row there. */
-          <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
-            <Link href="/dashboard" className="flex items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
-              <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
-              <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
-            </Link>
-            <div className="ml-auto flex items-center gap-3">
-              <Credits />
-              <Avatar initials={mark} />
-              <MobileSignOut />
-            </div>
-          </header>
-        )}
+        {/* The sidebar is hidden on phones, so brand and log-out still need a row there. */}
+        <header className="flex h-14 items-center gap-2 border-b border-line bg-surface px-4 md:hidden">
+          <Link href="/dashboard" className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a static SVG mark, nothing to optimise */}
+            <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
+            <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
+          </Link>
+          <div className="ml-auto flex items-center gap-3">
+            <Credits />
+            <Avatar initials={mark} />
+            <MobileSignOut />
+          </div>
+        </header>
 
         {/*
           * The body enters, the frame does not. A skeleton and the screen that replaces it both

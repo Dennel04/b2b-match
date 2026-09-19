@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout";
+
 import { RemoteLogo } from "@/components/RemoteLogo";
 import { Card, Chip, Icon, Pill, Row } from "@/components/ui";
 import type { MatchView } from "@/types";
@@ -25,7 +25,7 @@ export function MatchScreen({ d }: { d: MatchScreenData }) {
   const selling = m.viewer === "seller";
 
   return (
-    <AppShell active="matches" initials={d.initials}>
+    <>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-6 md:px-9 md:pt-8">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1 pb-3 text-[12.5px] text-ink-soft">
@@ -179,7 +179,7 @@ export function MatchScreen({ d }: { d: MatchScreenData }) {
           </Section>
         )}
       </main>
-    </AppShell>
+    </>
   );
 }
 

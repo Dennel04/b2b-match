@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { AppShell, initialsOf } from "@/components/layout";
+
 import { RemoteLogo } from "@/components/RemoteLogo";
 import { Card, Icon } from "@/components/ui";
 import { serverClient } from "@/lib/supabase";
@@ -37,7 +37,6 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect("/login");
-  const { data: mine } = await db.from("companies").select("name").eq("owner_id", user.id).limit(1).maybeSingle();
 
   const { data, error } = await db
     .from("directory")
@@ -64,7 +63,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
   };
 
   return (
-    <AppShell active="directory" initials={initialsOf(mine?.name)}>
+    <>
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 pb-16 pt-6 md:px-9 md:pt-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -130,7 +129,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
           </ul>
         )}
       </main>
-    </AppShell>
+    </>
   );
 }
 

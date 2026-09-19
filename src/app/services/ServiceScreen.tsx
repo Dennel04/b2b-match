@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { DeclinedRow, Group, PartyRow, RowButton, type Party } from "@/components/counterparties";
-import { AppShell } from "@/components/layout";
+
 import { Icon } from "@/components/ui";
 
 /**
@@ -26,7 +26,7 @@ export interface ServiceScreenData {
 export function ServiceScreen({ d, demo }: { d: ServiceScreenData; demo?: boolean }) {
   const live = d.status === "Live";
   return (
-    <AppShell active="services" demo={demo} initials={d.initials}>
+    <>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-6 md:px-9 md:pt-8">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1 pb-3 text-[12.5px] text-ink-soft">
@@ -109,7 +109,7 @@ export function ServiceScreen({ d, demo }: { d: ServiceScreenData; demo?: boolea
           </Group>
         )}
       </main>
-    </AppShell>
+    </>
   );
 }
 

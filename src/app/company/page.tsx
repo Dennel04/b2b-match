@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AppShell, initialsOf } from "@/components/layout";
+
 import { serverClient } from "@/lib/supabase";
 import { draftFromCompany } from "../onboarding/fields";
 import { CompanyForm } from "./CompanyForm";
@@ -16,9 +16,9 @@ export default async function CompanyPage({
   // `?demo` shows a filled profile without an account. Nothing it edits is stored.
   if (demo !== undefined)
     return (
-      <AppShell active="company" initials={initialsOf(DEMO_COMPANY.name)}>
+      <>
         <CompanyForm initial={DEMO_COMPANY} demo />
-      </AppShell>
+      </>
     );
 
   const db = await serverClient();
@@ -37,8 +37,8 @@ export default async function CompanyPage({
   if (!company) redirect("/onboarding");
 
   return (
-    <AppShell active="company" initials={initialsOf(company.name)}>
+    <>
       <CompanyForm initial={draftFromCompany(company)} />
-    </AppShell>
+    </>
   );
 }

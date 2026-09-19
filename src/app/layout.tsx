@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { myCredits } from "@/actions/credits";
 import { openMatchCount } from "@/actions/match";
-import { CreditsProvider, ShellProvider, initialsOf } from "@/components/layout";
+import { AppShell, CreditsProvider, ShellProvider, initialsOf } from "@/components/layout";
 import { currentUser, serverClient } from "@/lib/supabase";
 import { jakarta } from "./fonts";
 import "./globals.css";
@@ -37,7 +37,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col font-sans">
         <CreditsProvider initial={credits}>
-          <ShellProvider initial={frame}>{children}</ShellProvider>
+          <ShellProvider initial={frame}>
+            {/* The frame, once, above every screen: a client navigation does not re-run it. */}
+            <AppShell>{children}</AppShell>
+          </ShellProvider>
         </CreditsProvider>
         {/* Page views in Vercel → Analytics. No cookies, no personal data; off outside Vercel. */}
         <Analytics />

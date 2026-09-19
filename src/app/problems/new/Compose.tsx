@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { runInterview, saveProblem } from "@/actions/problem";
-import { AppShell } from "@/components/layout";
+
 import { Button } from "@/components/ui";
 import { Composer, Thinking } from "@/components/Composer";
 import type { CompanyProfile, ContractFormat, InterviewTurn, Requirement } from "@/types";
@@ -40,11 +40,9 @@ type Key = keyof ProblemDraft;
 export function Compose({
   companyId,
   profile,
-  initials,
 }: {
   companyId: string;
   profile: CompanyProfile | null;
-  initials: string;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState<ProblemDraft>(EMPTY);
@@ -271,7 +269,7 @@ export function Compose({
   if (!started) return <Hero onStart={begin} form={form} />;
 
   return (
-    <AppShell active="problems" initials={initials}>
+    <>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1440px] px-4 pt-6 md:px-9 md:pt-8">
           <nav aria-label="Breadcrumb" className="text-[12.5px] text-ink-soft">
@@ -313,7 +311,7 @@ export function Compose({
           {form}
         </section>
       </main>
-    </AppShell>
+    </>
   );
 }
 
@@ -552,5 +550,4 @@ function gateReply(
       return d.requirements.length ? list(d.requirements.map((r) => REQUIREMENTS.find((x) => x.value === r)?.label ?? r)) : "Nothing specific";
   }
 }
-
 

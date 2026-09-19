@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { claimCheckout, myCredits } from "@/actions/credits";
-import { AppShell, SyncBalance, initialsOf } from "@/components/layout";
+import { SyncBalance } from "@/components/layout";
 import { Coin, Icon } from "@/components/ui";
 import { PACKS, UNLOCK_COST, euros } from "@/lib/credits";
 import { currentUser, serverClient } from "@/lib/supabase";
@@ -29,7 +29,7 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
   const credits = claim?.ok ? claim.data : ((await myCredits()) ?? 0);
 
   return (
-    <AppShell initials={initialsOf(company.name)}>
+    <>
       {/* This screen has just read the balance — a top-up must not wait for a reload to show. */}
       <SyncBalance credits={credits} />
       <main className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-9 md:pt-8">
@@ -94,6 +94,6 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
         </div>
 
       </main>
-    </AppShell>
+    </>
   );
 }

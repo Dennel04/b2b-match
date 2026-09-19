@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout";
+
 import { Icon } from "@/components/ui";
 import { DeclinedRow, Group, PartyRow, RowButton, type Party } from "@/components/counterparties";
 
@@ -21,7 +21,7 @@ export interface ProblemScreenData {
 /** The buyer's problem screen, rebuilt from drafts/design/problem-page.html. */
 export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolean}) {
   return (
-    <AppShell active="problems" demo={demo} initials={d.initials}>
+    <>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-7 pt-6 md:px-9 md:pt-8">
           <nav aria-label="Breadcrumb" className="flex items-center gap-1 pb-3 text-[12.5px] text-ink-soft">
@@ -95,7 +95,7 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
           </Group>
         )}
       </main>
-    </AppShell>
+    </>
   );
 }
 
@@ -131,5 +131,4 @@ function TitleButton({ icon, children }: { icon: "circle-stop" | "pencil"; child
     </button>
   );
 }
-
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { RemoteLogo } from "@/components/RemoteLogo";
-import { AppShell, initialsOf } from "@/components/layout";
+
 import { Card, Icon } from "@/components/ui";
 import { serverClient } from "@/lib/supabase";
 import type { CompanyProfile } from "@/types";
@@ -41,7 +41,6 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
   const db = await serverClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) redirect("/login");
-  const { data: mine } = await db.from("companies").select("name").eq("owner_id", user.id).limit(1).maybeSingle();
 
   const { data } = await db.from("directory").select("*").eq("domain", decodeURIComponent(domain)).maybeSingle();
   if (!data) notFound();
@@ -51,7 +50,7 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
   const size = c.employees ? `${c.employees.toLocaleString("en-US")} people` : p.size_hint && p.size_hint !== "unknown" ? p.size_hint : null;
 
   return (
-    <AppShell active="directory" initials={initialsOf(mine?.name)}>
+    <>
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-4 pb-16 pt-6 md:px-9 md:pt-8">
         <Link href="/directory" className="-ml-1.5 flex w-fit items-center gap-1 rounded-md px-1.5 py-1 text-[13px] text-ink-soft transition-colors hover:bg-surface-alt hover:text-ink">
           <Icon name="chevron-left" size={15} />
@@ -130,7 +129,7 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
           </aside>
         </div>
       </main>
-    </AppShell>
+    </>
   );
 }
 

@@ -1,5 +1,5 @@
 import { ScreenSkeleton } from "@/components/layout/ScreenSkeleton";
 
 export default function Loading() {
-  return <ScreenSkeleton active="company" rows={4} />;
+  return <ScreenSkeleton rows={4} />;
 }

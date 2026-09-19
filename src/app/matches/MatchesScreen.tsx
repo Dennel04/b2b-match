@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { DeclinedRow, Group, PartyRow, RowButton, type Party } from "@/components/counterparties";
-import { AppShell } from "@/components/layout";
+
 import { Icon } from "@/components/ui";
 import type { CompanyRole } from "@/types";
 import { sells } from "../onboarding/fields";
@@ -37,13 +37,13 @@ export interface MatchesScreenData {
  * this one problem"; this answers "where do I have to move next" — so the rows waiting on the
  * viewer sort to the top and carry the only filled button on the screen.
  */
-export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolean }) {
+export function MatchesScreen({ d }: { d: MatchesScreenData; demo?: boolean }) {
   const open = d.matched.length + d.awaiting.length;
   const yours = d.matched.filter((m) => m.yours).length;
   const matched = [...d.matched].sort((a, b) => Number(b.yours) - Number(a.yours) || b.score - a.score);
 
   return (
-    <AppShell active="matches" demo={demo} initials={d.initials}>
+    <>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-1 pt-6 md:px-9 md:pt-8">
           <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Matches</h1>
@@ -124,7 +124,7 @@ export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolea
           </div>
         )}
       </main>
-    </AppShell>
+    </>
   );
 }
 

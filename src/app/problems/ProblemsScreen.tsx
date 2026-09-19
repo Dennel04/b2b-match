@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AppShell } from "@/components/layout";
+
 import { Chip, Icon } from "@/components/ui";
 
 /** One problem as its owner sees it in the list. Figures here are the owner's own. */
@@ -63,11 +63,7 @@ export function ProblemsScreen({
   };
 
   return (
-    <AppShell
-      active="problems"
-      demo={f.demo}
-      initials={d.initials}
-    >
+    <>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pt-6 md:px-9 md:pt-8">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-12">
@@ -159,7 +155,7 @@ export function ProblemsScreen({
           )}
         </section>
       </main>
-    </AppShell>
+    </>
   );
 }
 

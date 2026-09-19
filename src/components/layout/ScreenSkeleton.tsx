@@ -1,5 +1,3 @@
-import { AppShell } from "./AppShell";
-
 /**
  * What a nav segment shows the instant it is clicked, from its `loading.tsx`. The sidebar is
  * the real one — only the page body is a placeholder — so the frame does not blink and the
@@ -9,16 +7,12 @@ import { AppShell } from "./AppShell";
  * jumps when the content arrives. The body enters with `.screen-in`, the same 180ms the real
  * screen enters with, so the two sides of the swap move alike.
  */
-export function ScreenSkeleton({
-  active,
-  rows = 5,
-}: {
-  active?: React.ComponentProps<typeof AppShell>["active"];
+export function ScreenSkeleton({ rows = 5 }: {
   /** Placeholder rows. Match the screen's usual length, so the page height barely moves. */
   rows?: number;
 }) {
   return (
-    <AppShell active={active}>
+    <>
       <main aria-busy="true" aria-live="polite" className="flex-1">
         <span className="sr-only">Loading</span>
         <section className="mx-auto w-full max-w-[1200px] px-4 pt-6 md:px-9 md:pt-8">
@@ -48,7 +42,7 @@ export function ScreenSkeleton({
           </div>
         </section>
       </main>
-    </AppShell>
+    </>
   );
 }
 
