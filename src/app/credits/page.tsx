@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { claimCheckout, myCredits } from "@/actions/credits";
-import { openMatchCount } from "@/actions/match";
 import { AppShell, SyncBalance, initialsOf } from "@/components/layout";
 import { Coin, Icon } from "@/components/ui";
 import { PACKS, UNLOCK_COST, euros } from "@/lib/credits";
@@ -30,7 +29,7 @@ export default async function CreditsPage({ searchParams }: PageProps<"/credits"
   const credits = claim?.ok ? claim.data : ((await myCredits()) ?? 0);
 
   return (
-    <AppShell matches={await openMatchCount()} initials={initialsOf(company.name)}>
+    <AppShell initials={initialsOf(company.name)}>
       {/* This screen has just read the balance — a top-up must not wait for a reload to show. */}
       <SyncBalance credits={credits} />
       <main className="mx-auto w-full max-w-[1200px] px-4 pb-12 pt-6 md:px-9 md:pt-8">

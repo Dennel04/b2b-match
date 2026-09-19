@@ -19,7 +19,6 @@ export interface ProblemRow {
 
 export interface ProblemsScreenData {
   initials: string;
-  matches: number;
   rows: ProblemRow[];
 }
 
@@ -67,7 +66,6 @@ export function ProblemsScreen({
     <AppShell
       active="problems"
       demo={f.demo}
-      matches={d.matches}
       initials={d.initials}
     >
       <main className="flex flex-col">

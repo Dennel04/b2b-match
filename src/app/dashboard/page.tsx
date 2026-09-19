@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getCompanyStats } from "@/actions/stats";
 import { AppShell, initialsOf } from "@/components/layout";
 import { Card } from "@/components/ui";
-import { openMatchCount } from "@/actions/match";
 import { serverClient } from "@/lib/supabase";
 import type { BlockedReason } from "@/types";
 
@@ -39,11 +38,9 @@ export default async function DashboardPage() {
 
   // An expected failure comes back as a message, never as a thrown string: Next.js strips those
   // in production and the screen would show "Minified React error #441" instead (CLAUDE.md).
-  const openMatches = await openMatchCount();
-
   if (!stats.ok) {
     return (
-      <AppShell active="dashboard" matches={openMatches} initials={initials}>
+      <AppShell active="dashboard" initials={initials}>
         <Page>
           <Header />
           <Card className="p-6 text-[14px] text-ink-soft">{stats.message}</Card>
@@ -60,7 +57,7 @@ export default async function DashboardPage() {
   const buying = b.problems > 0;
 
   return (
-    <AppShell active="dashboard" matches={openMatches} initials={initials}>
+    <AppShell active="dashboard" initials={initials}>
       <Page>
         <Header />
 

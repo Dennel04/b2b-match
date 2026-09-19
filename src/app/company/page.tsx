@@ -4,7 +4,6 @@ import { serverClient } from "@/lib/supabase";
 import { draftFromCompany } from "../onboarding/fields";
 import { CompanyForm } from "./CompanyForm";
 import { DEMO_COMPANY } from "./mock";
-import { openMatchCount } from "@/actions/match";
 
 export const metadata = { title: "Company — Crossdesk" };
 
@@ -17,7 +16,7 @@ export default async function CompanyPage({
   // `?demo` shows a filled profile without an account. Nothing it edits is stored.
   if (demo !== undefined)
     return (
-      <AppShell active="company" matches={0} initials={initialsOf(DEMO_COMPANY.name)}>
+      <AppShell active="company" initials={initialsOf(DEMO_COMPANY.name)}>
         <CompanyForm initial={DEMO_COMPANY} demo />
       </AppShell>
     );
@@ -38,7 +37,7 @@ export default async function CompanyPage({
   if (!company) redirect("/onboarding");
 
   return (
-    <AppShell active="company" matches={await openMatchCount()} initials={initialsOf(company.name)}>
+    <AppShell active="company" initials={initialsOf(company.name)}>
       <CompanyForm initial={draftFromCompany(company)} />
     </AppShell>
   );

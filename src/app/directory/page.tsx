@@ -4,7 +4,6 @@ import { AppShell, initialsOf } from "@/components/layout";
 import { RemoteLogo } from "@/components/RemoteLogo";
 import { Card, Icon } from "@/components/ui";
 import { serverClient } from "@/lib/supabase";
-import { openMatchCount } from "@/actions/match";
 
 export const metadata = { title: "Directory — Crossdesk" };
 
@@ -65,7 +64,7 @@ export default async function DirectoryPage({ searchParams }: PageProps<"/direct
   };
 
   return (
-    <AppShell active="directory" matches={await openMatchCount()} initials={initialsOf(mine?.name)}>
+    <AppShell active="directory" initials={initialsOf(mine?.name)}>
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-6 px-4 pb-16 pt-6 md:px-9 md:pt-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>

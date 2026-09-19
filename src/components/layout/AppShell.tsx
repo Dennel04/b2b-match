@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Credits } from "./Credits";
 import { NavLink } from "./NavLink";
+import { useShell } from "./Shell";
 
 export interface NavItem {
   href: string;
@@ -28,12 +31,11 @@ export function AppShell({
   /** Signed-out demo browsing: the nav keeps `?demo`, or every link lands on the login screen. */
   demo?: boolean;
   /**
-   * The badge on Matches: how many are open, on every screen alike. Required on purpose — a
-   * screen that forgot it used to blank the badge, so the count seemed to come and go with
-   * whichever section you were in.
+   * The badge on Matches and the avatar come from the frame's own state, read once in the root
+   * layout. A screen passes them only to say something different — the signed-out demo does.
    */
-  matches: number | null;
-  initials: string;
+  matches?: number | null;
+  initials?: string;
   /** Left side of the top bar: back link, case reference, status, the control acting on it. Leave it out for a bare screen that carries its own controls. */
   bar?: React.ReactNode;
   /** Page-level controls, placed before the privacy marker. */
@@ -41,12 +43,17 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   // Only the signed-in screens have fake data, so only their links carry the flag onwards.
+  // The frame's own state, unless this screen said otherwise.
+  const frame = useShell();
+  const count = matches === undefined ? frame.matches : matches;
+  const mark = initials ?? frame.initials;
+
   const keep = (href: string) => (demo && /^\/(problems|services|matches)/.test(href) ? `${href}?demo` : href);
   const nav: NavItem[] = [
     { href: "/company", label: "Company", icon: "building-2", active: active === "company" },
     { href: keep("/problems"), label: "Problems", icon: "file-text", active: active === "problems" },
     { href: keep("/services"), label: "Services", icon: "package", active: active === "services" },
-    { href: keep("/matches"), label: "Matches", icon: "handshake", count: matches ?? undefined, active: active === "matches" },
+    { href: keep("/matches"), label: "Matches", icon: "handshake", count: count ?? undefined, active: active === "matches" },
     { href: "/directory", label: "Directory", icon: "globe", active: active === "directory" },
   ];
 
@@ -96,7 +103,7 @@ export function AppShell({
                 <Icon name="lock" size={13} />
                 Private to you
               </span>
-              <Avatar initials={initials} />
+              <Avatar initials={mark} />
               <MobileSignOut />
             </div>
           </header>
@@ -110,7 +117,7 @@ export function AppShell({
             </Link>
             <div className="ml-auto flex items-center gap-3">
               <Credits />
-              <Avatar initials={initials} />
+              <Avatar initials={mark} />
               <MobileSignOut />
             </div>
           </header>

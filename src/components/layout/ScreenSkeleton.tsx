@@ -18,7 +18,7 @@ export function ScreenSkeleton({
   rows?: number;
 }) {
   return (
-    <AppShell active={active} matches={null} initials="·">
+    <AppShell active={active}>
       <main aria-busy="true" aria-live="polite" className="flex-1">
         <span className="sr-only">Loading</span>
         <section className="mx-auto w-full max-w-[1200px] px-4 pt-6 md:px-9 md:pt-8">

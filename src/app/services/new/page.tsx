@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { initialsOf } from "@/components/layout";
-import { openMatchCount } from "@/actions/match";
 import { serverClient } from "@/lib/supabase";
 import { Compose } from "./Compose";
 
@@ -20,5 +19,5 @@ export default async function NewServicePage() {
     .maybeSingle();
   if (!company) redirect("/onboarding");
 
-  return <Compose companyId={company.id} profile={company.profile_json} initials={initialsOf(company.name)} matches={await openMatchCount()} />;
+  return <Compose companyId={company.id} profile={company.profile_json} initials={initialsOf(company.name)} />;
 }

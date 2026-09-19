@@ -19,7 +19,6 @@ export interface ServiceRow {
 
 export interface ServicesScreenData {
   initials: string;
-  matches: number;
   rows: ServiceRow[];
 }
 
@@ -66,7 +65,6 @@ export function ServicesScreen({
     <AppShell
       active="services"
       demo={f.demo}
-      matches={d.matches}
       initials={d.initials}
     >
       <main className="flex flex-col">

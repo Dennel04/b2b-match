@@ -25,8 +25,6 @@ export interface MatchesScreenData {
   initials: string;
   /** Counterparties that arrived while nobody was looking. The line under the title, nothing else. */
   unseen: number;
-  /** Open on either side. The sidebar badge, which reads the same from every screen. */
-  open: number;
   /** Decides what an empty screen invites: a buyer writes a problem, a seller can only be findable. */
   role: CompanyRole;
   matched: MatchLine[];
@@ -45,7 +43,7 @@ export function MatchesScreen({ d, demo }: { d: MatchesScreenData; demo?: boolea
   const matched = [...d.matched].sort((a, b) => Number(b.yours) - Number(a.yours) || b.score - a.score);
 
   return (
-    <AppShell active="matches" demo={demo} matches={d.open} initials={d.initials}>
+    <AppShell active="matches" demo={demo} initials={d.initials}>
       <main className="flex flex-col">
         <section className="mx-auto w-full max-w-[1200px] px-4 pb-1 pt-6 md:px-9 md:pt-8">
           <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.025em] md:text-[34px]">Matches</h1>

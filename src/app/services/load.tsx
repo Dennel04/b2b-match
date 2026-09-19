@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getMatchView, openMatchCount } from "@/actions/match";
+import { getMatchView } from "@/actions/match";
 import { initialsOf } from "@/components/layout";
 import { currentUser, serverClient } from "@/lib/supabase";
 import type { MatchStatus, MatchView, SellerTerms, Service } from "@/types";
@@ -66,7 +66,7 @@ export async function renderServicesList(f: ServicesFilter) {
     });
   }
 
-  return <ServicesScreen d={{ initials: initialsOf(company.name), matches: await openMatchCount(), rows }} f={f} />;
+  return <ServicesScreen d={{ initials: initialsOf(company.name), rows }} f={f} />;
 }
 
 export async function renderServiceScreen({ serviceId, demo }: { serviceId: string; demo?: boolean }) {
@@ -93,7 +93,6 @@ export async function renderServiceScreen({ serviceId, demo }: { serviceId: stri
     caseRef: `SRV-${s.id.slice(0, 4)}`,
     status: s.active ? "Live" : "Paused",
     initials: initialsOf(company.name),
-    matches: await openMatchCount(),
     title: s.title,
     summary: s.description,
     terms: termChips(s.terms),
@@ -120,7 +119,6 @@ export async function renderServiceScreen({ serviceId, demo }: { serviceId: stri
     else d.awaiting.push({ ...party, area: openArea(m) });
   }
   d.matched.sort((a, b) => Number(b.yours) - Number(a.yours) || b.score - a.score);
-  d.matches = d.matched.length + d.awaiting.length;
   d.declinedReasons = describeReasons(reasons);
 
   return <ServiceScreen d={d} />;

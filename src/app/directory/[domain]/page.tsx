@@ -5,7 +5,6 @@ import { AppShell, initialsOf } from "@/components/layout";
 import { Card, Icon } from "@/components/ui";
 import { serverClient } from "@/lib/supabase";
 import type { CompanyProfile } from "@/types";
-import { openMatchCount } from "@/actions/match";
 
 /** One `directory` row in full: everything the scraper read off the company's own website. */
 interface Listed {
@@ -52,7 +51,7 @@ export default async function DirectoryCompanyPage({ params }: PageProps<"/direc
   const size = c.employees ? `${c.employees.toLocaleString("en-US")} people` : p.size_hint && p.size_hint !== "unknown" ? p.size_hint : null;
 
   return (
-    <AppShell active="directory" matches={await openMatchCount()} initials={initialsOf(mine?.name)}>
+    <AppShell active="directory" initials={initialsOf(mine?.name)}>
       <main className="mx-auto flex w-full max-w-[1200px] flex-col gap-7 px-4 pb-16 pt-6 md:px-9 md:pt-8">
         <Link href="/directory" className="-ml-1.5 flex w-fit items-center gap-1 rounded-md px-1.5 py-1 text-[13px] text-ink-soft transition-colors hover:bg-surface-alt hover:text-ink">
           <Icon name="chevron-left" size={15} />

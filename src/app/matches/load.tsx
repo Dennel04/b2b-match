@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { unlockedMatchIds } from "@/actions/credits";
-import { getMatchView, openMatchCount, unseenMatchCount } from "@/actions/match";
+import { getMatchView, unseenMatchCount } from "@/actions/match";
 import { initialsOf } from "@/components/layout";
 import { FORMAT_LABELS } from "@/lib/overlap";
 import { currentUser, serverClient } from "@/lib/supabase";
@@ -41,7 +41,6 @@ export async function renderMatchesList({ demo }: { demo?: boolean }) {
     // Counted before the rows below are marked as read, so the screen you arrive on still
     // shows what was new when you arrived.
     unseen: await unseenMatchCount(),
-    open: await openMatchCount(),
     role: company.role as CompanyRole,
     matched: [],
     awaiting: [],
@@ -127,7 +126,6 @@ export async function renderMatchScreen(matchId: string) {
         d={{
           m,
           initials: initialsOf(company.name),
-          matches: await openMatchCount(),
           counterparty,
           problemTitle: m.problem_text ? splitVerbatim(m.problem_text)[0] : null,
           logo: selling ? m.buyer.logo : m.seller.logo,

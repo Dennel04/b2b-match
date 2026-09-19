@@ -8,7 +8,6 @@ import type { ServicesScreenData } from "./ServicesScreen";
  */
 export const DEMO_SERVICES: ServicesScreenData = {
   initials: "TE",
-  matches: 3,
   rows: [
     {
       id: "s-1",
@@ -68,7 +67,6 @@ export const DEMO_SERVICE: ServiceScreenData = {
   caseRef: "SRV-8c30",
   status: "Live",
   initials: "TE",
-  matches: 3,
   title: "Business call centre",
   summary:
     "Twelve agents in Tallinn, Estonian and English, inbound and outbound. Takes over an existing number range in about three weeks; reporting into the buyer's own CRM.",
