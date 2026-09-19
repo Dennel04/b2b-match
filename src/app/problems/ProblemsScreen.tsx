@@ -319,7 +319,7 @@ function Blank({
   action: string;
 }) {
   return (
-    <div className="mt-2 flex flex-col items-start gap-5 rounded-xl border border-line bg-surface px-6 py-12 md:items-center md:px-8 md:py-16 md:text-center">
+    <div className="mt-2 flex flex-col items-start gap-5 rounded-[10px] border border-line bg-surface px-6 py-12 md:items-center md:px-8 md:py-16 md:text-center">
       <div className="flex flex-col gap-2 md:items-center">
         <h2 className="text-[22px] font-semibold tracking-[-0.02em]">
           {title}
@@ -330,7 +330,7 @@ function Blank({
       </div>
       <Link
         href={href}
-        className="inline-flex items-center gap-2 rounded-[9px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
+        className="inline-flex items-center gap-2 rounded-[8px] bg-ink px-4 py-2.5 text-[13px] font-semibold text-surface transition-colors hover:bg-ink-soft"
       >
         <Icon name="plus" size={15} />
         {action}
