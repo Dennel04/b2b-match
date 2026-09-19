@@ -2,5 +2,6 @@
 export { Card, Row } from "./Card";
 export { Button } from "./Button";
 export { Chip, Pill, Sealed } from "./Chip";
+export { Coin } from "./Coin";
 export { Field, FieldGroup, Chips, TagInput, inputClass } from "./Field";
 export { Icon, type IconName } from "./Icon";

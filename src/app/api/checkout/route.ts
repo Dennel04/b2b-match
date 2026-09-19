@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
+import { euros, packFor } from '@/lib/credits';
+import { currentUser, serverClient } from '@/lib/supabase';
 
 /**
  * The introduction fee: the vendor pays when a meeting is accepted, and only then.
@@ -11,6 +13,10 @@ import Stripe from 'stripe';
  *
  * Post a form to /api/checkout and the browser lands on Stripe's hosted page:
  *   <form action="/api/checkout" method="post"><button>Accept and pay</button></form>
+ *
+ * A credit top-up posts the same way, with the pack in a `credits` field:
+ *   <form action="/api/checkout" method="post"><input type="hidden" name="credits" value="50">…
+ * Coins are granted on the way back, by claimCheckout() — there is no webhook.
  *
  * Test mode only. See STRIPE_INTEGRATION_TODO.md for what is still a placeholder.
  */
@@ -29,6 +35,21 @@ export async function POST(request: Request) {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const origin = process.env.DOMAIN ?? new URL(request.url).origin;
 
+  // A top-up names its pack; anything else is the flat introduction fee.
+  const pack = packFor(Number((await request.formData().catch(() => null))?.get('credits')));
+  let metadata: Record<string, string> | undefined;
+
+  if (pack) {
+    const user = await currentUser();
+    if (!user) return NextResponse.redirect(`${origin}/login`, 303);
+    const db = await serverClient();
+    const { data: company } = await db.from('companies').select('id').eq('owner_id', user.id).limit(1).maybeSingle();
+    if (!company) return NextResponse.redirect(`${origin}/onboarding`, 303);
+    // The company is named here and checked again on the way back: coins land on the account
+    // that paid for them, never on whoever happens to open the success URL.
+    metadata = { company_id: company.id, credits: String(pack.credits) };
+  }
+
   try {
     const session = await stripe.checkout.sessions.create({
       ui_mode: 'hosted_page',
@@ -42,8 +63,9 @@ export async function POST(request: Request) {
       locale: 'en',
       integration_identifier: 'hosted_web_0001',
       origin_context: 'web',
-      success_url: `${origin}/matches?paid={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/matches`,
+      metadata,
+      success_url: pack ? `${origin}/credits?paid={CHECKOUT_SESSION_ID}` : `${origin}/matches?paid={CHECKOUT_SESSION_ID}`,
+      cancel_url: pack ? `${origin}/credits` : `${origin}/matches`,
       line_items: [
         {
           quantity: 1,
@@ -51,11 +73,16 @@ export async function POST(request: Request) {
           // Dashboard. Swap it for a real price — see STRIPE_INTEGRATION_TODO.md.
           price_data: {
             currency: 'eur',
-            unit_amount: FEE_CENTS,
-            product_data: {
-              name: 'Crossdesk introduction fee',
-              description: 'Charged once, when a meeting is accepted by both sides.',
-            },
+            unit_amount: pack ? pack.cents : FEE_CENTS,
+            product_data: pack
+              ? {
+                  name: `${pack.credits} Crossdesk credits`,
+                  description: `${euros(pack.cents)} for ${pack.credits} credits. Opening one counterparty costs 10.`,
+                }
+              : {
+                  name: 'Crossdesk introduction fee',
+                  description: 'Charged once, when a meeting is accepted by both sides.',
+                },
           },
         },
       ],

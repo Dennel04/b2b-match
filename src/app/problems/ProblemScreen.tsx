@@ -55,6 +55,9 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
         </section>
 
         <Group label="Matched" count={d.matched.length} fact="Every term cleared">
+          {d.matched.length === 0 && (
+            <p className="px-4 py-3.5 text-[13px] text-ink-soft md:px-5">Nothing has cleared every term yet.</p>
+          )}
           {d.matched.map((m) => (
             <PartyRow key={m.id} p={m}>
               <span className={`hidden flex-none text-[12px] font-medium sm:block ${m.ready ? "text-accent-strong" : "text-ink-soft"}`}>
@@ -70,23 +73,28 @@ export function ProblemScreen({ d, demo }: { d: ProblemScreenData; demo?: boolea
           ))}
         </Group>
 
-        <Group
-          label="Awaiting"
-          count={d.awaiting.length}
-          fact="One term apart, and willing to move"
-          note="Asking reveals nothing about you, and never sends your problem."
-        >
-          {d.awaiting.map((m) => (
-            <PartyRow key={m.id} p={m}>
-              <span className="flex-none rounded-[7px] bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold">{m.area}</span>
-              <RowButton href={`/matches/${m.id}`}>Ask</RowButton>
-            </PartyRow>
-          ))}
-        </Group>
+        {d.awaiting.length > 0 && (
+          <Group
+            label="Awaiting"
+            count={d.awaiting.length}
+            fact="One term apart, and willing to move"
+            note="Asking reveals nothing about you, and never sends your problem."
+          >
+            {d.awaiting.map((m) => (
+              <PartyRow key={m.id} p={m}>
+                <span className="flex-none rounded-[7px] bg-gold-soft px-2.5 py-1 text-[12px] font-semibold text-gold">{m.area}</span>
+                <RowButton href={`/matches/${m.id}`}>Ask</RowButton>
+              </PartyRow>
+            ))}
+          </Group>
+        )}
 
-        <Group label="Declined" count={d.declined} fact="Nothing was sent to them" muted>
-          <DeclinedRow />
-        </Group>
+        {/* Nothing declined is not a section: an empty group is a heading asking to be read. */}
+        {d.declined > 0 && (
+          <Group label="Declined" count={d.declined} fact="Nothing was sent to them" muted>
+            <DeclinedRow />
+          </Group>
+        )}
       </main>
     </AppShell>
   );

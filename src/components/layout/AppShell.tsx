@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui/Icon";
+import { Credits } from "./Credits";
 import { NavLink } from "./NavLink";
 
 export interface NavItem {
@@ -59,6 +60,10 @@ export function AppShell({
           <img src="/crossdesk-icon.svg" alt="" width={32} height={32} className="h-8 w-8" />
           <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
         </Link>
+        {/* Above the nav, because it is spent on what the nav leads to. */}
+        <div className="px-3 pt-4">
+          <Credits className="w-full justify-start bg-surface" />
+        </div>
         <nav aria-label="Main" className="flex flex-col gap-1 px-3 py-4">
           {nav.map((item) => (
             <NavLink key={item.href} item={item} />
@@ -100,6 +105,7 @@ export function AppShell({
               <span className="text-[15.5px] tracking-[-0.01em]"><span className="font-extrabold">Cross</span><span className="font-normal">desk</span></span>
             </Link>
             <div className="ml-auto flex items-center gap-3">
+              <Credits />
               <Avatar initials={initials} />
               <MobileSignOut />
             </div>
