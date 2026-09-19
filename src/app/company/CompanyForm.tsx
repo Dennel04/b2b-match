@@ -9,19 +9,30 @@ import {
 } from "@/actions/company";
 import { Button, Icon, TagInput } from "@/components/ui";
 import { Cloud, Pills, Swap, bare } from "@/components/cloud";
+import { DateField } from "@/components/DateField";
+import { RemoteLogo } from "@/components/RemoteLogo";
+import { DEPARTMENTS } from "../problems/new/fields";
 import type { CompanyDraft, Requirement } from "@/types";
 import {
+  CLIENT_SIZES,
+  DELIVERY,
+  FORMATS,
+  LANGUAGES,
+  PERIODS,
+  REGIONS,
   REQUIREMENTS,
   ROLES,
   SIZES,
   applyAutofill,
+  missing,
+  profileFromDraft,
   sellerTermsFromDraft,
   sells,
   type Draft,
 } from "../onboarding/fields";
 
 type Source = "site" | "text";
-type Panel = "head" | "about" | "offer";
+type Panel = "head" | "about" | "offer" | "facts" | "clients" | "terms" | "help" | "contact";
 type Autofill =
   | { state: "idle" }
   | { state: "running"; source: Source; started: number }
@@ -81,14 +92,8 @@ function payload(d: Draft) {
     name: d.name.trim(),
     website: d.website.trim() || null,
     role: d.role ?? ("both" as const),
-    profile_json: {
-      name: d.name.trim(),
-      industry: d.industry.trim(),
-      size_hint: d.size,
-      services: d.services,
-      keywords: d.keywords,
-      summary: d.summary.trim(),
-    },
+    // Every profile field, laid over what was stored: saving one block never wipes another.
+    profile_json: profileFromDraft(d),
     seller_terms: sells(d.role) ? sellerTermsFromDraft(d) : null,
   };
 }
@@ -108,8 +113,11 @@ const monogram = (name: string) =>
 export function CompanyForm({
   initial,
   demo = false,
+  welcome = false,
 }: {
   initial: Draft;
+  /** Straight from sign-up: lead with what is still missing. */
+  welcome?: boolean;
   /** Filled with a made-up company for looking at the screen. Nothing is stored. */
   demo?: boolean;
 }) {
@@ -274,12 +282,18 @@ export function CompanyForm({
         ) : (
           <div className="flex flex-col gap-6 pb-9">
             <section className="flex items-start gap-5">
+            {d.logoUrl ? (
+              <span className="grid h-16 w-16 flex-none place-items-center overflow-hidden rounded-[22px] bg-surface ring-1 ring-ink/[0.08]">
+                <RemoteLogo url={d.logoUrl} name={d.name} className="p-2" />
+              </span>
+            ) : (
               <span
                 aria-hidden
                 className="grid h-16 w-16 flex-none place-items-center rounded-[22px] bg-ink text-[20px] font-semibold text-surface"
               >
                 {monogram(d.name)}
               </span>
+            )}
               <div className="min-w-0 flex-1">
                 <h1 className="truncate text-[28px] font-bold leading-[1.1] tracking-[-0.03em] md:text-[32px]">
                   {d.name || "Your company"}
@@ -322,6 +336,17 @@ export function CompanyForm({
           </div>
         )}
       </Swap>
+
+      <Missing
+        items={missing(kept)}
+        welcome={welcome}
+        onOpen={(block) => {
+          setEditing(block);
+          requestAnimationFrame(() =>
+            document.getElementById(`block-${block}`)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+          );
+        }}
+      />
 
       <Block
         title="About"
@@ -488,6 +513,199 @@ export function CompanyForm({
         </Block>
       )}
 
+      <Block
+        id="facts"
+        title="Facts"
+        note="Location, size and languages are shown to a match from the start; your name only once both agree."
+        editing={editing === "facts"}
+        onEdit={() => setEditing("facts")}
+      >
+        {editing === "facts" ? (
+          <div className="flex flex-col gap-5">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <Cloud label="City">
+                <input value={d.city} onChange={(e) => set("city", e.target.value)} placeholder="Tallinn" className={bare} />
+              </Cloud>
+              <Cloud label="Country">
+                <input value={d.country} onChange={(e) => set("country", e.target.value)} placeholder="Estonia" className={bare} />
+              </Cloud>
+              <Cloud label="People">
+                <input inputMode="numeric" value={d.employees} onChange={(e) => set("employees", e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="45" className={`${bare} tabular-nums`} />
+              </Cloud>
+              <Cloud label="Founded">
+                <input inputMode="numeric" value={d.founded} onChange={(e) => set("founded", e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="2014" className={`${bare} tabular-nums`} />
+              </Cloud>
+            </div>
+            <Group label="Languages you work in">
+              <Pills
+                options={[...LANGUAGES, ...d.languages.filter((l) => !LANGUAGES.some((x) => x.value === l)).map((l) => ({ value: l, label: l }))]}
+                value={d.languages}
+                onChange={(v) => set("languages", v)}
+              />
+            </Group>
+            <Cloud label="Logo URL">
+              <input value={d.logoUrl} onChange={(e) => set("logoUrl", e.target.value)} placeholder="https://nordkai.ee/logo.png" className={bare} />
+            </Cloud>
+            <Buttons onSave={save} onCancel={cancel} saving={saving} />
+          </div>
+        ) : (
+          <Facts
+            rows={[
+              ["Based in", [d.city, d.country].filter(Boolean).join(", ")],
+              ["People", d.employees ? Number(d.employees).toLocaleString("en-US") : d.size],
+              ["Founded", d.founded],
+              ["Works in", d.languages.join(", ")],
+            ]}
+          />
+        )}
+      </Block>
+
+      {sells(d.role) && (
+        <Block
+          id="clients"
+          title="Who you work with"
+          note="Buyers are matched to vendors who already serve companies like theirs."
+          editing={editing === "clients"}
+          onEdit={() => setEditing("clients")}
+        >
+          {editing === "clients" ? (
+            <div className="flex flex-col gap-6">
+              <Cloud span label="Industries you serve">
+                <TagInput shape="" value={d.industriesServed} onChange={(v) => set("industriesServed", v)} placeholder="Retail, banking, public sector" />
+              </Cloud>
+              <Group label="Your clients are usually">
+                <Pills options={CLIENT_SIZES} value={d.clientSizes} onChange={(v) => set("clientSizes", v)} />
+              </Group>
+              <Group label="Where you deliver">
+                <Pills options={REGIONS} value={d.regions} onChange={(v) => set("regions", v)} />
+              </Group>
+              <Group label="How you work">
+                <Pills
+                  options={[...DELIVERY]}
+                  value={d.delivery ? [d.delivery] : []}
+                  onChange={(v) => set("delivery", (v.find((x) => x !== d.delivery) ?? "") as Draft["delivery"])}
+                />
+              </Group>
+              <Buttons onSave={save} onCancel={cancel} saving={saving} />
+            </div>
+          ) : (
+            <Facts
+              rows={[
+                ["Industries", d.industriesServed.join(", ")],
+                ["Clients", d.clientSizes.map((c) => CLIENT_SIZES.find((x) => x.value === c)?.label ?? c).join(", ")],
+                ["Delivers to", d.regions.join(", ")],
+                ["Works", DELIVERY.find((x) => x.value === d.delivery)?.label ?? ""],
+              ]}
+            />
+          )}
+        </Block>
+      )}
+
+      {sells(d.role) && (
+        <Block
+          id="terms"
+          title="Working terms"
+          note="Withheld from everyone. The platform compares them with a buyer's and says only whether they fit. Empty means you are not filtered on it."
+          editing={editing === "terms"}
+          onEdit={() => setEditing("terms")}
+        >
+          {editing === "terms" ? (
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Cloud label="Smallest deal you take, €">
+                  <input
+                    inputMode="numeric"
+                    value={d.floorAmount ? Number(d.floorAmount).toLocaleString("en-US").replace(/,/g, " ") : ""}
+                    onChange={(e) => set("floorAmount", e.target.value.replace(/\D/g, "").slice(0, 9))}
+                    placeholder="5 000"
+                    className={`${bare} tabular-nums`}
+                  />
+                </Cloud>
+                <Cloud group label="Free to start from">
+                  <DateField label="Free to start from" value={d.availableFrom} onChange={(v) => set("availableFrom", v)} />
+                </Cloud>
+              </div>
+              <Group label="That amount is">
+                <Pills
+                  options={PERIODS.map((p) => ({ value: p.value, label: p.label }))}
+                  value={[d.floorPeriod]}
+                  onChange={(v) => set("floorPeriod", (v.find((x) => x !== d.floorPeriod) ?? d.floorPeriod) as Draft["floorPeriod"])}
+                />
+              </Group>
+              <Group label="How you like to be paid">
+                <Pills options={FORMATS} value={d.sellerFormats} onChange={(v) => set("sellerFormats", v)} />
+              </Group>
+              <Group label="What you can promise a buyer">
+                <Pills options={REQUIREMENTS} value={d.capabilities} onChange={(v) => set("capabilities", v)} />
+              </Group>
+              <Cloud span label="Certifications">
+                <TagInput shape="" value={d.certifications} onChange={(v) => set("certifications", v)} placeholder="ISO 27001, SOC 2, AWS Partner" />
+              </Cloud>
+              <Buttons onSave={save} onCancel={cancel} saving={saving} />
+            </div>
+          ) : (
+            <Facts
+              rows={[
+                ["Smallest deal", d.floorAmount ? `€${Number(d.floorAmount).toLocaleString("en-US").replace(/,/g, " ")} ${PERIODS.find((p) => p.value === d.floorPeriod)?.label ?? ""}` : ""],
+                ["Paid as", d.sellerFormats.map((x) => FORMATS.find((f) => f.value === x)?.label ?? x).join(", ")],
+                ["Free from", d.availableFrom ? new Date(d.availableFrom).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : ""],
+                ["Promises", d.capabilities.map((c) => REQUIREMENTS.find((r) => r.value === c)?.label ?? c).join(", ")],
+                ["Certified", d.certifications.join(", ")],
+              ]}
+            />
+          )}
+        </Block>
+      )}
+
+      {d.role !== "seller" && (
+        <Block
+          id="help"
+          title="Where you need help"
+          note="The parts of the business you expect to bring problems from. It shapes the interview and who you are shown."
+          editing={editing === "help"}
+          onEdit={() => setEditing("help")}
+        >
+          {editing === "help" ? (
+            <div className="flex flex-col gap-6">
+              <Pills
+                options={DEPARTMENTS.filter((x) => x !== "Other").map((x) => ({ value: x, label: x }))}
+                value={d.lookingFor}
+                onChange={(v) => set("lookingFor", v)}
+              />
+              <Buttons onSave={save} onCancel={cancel} saving={saving} />
+            </div>
+          ) : d.lookingFor.length ? (
+            <Tags items={d.lookingFor} />
+          ) : (
+            <Empty>Pick the areas you want help with</Empty>
+          )}
+        </Block>
+      )}
+
+      <Block
+        id="contact"
+        title="Who meets a match"
+        note="Shared only after both sides agree to meet, in the briefing."
+        editing={editing === "contact"}
+        onEdit={() => setEditing("contact")}
+      >
+        {editing === "contact" ? (
+          <div className="flex flex-col gap-5">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <Cloud label="Name">
+                <input value={d.contactName} onChange={(e) => set("contactName", e.target.value)} placeholder="Kadri Tamm" className={bare} />
+              </Cloud>
+              <Cloud label="Role">
+                <input value={d.contactRole} onChange={(e) => set("contactRole", e.target.value)} placeholder="Head of operations" className={bare} />
+              </Cloud>
+            </div>
+            <Buttons onSave={save} onCancel={cancel} saving={saving} />
+          </div>
+        ) : (
+          <Facts rows={[["Name", d.contactName], ["Role", d.contactRole]]} />
+        )}
+      </Block>
+
       {note && (
         <p role="status" className="px-1 text-[13.5px] text-ink-soft">
           {note}
@@ -575,12 +793,14 @@ function headcount(size: string) {
 
 /** One block of the profile: a heading, its pencil, and whatever it is showing. */
 function Block({
+  id,
   title,
   note,
   editing,
   onEdit,
   children,
 }: {
+  id?: string;
   title: string;
   note?: string;
   editing: boolean;
@@ -588,7 +808,10 @@ function Block({
   children: React.ReactNode;
 }) {
   return (
-    <section className="grid gap-x-10 gap-y-5 border-t border-line py-9 md:grid-cols-[minmax(200px,260px)_minmax(0,1fr)_auto]">
+    <section
+      id={id ? `block-${id}` : undefined}
+      className="grid scroll-mt-6 gap-x-10 gap-y-5 border-t border-line py-9 md:grid-cols-[minmax(200px,260px)_minmax(0,1fr)_auto]"
+    >
       <div className="min-w-0">
         <h2 className="text-[19px] font-semibold tracking-[-0.02em]">
           {title}
@@ -675,6 +898,61 @@ function Tags({ items }: { items: string[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Label on the left, value on the right; an unanswered row says so instead of disappearing. */
+function Facts({ rows }: { rows: [string, string][] }) {
+  return (
+    <dl className="grid max-w-[640px] gap-x-8 gap-y-3 sm:grid-cols-[160px_1fr]">
+      {rows.map(([k, v]) => (
+        <div key={k} className="contents">
+          <dt className="text-[14px] text-ink-soft">{k}</dt>
+          <dd className="text-[15px] text-ink">{v || <span className="text-ink-faint">Not set</span>}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * What the website did not say and matching would use. After sign-up it leads the page; later it
+ * stays until the list is empty. Each row opens the block that asks it.
+ */
+function Missing({
+  items,
+  welcome,
+  onOpen,
+}: {
+  items: ReturnType<typeof missing>;
+  welcome: boolean;
+  onOpen: (block: ReturnType<typeof missing>[number]["block"]) => void;
+}) {
+  if (!items.length) return null;
+  return (
+    <section className="mb-9 rounded-[26px] bg-surface/85 p-6 ring-1 ring-ink/[0.06] md:p-7">
+      <h2 className="text-[19px] font-semibold tracking-[-0.02em]">
+        {welcome ? "Your company is set up. A few answers make matching sharper" : "Still worth adding"}
+      </h2>
+      <p className="mt-1.5 max-w-[62ch] text-[14px] leading-relaxed text-ink-soft">
+        Your website did not say these. Each one decides who you are matched with; none of them is
+        shown with your name before both sides agree.
+      </p>
+      <ul className="mt-5 flex flex-wrap gap-2">
+        {items.map((m) => (
+          <li key={m.label}>
+            <button
+              type="button"
+              onClick={() => onOpen(m.block)}
+              className="inline-flex h-10 cursor-pointer items-center gap-2 rounded-full bg-surface px-4 text-[13.5px] font-medium text-ink ring-1 ring-ink/10 transition-shadow hover:ring-ink/25"
+            >
+              <Icon name="plus" size={14} />
+              {m.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

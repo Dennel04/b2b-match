@@ -32,4 +32,19 @@ export const DEMO_COMPANY: Draft = {
   availableFrom: new Date(Date.now() + 14 * 86_400_000)
     .toISOString()
     .slice(0, 10),
+  logoUrl: "",
+  city: "Tallinn",
+  country: "Estonia",
+  employees: "85",
+  founded: "2009",
+  languages: ["Estonian", "English", "Finnish"],
+  certifications: ["ISO 9001"],
+  industriesServed: ["Retail", "Manufacturing", "Food & drink"],
+  clientSizes: ["sme", "mid_market"],
+  regions: ["Baltics", "Nordics"],
+  delivery: "hybrid",
+  lookingFor: ["IT & software", "Finance & accounting"],
+  contactName: "Kadri Tamm",
+  contactRole: "Head of operations",
+  rest: {},
 };

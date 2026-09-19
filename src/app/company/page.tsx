@@ -11,7 +11,7 @@ export const metadata = { title: "Company — Crossdesk" };
 export default async function CompanyPage({
   searchParams,
 }: PageProps<"/company">) {
-  const { demo } = await searchParams;
+  const { demo, welcome } = await searchParams;
 
   // `?demo` shows a filled profile without an account. Nothing it edits is stored.
   if (demo !== undefined)
@@ -38,7 +38,7 @@ export default async function CompanyPage({
 
   return (
     <AppShell active="company" initials={initialsOf(company.name)}>
-      <CompanyForm initial={draftFromCompany(company)} />
+      <CompanyForm initial={draftFromCompany(company)} welcome={welcome !== undefined} />
     </AppShell>
   );
 }

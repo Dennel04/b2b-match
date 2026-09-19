@@ -4,6 +4,7 @@
 export type CompanyRole = 'seller' | 'buyer' | 'both';
 export type MatchStatus = 'proposed' | 'buyer_interested' | 'accepted' | 'declined';
 export type Urgency = 'low' | 'medium' | 'high';
+export type ClientSize = 'startup' | 'sme' | 'mid_market' | 'enterprise' | 'public_sector';
 
 /** Contract shape. The intersection of both sides' sets is all that can be discussed. */
 export type ContractFormat =
@@ -77,6 +78,15 @@ export interface CompanyProfile {
   employees?: number | null;  // headcount the site states or clearly implies
   founded?: number | null;    // year
   certifications?: string[];  // as named on the site: "ISO 27001", "SOC 2", "AWS Partner"
+  // Asked on /company after sign-up, because a website rarely says them. They sharpen matching
+  // and the offers; none of them is a figure, so all are safe before a match is accepted,
+  // except the contact, which is shared only once both sides agree to meet.
+  client_sizes?: ClientSize[];   // who a vendor usually works for
+  regions?: string[];            // where it delivers: "Estonia", "Baltics", "Nordics", "EU", "Worldwide"
+  delivery?: 'remote' | 'on_site' | 'hybrid' | null;
+  looking_for?: string[];        // parts of the business a buyer wants help with (problem departments)
+  contact_name?: string | null;
+  contact_role?: string | null;
 }
 
 /**

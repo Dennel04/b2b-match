@@ -39,7 +39,8 @@ export function Wizard({ autoSite }: { autoSite: string | null }) {
 
   function done() {
     left.current = true;
-    router.push("/dashboard");
+    // Land on the profile: it lists what the website did not say and matching would use.
+    router.push("/company?welcome");
     router.refresh();
   }
 
