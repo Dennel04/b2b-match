@@ -6,7 +6,7 @@ model call that is never handed the buyer's problem, and a deterministic guard r
 transcript that carries it across — and people are introduced only once the machines agree,
 with a briefing already written.
 
-Hackathon, 18–19 September 2026.
+Hackathon, 18–19 September 2026. Live at <https://crossdeskmatch.vercel.app>.
 
 | Document | What's in it |
 |---|---|
